@@ -1,5 +1,6 @@
 module NonstationaryProcesses
 
-# Write your package code here.
+
+include("ParameterProfiles.jl")
 
 end
