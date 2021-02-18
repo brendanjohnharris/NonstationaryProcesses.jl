@@ -1,7 +1,14 @@
-name = "Template"
+name = "NonstationaryProcesses"
 uuid = "7656fb31-40ed-4019-8ece-32bdcc5fce69"
 authors = ["brendanjohnharris <brendanjohnharris@gmail.com> and contributors"]
 version = "0.1.0"
+
+[deps]
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+DynamicalSystems = "61744808-ddfa-5f27-97ff-6e42cc95d634"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 
 [compat]
 julia = "1"
