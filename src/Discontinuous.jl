@@ -48,6 +48,8 @@ function /(D1::Discontinuous, c::Real)
     g(x) = D1.f(x)/c
     D = Discontinuous(g, D1.d)
 end
+
+# Maybe these aren't necessary
 function +(c::Real, D1::Discontinuous)
     g(x) = D1.f(x)+c
     D = Discontinuous(g, D1.d)
@@ -65,6 +67,6 @@ function /(c::Real, D1::Discontinuous)
     D = Discontinuous(g, D1.d)
 end
 
-# Overload call so that you can use the Discontinuous like a normal function, if you want
+# Overload call so that you can use a Discontinuous like a normal function, if you want
 (D::Discontinuous)(x::Real) = D.f(x)
 (D::Discontinuous)(x::Array) = map.(x -> D.f(x), x)

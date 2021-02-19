@@ -10,9 +10,9 @@ end
 
 X0 = [1.0, 1.0]
 tspan = (0.0, 2000.0)
-μ(t) = heaviside(t-1000.0).*20.0
-prob = ODEProblem(f!, x0, tspan, μ)
-sol = solve(prob)
+μ = unitStep(1000.0).*20.0 # A step from 0 to 20 at t = 1000
+prob = ODEProblem(f!, X0, tspan, μ)
+sol = solve(prob; tstops=collect(μ.d), saveat=0.001, reltol=1e-6)
 
 plot(sol, vars=(1))
 plot!(title="Van der Pol, parameter steps from 0 to 20")
