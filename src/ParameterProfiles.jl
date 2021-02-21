@@ -16,7 +16,7 @@ function heaviside(x::Real, stepOpt::Real=1.0)
     end
     y = convert(typeof(x), y)
 end
-heaviside(x::AbstractArray, stepOpt::Real=1.0) = map.(x -> heaviside(x, stepOpt), x)
+heaviside(x::AbstractArray, stepOpt::Real=1.0) = heaviside.(x, stepOpt)
 
 """
     unitStep(threshold::Real=0.0 stepOpt::Real=1.0)

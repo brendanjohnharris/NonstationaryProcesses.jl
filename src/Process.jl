@@ -1,0 +1,3 @@
+# How best to structure the I/O format and system definitions
+# The DynamicalSystems package already has its own neat method of storing system information and time series, but not the simulation parameters. You want to be able to save this to a file that can be read ealsewhere, so we don't want any Julia-specific types in our dict (probably don't want this regardless, for data persistence).
+# I think we'll want a simple dictionary, with enough fields that you can reconstruct the function calls that generate a time series dataset.
