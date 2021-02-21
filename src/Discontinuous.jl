@@ -5,8 +5,8 @@ import Base.:+, Base.:-, Base.:*, Base.:/
 
  A type that contains a discontinuous function and an index of any of its discontinuities. This allows the construction of step parameter profiles that retain discontinuity information. You can also call the Discontinuous type like a normal function, if you want to.
 """
-struct Discontinuous{T} <: Function
-    f::T
+struct Discontinuous <: Function
+    f::Function
     d::Set
 end
 # These can be turned into macros later?
@@ -67,6 +67,6 @@ function /(c::Real, D1::Discontinuous)
     D = Discontinuous(g, D1.d)
 end
 
-# Overload call so that you can use a Discontinuous like a normal function, if you want
+# Overload call so that you can use a Discontinuous like a normal (vectorised) function, if you want
 (D::Discontinuous)(x::Real) = D.f(x)
-(D::Discontinuous)(x::Array) = map.(x -> D.f(x), x)
+(D::Discontinuous)(x::Array) = D.f.(x)
