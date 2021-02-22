@@ -29,7 +29,7 @@ D([-1, 0, 1])
 """
 
 function unitStep(threshold::Real=0.0, baseline::Real=0.0, stepHeight::Real=1.0, stepOpt::Real=1.0)
-    Discontinuous(x -> (heaviside(x-threshold, stepOpt).*baseline).*stepHeight, Set([threshold]))
+    Discontinuous(x -> (heaviside(x-threshold, stepOpt).*stepHeight)+baseline, Set([threshold]))
 end
 
 

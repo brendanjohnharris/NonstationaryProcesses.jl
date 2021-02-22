@@ -41,23 +41,22 @@ function vanderpol(; X0::AbstractArray,
                      T::NTuple{4,Real},
                      solver,
                      reltol::Real,
-                     rngseed::Union{UInt, Nothing})::ProcessSimulator
+                     rngseed::Union{UInt, Nothing})
 
     # Do the actual simulation
     rngseed = seed(rngseed)
     ds = ContinuousDynamicalSystem(vanderpol, X0, p, vanderpol_J, t0=T[2])
-    data = trajectory(ds, T[4]; dt=T[3], Ttr=T[2]-T[1], reltol=reltol, alg=solver)
+    data = trajectory(ds, T[4]; dt=T[3], Ttr=T[1], reltol=reltol, alg=solver)
 
     # Save the results
     metadata = Process(
     process = vanderpol,
     X0 = X0,
-    t0 = T[1],
-    save_t0 = T[2],
-    save_dt = T[3],
+    transient = T[1],
+    t0 = T[2],
+    dt = T[3],
     tmax = T[4],
     solver_rng = rngseed,
-    solver = solver,
     relative_tolerance = reltol)
 
     return (data, metadata)
