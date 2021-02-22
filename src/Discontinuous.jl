@@ -70,3 +70,4 @@ end
 # Overload call so that you can use a Discontinuous like a normal (vectorised) function, if you want
 (D::Discontinuous)(x::Real) = D.f(x)
 (D::Discontinuous)(x::Array) = D.f.(x)
+(D::Discontinuous)(x::StepRangeLen) = D.f.(x)
