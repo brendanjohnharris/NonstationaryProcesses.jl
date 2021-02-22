@@ -9,10 +9,10 @@ Base.@kwdef mutable struct Process
     parameter_function_parameters::Union{Tuple, Nothing} = nothing # Can be a tuple of tuples
     # parameter_offset::Union{Real, Nothing, Tuple} = nothing
     # parameter_scale::Union{Real, Nothing, Tuple} = nothing
-    t0::Union{Real, Nothing} = nothing
+    transient::Union{Real, Nothing} = nothing
     tmax::Union{Real, Nothing} = nothing
-    save_dt::Union{Real, Nothing} = nothing
-    save_t0::Union{Real, Nothing} = nothing
+    dt::Union{Real, Nothing} = nothing
+    t0::Union{Real, Nothing} = nothing
     parameter_rng::Union{Real, Nothing} = nothing
     solver_rng::Union{Real, Nothing} = nothing
     solver::Union{String, Nothing} = nothing
@@ -33,16 +33,15 @@ function simulate(P::Process)
         end
         p(t) = [ps...](t) # Something like that
     else
-        show(P.parameter_function(P.parameter_function_parameters...))
         p = P.parameter_function(P.parameter_function_parameters...)
     end
-    T = P.save_t0:P.save_dt:P.tmax
+    T = P.t0:P.dt:P.tmax
     seed(P.parameter_rng) # So the function and the evaluated parameters have the same rng state, if there is anything stochastic in the function itself
     parameters = p(T)
 
     data, metadata = P.process(X0=P.X0,
                                 p=p,
-                                T= (P.t0, P.save_t0, P.save_dt, P.tmax),
+                                T= (P.t0, P.t0, P.dt, P.tmax),
                                 solver=eval(Meta.parse(P.solver)),
                                 reltol=P.relative_tolerance,
                                 rngseed=P.solver_rng)
@@ -50,11 +49,11 @@ function simulate(P::Process)
     # If any of the fields of P are nothing, we check to see if the simulation gives us any answers in metadata
     fns = fieldnames(typeof(P))
     for fn = 1:length(fns)
-        if isnothing(P.fns(fn))
-            subFn = fns(fn) # Throws a syntax error otherwise
-            P.subFn = metadata.fns(fn)
+        subFn = fns[fn] # Throws a syntax error otherwise
+        if isnothing(getproperty(P, subFn))
+            setproperty!(P, subFn, getproperty(metadata, subFn))
         end
     end
 
-    return (dict(:Trajectory => data, :Parameters, parameters), metadata)
+    return (Dict(:Trajectory => data, :Parameters => parameters), metadata)
 end
