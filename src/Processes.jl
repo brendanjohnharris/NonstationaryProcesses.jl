@@ -13,13 +13,13 @@ end
 # Hijack DynamicalSystems trajectory so that (ONLY) if it gets a Discontinuity, it fills in tstops
 function trajectory(ds, T; args...)
     if typeof(ds.p) <: Discontinuous
-        DynamicalSystems.trajectory(ds, T; tstops=collect(ds.p.d), args...) # May need to check tstops isn't in args in the future
+        DynamicalSystems.trajectory(ds, T; tstops=sort(collect(ds.p.d)), args...) # May need to check tstops isn't in args in the future
     else
         DynamicalSystems.trajectory(ds, T; args...)
     end
 end
 
-abstract type ProcessSimulator <: Function end
+#abstract type ProcessSimulator <: Function end
 
 
 # ------------------------------------------------------------------------------------------------ #

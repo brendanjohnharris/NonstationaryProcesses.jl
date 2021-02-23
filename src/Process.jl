@@ -5,7 +5,7 @@
 Base.@kwdef mutable struct Process
     process::Union{Function, Nothing} = nothing
     X0::Union{AbstractArray, Nothing} = nothing
-    parameter_function::Union{Function, Nothing, Tuple{Function}} = nothing # Can be a tuple of strings, if the system has more than one parameter
+    parameter_function::Union{String, Nothing, Tuple{String}} = nothing # Can be a tuple of strings, if the system has more than one parameter
     parameter_function_parameters::Union{Tuple, Nothing} = nothing # Can be a tuple of tuples
     # parameter_offset::Union{Real, Nothing, Tuple} = nothing
     # parameter_scale::Union{Real, Nothing, Tuple} = nothing
@@ -26,14 +26,15 @@ end
 # ------------------------------------------------------------------------------------------------ #
 function simulate(P::Process)
     # Generate the parameter function, and save a parameter vector
-    P.parameter_rng = copy(seed(P.parameter_rng));
-    if typeof(P.parameter_function) <: Tuple
-        for i = 1:length(P.parameter_function)
-            ps(i) = P.parameter_function(i)(P.parameter_function_parameters(i)...)
+    P.parameter_rng = copy(seed(P.parameter_rng))
+    parameter_function = eval(Meta.parse(P.parameter_function))
+    if typeof(parameter_function) <: Tuple
+        for i = 1:length(parameter_function)
+            ps(i) = parameter_function(i)(P.parameter_function_parameters(i)...)
         end
         p(t) = [ps...](t) # Something like that
     else
-        p = P.parameter_function(P.parameter_function_parameters...)
+        p = parameter_function(P.parameter_function_parameters...)
     end
     T = P.t0:P.dt:P.tmax
     seed(P.parameter_rng) # So the function and the evaluated parameters have the same rng state, if there is anything stochastic in the function itself

@@ -6,7 +6,7 @@
 vanderpolSim = Process(
     process = vanderpol,
     X0 = [1.0, 1.0],
-    parameter_function = unitStep,
+    parameter_function = "unitStep",
     parameter_function_parameters = (500.0, 0.0, 20.0), # (threshold, baseline, stepHeight)
     transient = 100.0,
     tmax = 1000.0,
