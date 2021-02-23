@@ -1,6 +1,9 @@
 using NonstationaryProcesses
+using SafeTestsets
 using Test
 
 @testset "NonstationaryProcesses.jl" begin
-    # Write your tests here.
+    @test 1 == 1
 end
+
+

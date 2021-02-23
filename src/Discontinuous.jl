@@ -67,8 +67,19 @@ function /(c::Real, D1::Discontinuous)
     D = Discontinuous(g, D1.d)
 end
 
+
 # Overload call so that you can use a Discontinuous like a normal (vectorised) function, if you want
 (D::Discontinuous)(x::Real) = D.f(x)
-(D::Discontinuous)(x::Array) = D.f.(x)
-(D::Discontinuous)(x::StepRange) = D.f.(x)
-(D::Discontinuous)(x::StepRangeLen) = D.f.(x)
+(D::Discontinuous)(x::Union{Array, StepRange, StepRangeLen}) = D.f.(x)
+
+
+function plot(D::Discontinuous, args...)
+    xr = extrema(collect(D.d))
+    scale = abs(-(xr...))
+    xr = (xr[1] - 0.2*scale):(scale/1000):(xr[2] + 0.2*scale)
+    plot(xr, D, args...)
+end
+function plot(xr, D::Discontinuous, args...)
+    Plots.plot(xr, D(xr), args...)
+end
+export plot
