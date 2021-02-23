@@ -57,3 +57,4 @@ function simulate(P::Process)
 
     return (Dict(:Trajectory => data, :Parameters => parameters), metadata)
 end
+export simulate
