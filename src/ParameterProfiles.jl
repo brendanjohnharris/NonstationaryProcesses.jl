@@ -2,6 +2,9 @@
 #                           Functions for constructing parameter profiles                          #
 # ------------------------------------------------------------------------------------------------ #
 
+function constantParameter(offset::Real=0) x -> offset end
+
+
 function heaviside(x::Real, stepOpt::Real=1.0)
     if x < 0
         y = 0
@@ -75,7 +78,7 @@ export stepNoise
 
 
 function stepRandomWalk(T::Tuple, stepWidth::Real=100, stepHeight::Real=1, baseline::Real=0)
-    stepIdxs = T[1]:stepWidth:T[2]-stepWidth
+    stepIdxs = T[1]:stepWidth:T[2]
     steps = stepHeight.*randn(Float64, (1, length(stepIdxs)))
     ps = sum(map((x, y) -> unitStep((x, x+stepWidth), baseline, y), stepIdxs, steps))
 end
