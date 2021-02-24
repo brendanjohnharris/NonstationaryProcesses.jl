@@ -17,6 +17,7 @@ DifferentialEquations = "6.16"
 Documenter = "0.26"
 DynamicalSystems = "1.7"
 Plots = "1.10"
+Reexport = "1.0"
 julia = "1"
 
 [extras]
