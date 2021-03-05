@@ -5,20 +5,21 @@
 Base.@kwdef mutable struct Process
     process::Union{Function, Nothing} = nothing
     X0::Union{AbstractArray, Nothing} = nothing
-    parameter_function::Union{String, Nothing, Tuple} = nothing # Can be a tuple of strings, if the system has more than one parameter
+    parameter_function::Union{Expr, Symbol, Nothing, Tuple} = nothing # Can be a tuple of symbols, if the system has more than one parameter
     parameter_function_parameters::Union{Tuple, Nothing} = nothing # Can be a tuple of tuples
     # parameter_offset::Union{Real, Nothing, Tuple} = nothing
     # parameter_scale::Union{Real, Nothing, Tuple} = nothing
-    transient::Union{Real, Nothing} = nothing
+    t0::Union{Real, Nothing} = nothing
     tmax::Union{Real, Nothing} = nothing
     dt::Union{Real, Nothing} = nothing
-    t0::Union{Real, Nothing} = nothing
+    savedt::Union{Real, Nothing} = nothing
+    savet0::Union{Real, Nothing} = nothing
     parameter_rng::Union{Real, Nothing} = nothing
     solver_rng::Union{Real, Nothing} = nothing
-    solver::Union{String, Nothing} = nothing
-    relative_tolerance::Union{Real, Nothing} = nothing
+    solver::Union{Expr, Symbol, Nothing} = nothing
+    #relative_tolerance::Union{Real, Nothing} = nothing
     inventory_id::Int = abs(rand(Int, 1)[1]) # Just a unique number for this simulation
-    solver_opts::Union{Tuple, Nothing} = nothing
+    solver_opts::Union{Dict, Nothing} = nothing
     # Add any other solver options as they become necessary
 end
 
@@ -29,7 +30,7 @@ end
 function simulate(P::Process)
     # Generate the parameter function, and save a parameter vector
     P.parameter_rng = copy(seed(P.parameter_rng))
-    parameter_function = eval.(Meta.parse.(P.parameter_function))
+    parameter_function = eval.(P.parameter_function)
     if isnothing(P.parameter_function_parameters)
         parameter_function_parameters = fill([], length(parameter_function))
     else
@@ -44,9 +45,7 @@ function simulate(P::Process)
     else
         p = parameter_function(parameter_function_parameters...)
     end
-    T = P.t0:P.dt:P.tmax
     seed(P.parameter_rng) # So the function and the evaluated parameters have the same rng state, if there is anything stochastic in the function itself
-    parameters = p(T)
     if isnothing(P.solver_opts)
         solver_opts = ()
     else
@@ -54,10 +53,9 @@ function simulate(P::Process)
     end
     data, metadata = P.process(X0=P.X0,
                                 p=p,
-                                T= (P.t0, P.t0, P.dt, P.tmax),
-                                solver=eval(Meta.parse(P.solver)),
-                                reltol=P.relative_tolerance,
-                                rngseed=P.solver_rng, solver_opts...)
+                                T=(P.t0, P.savet0, P.dt, P.savedt, P.tmax),
+                                solver=eval(P.solver),
+                                rngseed=P.solver_rng, solver_opts=solver_opts)
 
     # If any of the fields of P are nothing, we check to see if the simulation gives us any answers in metadata
     fns = fieldnames(typeof(P))
@@ -67,7 +65,12 @@ function simulate(P::Process)
             setproperty!(P, subFn, getproperty(metadata, subFn))
         end
     end
-
+    checkdt = (P.tmax - P.savet0)./(size(data)[1]-1)
+    T = P.savet0:checkdt:P.tmax
+    if length(T) != size(data)[1]
+        error()
+    end
+    parameters = p.(T)
     return (Dict(:Trajectory => data, :Parameters => parameters), P)
 end
 export simulate

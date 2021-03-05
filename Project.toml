@@ -4,9 +4,7 @@ authors = ["brendanjohnharris <brendanjohnharris@gmail.com> and contributors"]
 version = "0.1.0"
 
 [deps]
-Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DynamicalSystems = "61744808-ddfa-5f27-97ff-6e42cc95d634"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -14,7 +12,6 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
 DifferentialEquations = "6.16"
-Documenter = "0.26"
 DynamicalSystems = "1.7"
 Plots = "1.10"
 julia = "1"
