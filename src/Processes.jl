@@ -18,6 +18,15 @@ function DynamicalSystems.trajectory(ds, T; args...)
         DynamicalSystems.trajectory(ds, T; args...)
     end
 end
+function expandT(T::Tuple) # Quick fix
+    expandTK = [:Ttr, :dt, :saveat]
+    expandTT = [T[2] - T[1], T[3], T[4]]
+    expandTK = expandTK[.!isnothing.(expandTT)]
+    expandTT = expandTT[.!isnothing.(expandTT)]
+    Dict(expandTK .=> expandTT)
+end
+
+
 
 #abstract type ProcessSimulator <: Function end
 
@@ -38,26 +47,25 @@ end
 
 function vanderpol(; X0::AbstractArray,
                      p::Function,
-                     T::NTuple{4,Real},
+                     T::Tuple,
                      solver,
-                     reltol::Real,
                      rngseed::Union{UInt, Nothing}, solver_opts...)
 
     # Do the actual simulation
     rngseed = seed(rngseed)
     ds = ContinuousDynamicalSystem(vanderpol, X0, p, vanderpol_J, t0=T[2])
-    data = trajectory(ds, T[4]; dt=T[3], Ttr=T[1], reltol=reltol, alg=solver, solver_opts...)
+    data = trajectory(ds, T[5]; expandT(T)..., alg=solver, solver_opts...)
 
     # Save the results
     metadata = Process(
     process = vanderpol,
     X0 = X0,
-    transient = T[1],
-    t0 = T[2],
+    t0 = T[1],
+    savet0 = T[2],
     dt = T[3],
-    tmax = T[4],
-    solver_rng = rngseed,
-    relative_tolerance = reltol)
+    savedt = T[4],
+    tmax = T[5],
+    solver_rng = rngseed)
 
     return (data, metadata)
 end
@@ -80,27 +88,66 @@ end
 
 function henon(; X0::AbstractArray,
     p::Function,
-    T::NTuple{4,Real},
+    T::Tuple,
     solver,
-    reltol::Real,
     rngseed::Union{UInt, Nothing}, solver_opts...)
 
     # Do the actual simulation
     rngseed = seed(rngseed)
     ds = DiscreteDynamicalSystem(henon, X0, p, henon_J, t0=T[2])
-    show(ds)
-    data = trajectory(ds, T[4]; dt=T[3], Ttr=T[1])
-
+    data = trajectory(ds, T[5]; expandT(T)..., solver_opts...)
     # Save the results
     metadata = Process(
     process = henon,
     X0 = X0,
-    transient = T[1],
-    t0 = T[2],
+    t0 = T[1],
+    savet0 = T[2],
     dt = T[3],
-    tmax = T[4],
-    solver_rng = rngseed,
-    relative_tolerance = reltol)
+    tmax = T[5],
+    savedt = T[4],
+    solver_rng = rngseed)
 
     return (data, metadata)
 end
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                        Harmonic Oscillator                                       #
+# ------------------------------------------------------------------------------------------------ #
+
+@inline @inbounds function harmonic(X::AbstractArray, ω::Function, t::Real)
+    dX2 = -ω(t)^2.0*X[1]
+    dX1 = X[2]
+    return SVector{2}(dX1, dX2)
+end
+
+@inline @inbounds function harmonic_J(X::AbstractArray, ω::Function, t::Real)
+    J = @SMatrix [0.0 1.0; -ω(t)^2 0.0]
+end
+
+function harmonic(; X0::AbstractArray,
+                     p::Function,
+                     T::Tuple,
+                     solver,
+                     rngseed::Union{UInt, Nothing}, solver_opts::Dict)
+
+    # Do the actual simulation
+    rngseed = seed(rngseed)
+    ds = ContinuousDynamicalSystem(harmonic, X0, p, harmonic_J, t0=T[2])
+    data = trajectory(ds, T[5]; expandT(T)..., solver_opts..., alg=solver)
+    # Save the results
+    metadata = Process(
+    process = harmonic,
+    X0 = X0,
+    t0 = T[1],
+    savet0 = T[2],
+    dt = T[3],
+    tmax = T[5],
+    savedt = T[4],
+    solver_rng = rngseed)
+
+    return (data, metadata)
+end
+export harmonic

@@ -16,7 +16,7 @@ function dynamicalSineJ(X, μ, t)
     J = @SMatrix [-μ^2*sin(μ.*t)]
 end
 
-#(x, μ, t) -> sin(μ.*t)
+# (x, μ, t) -> sin(μ.*t)
 ds = ContinuousDynamicalSystem(dynamicalSine, X0, μ, dynamicalSineJ) # Easy system defined anonymously
 data = trajectory(ds, T; dt=0.01)
 
