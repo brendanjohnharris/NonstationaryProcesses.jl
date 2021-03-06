@@ -2,7 +2,7 @@
 # A list of process EOM's, Jacobians and simulators (a simulator is a just a function that wraps up parameters for automation)
 
 
-function seed(theSeed=nothing) # Seed the rng, but return the seed. If no or NaN argument, randomly seed rng
+function seed(theSeed=nothing) # Seed the rng, but return the seed. If no, nothing or NaN argument, randomly seed rng
     if isnothing(theSeed)
         Random.rand(Random.seed!(), UInt64)
     else
@@ -10,25 +10,29 @@ function seed(theSeed=nothing) # Seed the rng, but return the seed. If no or NaN
     end
 end
 
-# Hijack DynamicalSystems trajectory so that (ONLY) if it gets a Discontinuity, it fills in tstops
-function DynamicalSystems.trajectory(ds, T; args...)
-    if typeof(ds.p) <: Discontinuous
-        DynamicalSystems.trajectory(ds, T; tstops=sort(collect(ds.p.d)), args...) # May need to check tstops isn't in args in the future
+# ------------------------------------------------------------------------------------------------ #
+#               Define a function which, if it gets a Discontinuity, fills in tstops               #
+# ------------------------------------------------------------------------------------------------ #
+
+function dsolve(prob, alg; kwargs...)
+    if typeof(prob.p) <: Discontinuous
+        DifferentialEquations.solve(prob, alg; kwargs..., tstops=sort(collect(prob.p.d))) # May need to check tstops isn't in args in the future
     else
-        DynamicalSystems.trajectory(ds, T; args...)
+        DifferentialEquations.solve(prob, alg; kwargs...)
     end
 end
-function expandT(T::Tuple) # Quick fix
-    expandTK = [:Ttr, :dt, :saveat]
-    expandTT = [T[2] - T[1], T[3], T[4]]
-    expandTK = expandTK[.!isnothing.(expandTT)]
-    expandTT = expandTT[.!isnothing.(expandTT)]
-    Dict(expandTK .=> expandTT)
+
+function tuplef2ftuple(f, params)
+    if typeof(f) <: Tuple
+        ps = Vector{Function}(undef, length(f))
+        for i = 1:length(f)
+            ps[i] = f[i](params[i]...)
+        end
+        p(t) = map((x, g) -> g(x), fill(t, length(ps)), ps) # Something like that
+    else
+        p = f(params...)
+    end
 end
-
-
-
-#abstract type ProcessSimulator <: Function end
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -45,29 +49,10 @@ end
                     -2*μ(t)*X[1]*X[2]-1      μ(t)*(1-X[1]^2)]
 end
 
-function vanderpol(; X0::AbstractArray,
-                     p::Function,
-                     T::Tuple,
-                     solver,
-                     rngseed::Union{UInt, Nothing}, solver_opts...)
-
-    # Do the actual simulation
-    rngseed = seed(rngseed)
-    ds = ContinuousDynamicalSystem(vanderpol, X0, p, vanderpol_J, t0=T[2])
-    data = trajectory(ds, T[5]; expandT(T)..., alg=solver, solver_opts...)
-
-    # Save the results
-    metadata = Process(
-    process = vanderpol,
-    X0 = X0,
-    t0 = T[1],
-    savet0 = T[2],
-    dt = T[3],
-    savedt = T[4],
-    tmax = T[5],
-    solver_rng = rngseed)
-
-    return (data, metadata)
+function vanderpol(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=vanderpol_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
 # ------------------------------------------------------------------------------------------------ #
@@ -85,29 +70,10 @@ end
     return J
 end
 
-
-function henon(; X0::AbstractArray,
-    p::Function,
-    T::Tuple,
-    solver,
-    rngseed::Union{UInt, Nothing}, solver_opts...)
-
-    # Do the actual simulation
-    rngseed = seed(rngseed)
-    ds = DiscreteDynamicalSystem(henon, X0, p, henon_J, t0=T[2])
-    data = trajectory(ds, T[5]; expandT(T)..., solver_opts...)
-    # Save the results
-    metadata = Process(
-    process = henon,
-    X0 = X0,
-    t0 = T[1],
-    savet0 = T[2],
-    dt = T[3],
-    tmax = T[5],
-    savedt = T[4],
-    solver_rng = rngseed)
-
-    return (data, metadata)
+function henon(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=henon_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
 
@@ -127,27 +93,8 @@ end
     J = @SMatrix [0.0 1.0; -ω(t)^2 0.0]
 end
 
-function harmonic(; X0::AbstractArray,
-                     p::Function,
-                     T::Tuple,
-                     solver,
-                     rngseed::Union{UInt, Nothing}, solver_opts::Dict)
-
-    # Do the actual simulation
-    rngseed = seed(rngseed)
-    ds = ContinuousDynamicalSystem(harmonic, X0, p, harmonic_J, t0=T[2])
-    data = trajectory(ds, T[5]; expandT(T)..., solver_opts..., alg=solver)
-    # Save the results
-    metadata = Process(
-    process = harmonic,
-    X0 = X0,
-    t0 = T[1],
-    savet0 = T[2],
-    dt = T[3],
-    tmax = T[5],
-    savedt = T[4],
-    solver_rng = rngseed)
-
-    return (data, metadata)
+function harmonic(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=harmonic_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
-export harmonic

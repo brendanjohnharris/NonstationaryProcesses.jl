@@ -1,90 +1,30 @@
-# How best to structure the I/O format and system definitions
-# The DynamicalSystems package already has its own neat method of storing system information and time series, but not the simulation parameters. You want to be able to save this to a file that can be read ealsewhere, so we don't want any Julia-specific types in our dict (probably don't want this regardless, for data persistence).
-# I think we'll want a simple dictionary, with enough fields that you can reconstruct the function calls that generate a time series dataset.
+# How best to structure the I/O format and system definitions...
 
-Base.@kwdef mutable struct Process
-    process::Union{Function, Nothing} = nothing
-    X0::Union{AbstractArray, Nothing} = nothing
-    parameter_function::Union{Expr, Symbol, Nothing, Tuple} = nothing # Can be a tuple of symbols, if the system has more than one parameter
-    parameter_function_parameters::Union{Tuple, Nothing} = nothing # Can be a tuple of tuples
-    # parameter_offset::Union{Real, Nothing, Tuple} = nothing
-    # parameter_scale::Union{Real, Nothing, Tuple} = nothing
-    t0::Union{Real, Nothing} = nothing
-    tmax::Union{Real, Nothing} = nothing
-    dt::Union{Real, Nothing} = nothing
-    savedt::Union{Real, Nothing} = nothing
-    savet0::Union{Real, Nothing} = nothing
-    parameter_rng::Union{Real, Nothing} = nothing
-    solver_rng::Union{Real, Nothing} = nothing
-    solver::Union{Expr, Symbol, Nothing} = nothing
-    #relative_tolerance::Union{Real, Nothing} = nothing
-    inventory_id::Int = abs(rand(Int, 1)[1]) # Just a unique number for this simulation
-    solver_opts::Union{Dict, Nothing} = nothing
-    # Add any other solver options as they become necessary
+Base.@kwdef struct Process # Not ensemble
+    process = []
+    parameter_profile::Union{Function, Tuple, Array} = constantParameter # Can be a tuple of symbols, if the system has more than one parameter
+    parameter_profile_parameters::Union{Tuple, Array} = [0] # Can be a tuple of tuples
+    X0::Vector = [0.0, 0.0]
+    t0::Union{Float64, Int64} = -10.0
+    savet0::Union{Float64, Int64} = 0.0
+    dt::Union{Float64, Int64} = 0.001
+    savedt::Union{Float64, Int64} = 0.01
+    tmax::Union{Float64, Int64} = 100.0
+    alg::SciMLBase.SciMLAlgorithm = RK4()
+    solver_opts::Dict = Dict(:adaptive=>false)
+    parameter_rng::UInt64 = seed()
+    solver_rng::UInt64 = seed()
 end
-
 
 # ------------------------------------------------------------------------------------------------ #
 #               A function to handle simulations that are specified with a Process type            #
 # ------------------------------------------------------------------------------------------------ #
-function simulate(P::Process)
-    # Generate the parameter function, and save a parameter vector
-    P.parameter_rng = copy(seed(P.parameter_rng))
-    parameter_function = eval.(P.parameter_function)
-    if isnothing(P.parameter_function_parameters)
-        parameter_function_parameters = fill([], length(parameter_function))
-    else
-        parameter_function_parameters = P.parameter_function_parameters
-    end
-    if typeof(parameter_function) <: Tuple
-        ps = Vector{Function}(undef, length(parameter_function))
-        for i = 1:length(parameter_function)
-            ps[i] = parameter_function[i](parameter_function_parameters[i]...)
-        end
-        p(t) = map((x, g) -> g(x), fill(t, length(ps)), ps) # Something like that
-    else
-        p = parameter_function(parameter_function_parameters...)
-    end
-    seed(P.parameter_rng) # So the function and the evaluated parameters have the same rng state, if there is anything stochastic in the function itself
-    if isnothing(P.solver_opts)
-        solver_opts = ()
-    else
-        solver_opts = P.solver_opts
-    end
-    data, metadata = P.process(X0=P.X0,
-                                p=p,
-                                T=(P.t0, P.savet0, P.dt, P.savedt, P.tmax),
-                                solver=eval(P.solver),
-                                rngseed=P.solver_rng, solver_opts=solver_opts)
-
-    # If any of the fields of P are nothing, we check to see if the simulation gives us any answers in metadata
-    fns = fieldnames(typeof(P))
-    for fn = 1:length(fns)
-        subFn = fns[fn] # Throws a syntax error otherwise
-        if isnothing(getproperty(P, subFn))
-            setproperty!(P, subFn, getproperty(metadata, subFn))
-        end
-    end
-    checkdt = (P.tmax - P.savet0)./(size(data)[1]-1)
-    T = P.savet0:checkdt:P.tmax
-    if length(T) != size(data)[1]
-        error()
-    end
-    parameters = p.(T)
-    return (Dict(:Trajectory => data, :Parameters => parameters), P)
-end
+simulate(P::Process) = P.process(P)
 export simulate
 
-function timeseries(s::Dict, dim::Real=1)
-    s[:Trajectory][:, dim]
-end
-function timeseries(s::Dict, dim::Union{Vector, Tuple})
-    map(x -> timeseries(s, x), dim)
-end
-function timeseries(s::Tuple, dim::Union{Real, Vector, Tuple}=1)
-    timeseries(s[1], dim) # You gave the metadata as well
-end
+timeseries(s::SciMLBase.AbstractTimeseriesSolution, dim::Real) = s[dim, :]
+timeseries(s::SciMLBase.AbstractTimeseriesSolution, dim::Union{Vector, UnitRange}=1:size(s.u[1], 1)) = s[dim, :]'
+# function timeseries(s::Tuple, dim::Union{Real, Vector, Tuple}=1)
+#     timeseries(s[1], dim) # You gave the metadata as well
+# end
 export timeseries
-
-function Discrete() end
-export Discrete # Hotfix
