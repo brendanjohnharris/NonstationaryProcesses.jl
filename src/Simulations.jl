@@ -26,7 +26,7 @@ henonSim = Process(
     dt = 1,
     savedt = 1,
     tmax = 2000,
-    alg = FunctionMap())
+    alg = FunctionMap()) # The only discrete solver, pretty much
 export henonSim
 
 harmonicSim = Process(
@@ -41,4 +41,17 @@ harmonicSim = Process(
     tmax = 200.0,
     alg = AutoTsit5(Rosenbrock23()))
 export harmonicSim
+
+noisySineSim = Process(
+    process = noisySine,
+    X0 = [0.0],
+    parameter_profile = unitStep,
+    parameter_profile_parameters = (100.0, 0.0, 0.1), # (threshold, baseline, stepHeight)
+    t0 = -10.0,
+    dt = 0.01,
+    savedt = 0.01,
+    tmax = 200.0,
+    alg = nothing,
+    solver_opts=Dict())
+export noisySineSim
 
