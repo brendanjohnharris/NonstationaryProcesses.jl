@@ -78,7 +78,6 @@ end
 
 
 
-
 # ------------------------------------------------------------------------------------------------ #
 #                                        Harmonic Oscillator                                       #
 # ------------------------------------------------------------------------------------------------ #
@@ -98,3 +97,13 @@ function harmonic(P::Process)
     prob = ODEProblem(P.process, P.X0, (P.t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=harmonic_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                            Noisy Sine                                            #
+# ------------------------------------------------------------------------------------------------ #
+function noisySine(P::Process)
+    seed(P.solver_rng)
+    sol = [sin(t + asin(P.X0...)) + P.parameter_profile(P.parameter_profile_parameters...)(t)*randn() for t in P.t0:P.savedt:P.tmax]
+end
+
