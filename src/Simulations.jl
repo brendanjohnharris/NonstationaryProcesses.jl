@@ -13,7 +13,7 @@ vanderpolSim = Process(
     dt = 0.001,
     savedt = 0.1,
     tmax = 2000.0,
-    alg = AutoTsit5(Rosenbrock23())) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ
+    alg = RK4()) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ
 export vanderpolSim
 
 henonSim = Process(
@@ -39,7 +39,7 @@ harmonicSim = Process(
     dt = 0.0001,
     savedt = 0.001,
     tmax = 200.0,
-    alg = AutoTsit5(Rosenbrock23()))
+    alg = RK4())
 export harmonicSim
 
 noisySineSim = Process(

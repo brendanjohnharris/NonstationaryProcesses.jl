@@ -33,6 +33,7 @@ function tuplef2ftuple(f, params)
         p = f(params...)
     end
 end
+export tuplef2ftuple
 
 
 # ------------------------------------------------------------------------------------------------ #
