@@ -1,4 +1,7 @@
-import Base.:+, Base.:-, Base.:*, Base.:/
+import Base.:+
+import Base.:-
+import Base.:*
+import Base.:/
 
 """
      Discontinuous
