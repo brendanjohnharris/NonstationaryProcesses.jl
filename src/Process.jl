@@ -5,14 +5,14 @@ Base.@kwdef mutable struct Process # Not ensemble
     parameter_profile::Union{Function, Tuple, Array} = constantParameter # Can be a tuple of symbols, if the system has more than one parameter
     parameter_profile_parameters::Union{Tuple, Array} = [0] # Can be a tuple of tuples
     X0::Vector = [0.0, 0.0]
-    t0::Union{Float64, Int64} = -10.0
-    savet0::Union{Float64, Int64} = t0
+    t0::Union{Float64, Int64} = savet0 # savet0 will always take precedence
+    savet0::Union{Float64, Int64} = -10.0
     dt::Union{Float64, Int64} = 0.001
     savedt::Union{Float64, Int64} = 0.01
     tmax::Union{Float64, Int64} = 100.0
     alg::Union{SciMLBase.SciMLAlgorithm, Nothing} = RK4()
     solver_opts::Dict = Dict(:adaptive=>false)
-    parameter_rng::UInt64 = seed()
+    #parameter_rng::UInt64 = seed()
     solver_rng::UInt64 = seed()
     inventory_id::UInt64 = abs(rand(UInt64, 1)[1]) # Just a unique number for this simulation
     solution = nothing
@@ -21,8 +21,10 @@ function (P::Process)(;kwargs...) # Cleaner way to do this with constructors???
     P2 = deepcopy(P)
     [setfield!(P2, x, y) for (x, y) in kwargs]
     setfield!(P2, :solution, nothing) # You've changed some parameters, so the solution is no longer valid
+    setfield!(P2, :solver_rng, seed()) # New random seed, yeah?
     return P2
 end
+export Process
 
 # ------------------------------------------------------------------------------------------------ #
 #               A function to handle simulations that are specified with a Process type            #
@@ -65,10 +67,22 @@ end
 export timeseries
 
 # ------------------------------------------------------------------------------------------------ #
+#                              Convenient access to some solution info                             #
+# ------------------------------------------------------------------------------------------------ #
+times(P::Process) = P.savet0:P.savedt:P.tmax
+export times
+
+parameter_function(P::Process) = tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters)
+export parameter_function
+
+parameters(P::Process) = hcat(parameter_function(P).(times(P))...)
+export parameters
+
+# ------------------------------------------------------------------------------------------------ #
 #                          Plot recipe for Process types (e.g. label axes)                         #
 # ------------------------------------------------------------------------------------------------ #
 
-@recipe function f(P::Process, vars::Union{Vector, UnitRange, Real}=1:size(P.X0)[1])
+@recipe function f(P::Process; vars=1:size(P.X0)[1])
     linecolor --> :black
     markercolor --> :black
     if length(vars) == 1
