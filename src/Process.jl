@@ -59,7 +59,7 @@ function timeseries(s::AbstractArray, dim::Union{Vector, UnitRange, Real}=1:size
     end
 end
 function timeseries(P::Process, args...)
-    timeseries(solution!(P), args...)
+    x = timeseries(solution!(P), args...)
 end
 # function timeseries(s::Tuple, dim::Union{Real, Vector, Tuple}=1)
 #     timeseries(s[1], dim) # You gave the metadata as well
