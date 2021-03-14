@@ -41,7 +41,7 @@ export unitStep
 
 # Same as unitStep, but come back down
 function unitBump(T::Tuple, baseline::Real=0.0, bumpHeight::Real=1.0, stepOpt::Real=1.0)
-    D = unitStep(T[1], baseline, bumpHeight, stepOpt) - unitStep(T[2], baseline, bumpHeight, stepOpt)
+    D = unitStep(T[1], baseline, bumpHeight, stepOpt) - unitStep(T[2], 0.0, bumpHeight, stepOpt)
 end
 export unitBump
 
