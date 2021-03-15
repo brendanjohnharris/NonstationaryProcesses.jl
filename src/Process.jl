@@ -1,3 +1,4 @@
+using DimensionalData
 # How best to structure the I/O format and system definitions...
 
 Base.@kwdef mutable struct Process # Not ensemble
@@ -60,6 +61,11 @@ function timeseries(s::AbstractArray, dim::Union{Vector, UnitRange, Real}=1:size
 end
 function timeseries(P::Process, args...)
     x = timeseries(solution!(P), args...)
+    if size(x, 2) > 1
+        x = DimArray(x, (Ti(P.t0:P.savedt:P.tmax), Dim{:Variable}(1:size(x, 2))))
+    else
+        x = DimArray(x, (Ti(P.t0:P.savedt:P.tmax),))
+    end
 end
 # function timeseries(s::Tuple, dim::Union{Real, Vector, Tuple}=1)
 #     timeseries(s[1], dim) # You gave the metadata as well
@@ -69,13 +75,13 @@ export timeseries
 # ------------------------------------------------------------------------------------------------ #
 #                              Convenient access to some solution info                             #
 # ------------------------------------------------------------------------------------------------ #
-times(P::Process) = P.savet0:P.savedt:P.tmax
+times(P::Process) = P.t0:P.savedt:P.tmax
 export times
 
 parameter_function(P::Process) = tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters)
 export parameter_function
 
-parameters(P::Process) = hcat(parameter_function(P).(times(P))...)
+parameters(P::Process) = hcat(parameter_function(P).(times(P))...)[:]
 export parameters
 
 # ------------------------------------------------------------------------------------------------ #

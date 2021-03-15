@@ -1,4 +1,4 @@
-
+using LaTeXStrings
 # A list of process EOM's, Jacobians and simulators (a simulator is a just a function that wraps up parameters for automation)
 
 
@@ -55,6 +55,14 @@ function vanderpol(P::Process)
     prob = ODEProblem(P.process, P.X0, (P.t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=vanderpol_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
+
+# You want to get fancy? Let's store some stuff about the process using multiple dispatch 📜👽
+# function vanderpol(s::Symbol)
+#     if s == :Equation || s == :equation
+#         latexstring("y = \\dot{x}\n\\dot{y} = \\mu(1-x^2)y - x")
+#     end
+# end
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                                             Henon map                                            #
