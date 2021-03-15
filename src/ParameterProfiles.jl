@@ -84,3 +84,11 @@ function stepRandomWalk(T::Tuple, stepWidth::Real=100, stepHeight::Real=1, basel
     ps = sum(map((x, y) -> unitStep((x, x+stepWidth), baseline, y), stepIdxs, steps))
 end
 export stepRandomWalk
+
+
+
+
+function ramp(gradient::Real=1, p0::Real=0, t0::Real=0)
+    x -> gradient.*(x.-t0) .+ p0
+end
+export(ramp)
