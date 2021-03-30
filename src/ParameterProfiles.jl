@@ -91,4 +91,19 @@ export stepRandomWalk
 function ramp(gradient::Real=1, p0::Real=0, t0::Real=0)
     x -> gradient.*(x.-t0) .+ p0
 end
-export(ramp)
+export ramp
+
+
+function sineWave(period::Real=1, amplitude::Real=1, t0::Real=0, baseline::Real=5*amplitude)
+    x -> amplitude.*sin.((2π/period).*(x.-t0)) + baseline
+end
+export sineWave
+
+function triangleWave(period::Real=1, amplitude::Real=1, t0::Real=0, tmax=100, baseline::Real=5*amplitude)
+    # This is a discontinuous wave, so we can't (yet) define it over all x
+    # Be careful to set the t0 and tmax to match the simulation time
+    f = x -> (2amplitude/π).*asin.(sin.((2π/period).*(x.-t0))) + baseline
+    d = Set((t0 + π/2):π:tmax) # The set of maxima and minima of the triangle wave
+    Discontinuous(f, d)
+end
+export triangleWave
