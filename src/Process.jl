@@ -6,11 +6,11 @@ Base.@kwdef mutable struct Process # Not ensemble
     parameter_profile::Union{Function, Tuple, Array} = constantParameter # Can be a tuple of symbols, if the system has more than one parameter
     parameter_profile_parameters::Union{Tuple, Array} = [0] # Can be a tuple of tuples
     X0::Vector = [0.0, 0.0]
-    t0::Union{Float64, Int64} = savet0 # savet0 will always take precedence
-    savet0::Union{Float64, Int64} = -10.0
+    transient_t0::Union{Float64, Int64} = t0 # t0 will always take precedence
+    t0::Union{Float64, Int64} = -10.0
     dt::Union{Float64, Int64} = 0.001
     savedt::Union{Float64, Int64} = 0.01
-    tmax::Union{Float64, Int64} = 100.0
+    tmax::Union{Float64, Int64} = 100.0s
     alg::Union{SciMLBase.SciMLAlgorithm, Nothing} = RK4()
     solver_opts::Dict = Dict(:adaptive=>false)
     #parameter_rng::UInt64 = seed()
@@ -49,22 +49,28 @@ export simulate!
 # --------- Might have various solution types, so timeseries gets all of them as an array -------- #
 timeseries(s::SciMLBase.AbstractTimeseriesSolution, dim::Real) = s[dim, :]
 timeseries(s::SciMLBase.AbstractTimeseriesSolution, dim::Union{Vector, UnitRange}=1:size(s.u[1], 1)) = copy(s[dim, :]')
-function timeseries(s::AbstractArray, dim::Union{Vector, UnitRange, Real}=1:size(s[1], 1))
+function timeseries(s::AbstractArray, dim::Union{Vector, UnitRange, Real}=1:size(s, 2))
     if typeof(s) <: Vector
         if length(dim) != 1 || dim[1] != 1
             error("Cannot index the second dimension of the input, which is a vector")
         end
-        s
+        s[:]
     else
-        s[dim, :]
+        s[:, dim]
     end
 end
-function timeseries(P::Process, args...)
+function timeseries(P::Process, args...; transient::Bool=false)
     x = timeseries(solution!(P), args...)
-    if size(x, 2) > 1
-        x = DimArray(x, (Ti(P.t0:P.savedt:P.tmax), Dim{:Variable}(1:size(x, 2))))
+    if transient
+        idxs = 1:length(times(P, transient=true))
     else
-        x = DimArray(x, (Ti(P.t0:P.savedt:P.tmax),))
+        idxs = (length(P.transient_t0:P.savedt:P.t0)):1:length(times(P, transient=true))
+    end
+    saveTimes = (P.transient_t0:P.savedt:P.tmax)[idxs]
+    if size(x, 2) > 1
+        x = DimArray(x[idxs, :], (Ti(saveTimes), Dim{:Variable}(1:size(x, 2))))
+    else
+        x = DimArray(x[idxs], (Ti(saveTimes),))
     end
 end
 # function timeseries(s::Tuple, dim::Union{Real, Vector, Tuple}=1)
@@ -75,37 +81,56 @@ export timeseries
 # ------------------------------------------------------------------------------------------------ #
 #                              Convenient access to some solution info                             #
 # ------------------------------------------------------------------------------------------------ #
-times(P::Process) = P.t0:P.savedt:P.tmax
+function times(P::Process; transient::Bool=false)
+    if transient
+        P.transient_t0:P.savedt:P.tmax
+    else
+        P.t0:P.savedt:P.tmax
+    end
+end
 export times
 
 parameter_function(P::Process) = tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters)
 export parameter_function
 
-parameters(P::Process) = hcat(parameter_function(P).(times(P))...)[:]
+function parameters(P::Process; p=nothing, kwargs...)
+    ps = hcat(parameter_function(P).(times(P; kwargs...))...)
+    if size(ps, 1) == 1 # This 1 × N array, which should be a vector
+        ps = ps[:]
+    end
+    if isnothing(p) || (typeof(ps)<:Vector)
+        return ps
+    else
+        return ps[p, :]
+    end
+end
 export parameters
 
 # ------------------------------------------------------------------------------------------------ #
 #                          Plot recipe for Process types (e.g. label axes)                         #
 # ------------------------------------------------------------------------------------------------ #
 
-@recipe function f(P::Process; vars=1:size(P.X0)[1])
+@recipe function f(P::Process; vars=1:size(P.X0)[1], transient=false, downsample::Int=1)
     linecolor --> :black
     markercolor --> :black
     if length(vars) == 1
-        t = P.t0:P.savedt:P.tmax
-        x = (t, timeseries(P, vars))
+        t = times(P, transient=transient)
+        x = (t, timeseries(P, vars, transient=transient))
         seriestype --> :line
         xguide --> "t"
         yguide --> "x"
         label --> nothing
         title --> String(Symbol(P.process))
     else
-        x = timeseries(P, vars)
+        x = timeseries(P, vars, transient=transient)
         x = Tuple([x[:, i] for i in 1:size(x)[2]])
         seriestype --> :scatter
         markersize --> 1
         label --> nothing
         markerstrokewidth --> 0
+    end
+    if downsample != 1
+        x = tuple([xx[1:downsample:end] for xx in x]...)
     end
     return x
 end
