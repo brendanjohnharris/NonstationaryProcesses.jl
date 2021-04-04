@@ -1,3 +1,4 @@
+using Plots
 import Base.:+
 import Base.:-
 import Base.:*
