@@ -107,3 +107,13 @@ function triangleWave(period::Real=1, amplitude::Real=1, t0::Real=0, tmax=100, b
     Discontinuous(f, d)
 end
 export triangleWave
+
+
+
+function lorentzian(A=1.0, Γ=1.0, x₀=0.0, y₀=0.0)
+    # Γ is F.W.H.M, x₀ is centre, A is height and y₀ is the baseline
+    # (function is not mass normalised, as would be usual)
+    γ = Γ/2
+    x -> (A.*γ.^2)./((x.-x₀).^2 .+ γ.^2) + y₀
+end
+export lorentzian
