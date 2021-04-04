@@ -151,57 +151,46 @@ export doublePendulumMovie
     size := sz
     legend --> false
     seriescolor --> :black
+    left_margin --> 5mm
     bottom_margin --> 5mm
+    right_margin --> 20mm
+    top_margin --> 5mm
     link := :both
     grid --> false
-    layout --> @layout [
-        ts{0.9w,1.0h} density{0.1w,1.0h}
-    ]
-
+    #layout --> @layout [
+    #    ts{0.9w,1.0h} density{0.1w,1.0h}
+    #]
     @series begin
         if colordensity
             seriestype := :tscolordensity
         else
             seriestype := :path
         end
-        right_margin --> 0mm
-        top_margin --> 0mm
         framestyle --> :on
         xguide --> "t"
-        subplot := 1
         xlims --> xlims
         ylims --> ylims
         x := x
         y := y
     end
 
-    # not sure how to align this distribution exactly, so for now:
-    # if typeof(backend()) <: Plots.GRBackend
-    #     lof = -15px
-    # elseif typeof(backend()) <: Plots.PlotlyJSBackend
-    #     lof = -0px
-    # elseif typeof(backend()) <: Plots.PyPlotBackend
-    #     lof = -10px
-    # else
-    #     lof = -0px
-    # end
-    lof = (densityoffset)px
 
     idxs = LinRange(ylims..., 1000)
     p = pdf(kde(y), idxs)
     @series begin
         seriestype := :shape
         ticks := nothing
+        inset_subplots := (1, bbox(1.0, 0.0, 0.1, 1.0))
         subplot := 2
         background_color_inside := nothing
         foreground_color_border := nothing
         fillcolor --> plotattributes[:seriescolor]
         linecolor --> plotattributes[:seriescolor]
         framestyle --> :none
+        yguide := ""
         ylims --> ylims
         xlims --> (0, max(p...))
         fillalpha := 0.25
-        left_margin --> lof
         x := [0.0, p..., 0.0]
         y := [ylims[1], idxs..., ylims[2]]
     end
