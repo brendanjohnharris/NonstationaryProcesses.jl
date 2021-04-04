@@ -45,7 +45,7 @@ ds = DiscreteDynamicalSystem(AR, X0, p)
 #----------------------------------------
 data = trajectory(ds, T; dt=1)
 
-plot(data[:, 1], seriestype=:line)
+plot(data[:, 1], seriestype=:path)
 
 # Check that this EOM is in the correct form by reproducing:
 function f(X, p)
@@ -64,6 +64,6 @@ function integrateAR(X0, p, T)
 end
 Random.seed!(32)
 t = integrateAR(X0, p, T)
-plot!(t[:, 1], seriestype=:line)
+plot!(t[:, 1], seriestype=:path)
 
 
