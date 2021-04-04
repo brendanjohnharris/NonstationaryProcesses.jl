@@ -5,13 +5,13 @@ Base.@kwdef mutable struct Process # Not ensemble
     process = nothing
     parameter_profile::Union{Function, Tuple, Array} = constantParameter # Can be a tuple of symbols, if the system has more than one parameter
     parameter_profile_parameters::Union{Tuple, Array} = [0] # Can be a tuple of tuples
-    X0::Vector = [0.0, 0.0]
+    X0::Vector = [nothing]
     transient_t0::Union{Float64, Int64} = t0 # t0 will always take precedence
     t0::Union{Float64, Int64} = -10.0
     dt::Union{Float64, Int64} = 0.001
     savedt::Union{Float64, Int64} = 0.01
-    tmax::Union{Float64, Int64} = 100.0s
-    alg::Union{SciMLBase.SciMLAlgorithm, Nothing} = RK4()
+    tmax::Union{Float64, Int64} = 100.0
+    alg::Union{SciMLBase.SciMLAlgorithm, Nothing} = nothing
     solver_opts::Dict = Dict(:adaptive=>false)
     #parameter_rng::UInt64 = seed()
     solver_rng::UInt64 = seed()
@@ -105,32 +105,3 @@ function parameters(P::Process; p=nothing, kwargs...)
     end
 end
 export parameters
-
-# ------------------------------------------------------------------------------------------------ #
-#                          Plot recipe for Process types (e.g. label axes)                         #
-# ------------------------------------------------------------------------------------------------ #
-
-@recipe function f(P::Process; vars=1:size(P.X0)[1], transient=false, downsample::Int=1)
-    linecolor --> :black
-    markercolor --> :black
-    if length(vars) == 1
-        t = times(P, transient=transient)
-        x = (t, timeseries(P, vars, transient=transient))
-        seriestype --> :line
-        xguide --> "t"
-        yguide --> "x"
-        label --> nothing
-        title --> String(Symbol(P.process))
-    else
-        x = timeseries(P, vars, transient=transient)
-        x = Tuple([x[:, i] for i in 1:size(x)[2]])
-        seriestype --> :scatter
-        markersize --> 1
-        label --> nothing
-        markerstrokewidth --> 0
-    end
-    if downsample != 1
-        x = tuple([xx[1:downsample:end] for xx in x]...)
-    end
-    return x
-end
