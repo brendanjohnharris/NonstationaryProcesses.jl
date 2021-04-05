@@ -19,6 +19,10 @@ Base.@kwdef mutable struct Process # Not ensemble
     solution = nothing
 end
 function (P::Process)(;kwargs...) # Cleaner way to do this with constructors???
+    # Can use field aliases here
+    kwargs = Dict(kwargs)
+    repalias!(kwargs, process_aliases)
+
     P2 = deepcopy(P)
     [setfield!(P2, x, y) for (x, y) in kwargs]
     setfield!(P2, :solution, nothing) # You've changed some parameters, so the solution is no longer valid
@@ -26,6 +30,39 @@ function (P::Process)(;kwargs...) # Cleaner way to do this with constructors???
     return P2
 end
 export Process
+
+# ------------------------------------------------------------------------------------------------ #
+#                                           Field Aliases                                          #
+# ------------------------------------------------------------------------------------------------ #
+process_aliases = Dict(
+    :process =>                     [:sim, :system, :processes],
+    :parameter_profile =>           [:profile, :profiles, :parameter_functions, :𝑝, :𝑃],
+    :parameter_profile_parameters =>[:parameters, :ps, :params, :param, :parameter,
+                                     :profile_parameters, :parameterprofileparameters,
+                                     :profileparameters, :𝔓, :𝔭],
+    :X0 =>                          [:initial_conditions, :X, :X_0, :X₀, :𝑥₀, :𝑋₀, :𝑥0,
+                                     :𝑋0],
+    :transient_t0 =>                [:transient, :cutoff, :tₜ, :𝑡ₜ, :tt],
+    :t0 =>                          [:tstart, :t₀, :𝑡₀],
+    :dt =>                          [:δt, :𝛿t, :δ𝑡, :𝛿𝑡],
+    :savedt =>                      [:save_dt, :save_Δt, :save_δt, :save_𝛥t, :save_𝛿t, :save_Δ𝑡,
+                                     :save_δ𝑡, :save_𝛥𝑡, :save_𝛿𝑡, :Δt, :𝛥t, :Δ𝑡, :Δ𝑡],
+    :tmax =>                        [:t_max, :T, :Tmax, :T_max, :𝑇],
+    :alg =>                         [:algorithm, :solver],
+    :solver_opts =>                 [:opts, :solopts, :sol_opts, :solveropts],
+    :solver_rng =>                  [:rng, :rngseed, :rng_seed, :solverrng, :seed],
+    :inventory_id =>                [:id, :identifier],
+    :solution =>                    [:sol, :result, :output]
+)
+function repalias!(D, aliai::Dict)
+    for d ∈ keys(D)
+        for a ∈ keys(aliai)
+            if d ∈ aliai[a]
+                D[a] = pop!(D, d)
+            end
+        end
+    end
+end
 
 # ------------------------------------------------------------------------------------------------ #
 #               A function to handle simulations that are specified with a Process type            #
