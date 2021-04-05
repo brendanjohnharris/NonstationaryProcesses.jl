@@ -3,7 +3,7 @@ using Plots
 
 sim = gaussianBimodalSim(
     parameter_profile = (constantParameter, constantParameter, constantParameter),
-    parameter_profile_parameters = ((5.0,), (1.0,), (0.5)),  # (μ, σ, α)
+    parameter_profile_parameters = ((5.0,), (1.0,), (0.2)),  # (μ, σ, α)
     transient_t0 = 0.0,
     t0 = 0.0,
     savedt = 1,
