@@ -148,7 +148,7 @@ export doublePendulumMovie
     xlims, ylims = (extrema(x), extrema(y))
     ylims = (ylims[1] - 0.1*(ylims[1] + ylims[2])/2, ylims[2] + 0.1*(ylims[1] + ylims[2])/2)
     sz = (800, 200)
-    size := sz
+    size --> sz
     legend --> false
     seriescolor --> :black
     left_margin --> 5mm
