@@ -25,10 +25,10 @@ ds = ContinuousDynamicalSystem(vanderpol, X0, μ)
 # ------------------------------------------------------------------------------------------------ #
 
 # --------------------------------------------- Solve -------------------------------------------- #
-data = trajectory(ds, T; dt=0.001, tstops=sort(collect(μ.d)))
+@time data = trajectory(ds, T; dt=0.01, tstops=sort(collect(μ.d)))
 # ------------------------------------------------------------------------------------------------ #
 
-plot(data[:, 1], seriestype=:line)
+plot(data[:, 1], seriestype=:path)
 plot!(title="Van der Pol, parameter steps from 0 to 20")
 
 
