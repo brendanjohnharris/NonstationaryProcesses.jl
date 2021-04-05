@@ -20,5 +20,5 @@ end
 ds = ContinuousDynamicalSystem(dynamicalSine, X0, μ, dynamicalSineJ) # Easy system defined anonymously
 data = trajectory(ds, T; dt=0.01)
 
-plot(data[:, 1], seriestype=:line)
+plot(data[:, 1], seriestype=:path)
 plot!(title="Sine")
