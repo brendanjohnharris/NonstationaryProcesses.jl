@@ -1,11 +1,15 @@
-import Base.:+, Base.:-, Base.:*, Base.:/
+using Plots
+import Base.:+
+import Base.:-
+import Base.:*
+import Base.:/
 
 """
      Discontinuous
 
  A type that contains a discontinuous function and an index of any of its discontinuities. This allows the construction of step parameter profiles that retain discontinuity information. You can also call the Discontinuous type like a normal function, if you want to.
 """
-struct Discontinuous <: Function
+struct Discontinuous <: Function # Can probably turn into a 'functor'
     f::Function
     d::Set
 end
@@ -73,13 +77,18 @@ end
 (D::Discontinuous)(x::Union{Array, StepRange, StepRangeLen}) = D.f.(x)
 
 
-function plot(D::Discontinuous, args...)
-    xr = extrema(collect(D.d))
-    scale = abs(-(xr...))
-    xr = (xr[1] - 0.2*scale):(scale/1000):(xr[2] + 0.2*scale)
-    plot(xr, D, args...)
-end
-function plot(xr, D::Discontinuous, args...)
+function Plots.plot(xr, D::Discontinuous, args...)
     Plots.plot(xr, D(xr), args...)
 end
-export plot
+function Plots.plot(D::Discontinuous, args...)
+    xr = extrema(collect(D.d))
+    scale = abs(-(xr...))
+    if scale == 0.0
+        xr = collect(D.d)[1]-1:0.001:collect(D.d)[1]+1
+    else
+        xr = (xr[1] - 0.2*scale):(scale/1000):(xr[2] + 0.2*scale)
+    end
+    Plots.plot(xr, D, args...)
+    plot!(xlabel="t", ylabel="p(t)", legend=nothing)
+end
+
