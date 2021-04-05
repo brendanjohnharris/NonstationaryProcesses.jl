@@ -17,6 +17,7 @@ StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 
 [compat]
 DifferentialEquations = ">= 6.16"
+DimensionalData = ">= 0.16"
 DynamicalSystems = ">= 1.7"
 Plots = ">= 1.10"
 Reexport = ">= 1.0"
