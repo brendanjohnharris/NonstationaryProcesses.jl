@@ -130,6 +130,9 @@ export times
 parameter_function(P::Process) = tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters)
 export parameter_function
 
+parameter_functions(P::Process) = [P.parameter_profile[x](P.parameter_profile_parameters[x]...) for x in 1:length(P.parameter_profile)]
+export parameter_functions
+
 function parameters(P::Process; p=nothing, kwargs...)
     ps = hcat(parameter_function(P).(times(P; kwargs...))...)
     if size(ps, 1) == 1 # This 1 × N array, which should be a vector
