@@ -114,7 +114,7 @@ end
 # ------------------------------------------------------------------------------------------------ #
 function noisySine(P::Process)
     seed(P.solver_rng)
-    sol = [sin(t + asin(P.X0...)) + parameter_function(P)(t)*randn() for t in P.transient_t0:P.savedt:P.tmax]
+    sol = [sin(t) + parameter_function(P)(t)*randn() for t in P.transient_t0:P.savedt:P.tmax]
 end
 
 
@@ -125,14 +125,14 @@ end
 function noisyShiftyScalySine(P::Process)
     # Parameters (η, C, A)
     seed(P.solver_rng)
-    (η, C, A) = [P.parameter_profile[x](P.parameter_profile_parameters[x]...) for x in 1:length(P.parameter_profile)]
-    sol = [A(t)*sin(t + asin(P.X0...)) + η(t)*randn() + C(t) for t in P.transient_t0:P.savedt:P.tmax]
+    (η, C, A) = parameter_functions(P)
+    sol = [A(t)*sin(t) + η(t)*randn() + C(t) for t in P.transient_t0:P.savedt:P.tmax]
 end
 
 function shcalySine(P::Process)
     seed(P.solver_rng)
     A = parameter_function(P)
-    sol = [A(t)*(sin(t + asin(P.X0...)) + 1.0*randn() + 1.0) for t in P.transient_t0:P.savedt:P.tmax]
+    sol = [A(t)*(sin(t) + 1.0*randn() + 1.0) for t in P.transient_t0:P.savedt:P.tmax]
 end
 
 
@@ -289,4 +289,16 @@ function gaussianBimodal(P::Process)
     # Sample from a distribution formed from a single unit gaussian at the origin, and a satellite gaussian with parameters (height, mean, width) you choose.
     seed(P.solver_rng)
     sol =  [gaussianBimodal(parameter_function(P)(t)...) for t in P.transient_t0:P.savedt:P.tmax]
+end
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                           Shifty Noise                                           #
+# ------------------------------------------------------------------------------------------------ #
+function shiftyNoise(P::Process)
+    # Parameters (η, C, A)
+    seed(P.solver_rng)
+    (η, C) = parameter_functions(P)
+    sol = [η(t)*randn() + C(t) for t in P.transient_t0:P.savedt:P.tmax]
 end

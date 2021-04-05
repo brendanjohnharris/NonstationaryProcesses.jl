@@ -190,9 +190,20 @@ export skewedGaussianQuadraticSim
 gaussianBimodalSim = Process(
     process = gaussianBimodal,
     parameter_profile = (ramp, constantParameter, constantParameter),
-    parameter_profile_parameters = ((0.01, 0.1, 0.0), (1.0,), (0.5)),
+    parameter_profile_parameters = ((0.001, 0.1, 0.0), (1.0,), (0.1)),
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    savedt = 1,
+    tmax = 10000.0)
+export gaussianBimodalSim
+
+
+shiftyNoiseSim = Process(
+    process = shiftyNoise,
+    parameter_profile = (constantParameter, stepNoise),
+    parameter_profile_parameters = [(1.0,), ((0.0, 1000.0), 100.0, 2.0, 0.0)],
     transient_t0 = 0.0,
     t0 = 0.0,
     savedt = 1,
     tmax = 1000.0)
-export gaussianBimodalSim
+export shiftyNoiseSim
