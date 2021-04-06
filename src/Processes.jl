@@ -1,4 +1,5 @@
 using LaTeXStrings
+using QuadGK
 # A list of process EOM's, Jacobians and simulators (a simulator is a just a function that wraps up parameters for automation)
 
 
@@ -297,8 +298,24 @@ end
 #                                           Shifty Noise                                           #
 # ------------------------------------------------------------------------------------------------ #
 function shiftyNoise(P::Process)
-    # Parameters (η, C, A)
+    # Parameters (η, C)
     seed(P.solver_rng)
     (η, C) = parameter_functions(P)
     sol = [η(t)*randn() + C(t) for t in P.transient_t0:P.savedt:P.tmax]
+end
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                           FM Signal                                              #
+# ------------------------------------------------------------------------------------------------ #
+function fmWave(P::Process)
+    # Only parameter is the FM signal
+    T = P.transient_t0:P.savedt:P.tmax
+    p = parameter_functions(P)
+    Δ𝑓 = 1.0
+    # Δ𝑓 = 1/(2*abs(.-(extrema(p.(T))...)))
+    # if isinf(Δ𝑓)
+    #     Δ𝑓 = 0.0
+    # end
+    sol = [cos(2π*(t + Δ𝑓*(quadgk(p, 0.0, t, rtol=1e-8))[1])) for t in T] # Probably a more efficient way to integrate, but this will do for now
 end

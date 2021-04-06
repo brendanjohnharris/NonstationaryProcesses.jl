@@ -130,7 +130,13 @@ export times
 parameter_function(P::Process) = tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters)
 export parameter_function
 
-parameter_functions(P::Process) = [P.parameter_profile[x](P.parameter_profile_parameters[x]...) for x in 1:length(P.parameter_profile)]
+function parameter_functions(P::Process)
+    if typeof(P.parameter_profile) <: Union{Tuple, Vector}
+        [P.parameter_profile[x](P.parameter_profile_parameters[x]...) for x in 1:length(P.parameter_profile)]
+    else
+        P.parameter_profile(P.parameter_profile_parameters...)
+    end
+end
 export parameter_functions
 
 function parameters(P::Process; p=nothing, kwargs...)

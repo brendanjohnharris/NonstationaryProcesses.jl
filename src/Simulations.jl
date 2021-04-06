@@ -207,3 +207,14 @@ shiftyNoiseSim = Process(
     savedt = 1,
     tmax = 1000.0)
 export shiftyNoiseSim
+
+
+fmWaveSim = Process(
+    process = fmWave,
+    parameter_profile = (stepNoise),
+    parameter_profile_parameters = ((0.0, 100.0), 10.0, 0.5, 0.0),
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    savedt = 0.01,
+    tmax = 100.0)
+export fmWaveSim
