@@ -2,8 +2,10 @@
 #                           Functions for constructing parameter profiles                          #
 # ------------------------------------------------------------------------------------------------ #
 
-function constantParameter(offset::Real=0.0) x -> offset end
+constantParameter(offset::Real=0.0) = x -> offset
 export constantParameter
+constant(args...) = constantParameter(args...)
+export constant
 
 
 function heaviside(x::Real, stepOpt::Real=1.0)
