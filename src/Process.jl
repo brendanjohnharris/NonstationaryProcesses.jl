@@ -6,8 +6,8 @@ Base.@kwdef mutable struct Process # Not ensemble
     parameter_profile::Union{Function, Tuple, Array} = constantParameter # Can be a tuple of symbols, if the system has more than one parameter
     parameter_profile_parameters::Union{Tuple, Array} = [0] # Can be a tuple of tuples
     X0::Vector = [nothing]
+    t0::Union{Float64, Int64} = 0.0
     transient_t0::Union{Float64, Int64} = t0 # t0 will always take precedence
-    t0::Union{Float64, Int64} = -10.0
     dt::Union{Float64, Int64} = 0.001
     savedt::Union{Float64, Int64} = 0.01
     tmax::Union{Float64, Int64} = 100.0
@@ -36,7 +36,7 @@ export Process
 # ------------------------------------------------------------------------------------------------ #
 process_aliases = Dict(
     :process =>                     [:sim, :system, :processes],
-    :parameter_profile =>           [:profile, :profiles, :parameter_functions, :𝑝, :𝑃],
+    :parameter_profile =>           [:profile, :profiles, :𝑝, :𝑃],
     :parameter_profile_parameters =>[:parameters, :ps, :params, :param, :parameter,
                                      :profile_parameters, :parameterprofileparameters,
                                      :profileparameters, :𝔓, :𝔭],
@@ -50,7 +50,7 @@ process_aliases = Dict(
     :tmax =>                        [:t_max, :T, :Tmax, :T_max, :𝑇],
     :alg =>                         [:algorithm, :solver],
     :solver_opts =>                 [:opts, :solopts, :sol_opts, :solveropts],
-    :solver_rng =>                  [:rng, :rngseed, :rng_seed, :solverrng, :seed],
+    :solver_rng =>                  [:rng, :rngseed, :rng_seed, :solverrng],
     :inventory_id =>                [:id, :identifier],
     :solution =>                    [:sol, :result, :output]
 )
@@ -139,7 +139,7 @@ function parameter_functions(P::Process)
 end
 export parameter_functions
 
-function parameters(P::Process; p=nothing, kwargs...)
+function parameterseries(P::Process; p=nothing, kwargs...)
     ps = hcat(parameter_function(P).(times(P; kwargs...))...)
     if size(ps, 1) == 1 # This 1 × N array, which should be a vector
         ps = ps[:]
@@ -151,3 +151,25 @@ function parameters(P::Process; p=nothing, kwargs...)
     end
 end
 export parameters
+
+# Access the fields of a process with functions
+for field ∈ keys(process_aliases)
+    f = Symbol(:get, field)
+    eval(quote
+        $f(P::Process) = P.$field; export $f
+    end)
+    for field_alias ∈ process_aliases[field]
+        fa = Symbol(:get, field_alias)
+        eval(quote
+            $fa = $f; #export fa
+        end)
+    end
+end
+
+function forcevec(x)
+    if !(typeof(x) <: AbstractArray)
+        x = [x]
+    else
+        x
+    end
+end
