@@ -4,7 +4,7 @@
 
 constantParameter(offset::Real=0.0) = x -> offset
 export constantParameter
-constant(args...) = constantParameter(args...)
+constant = constantParameter
 export constant
 
 
@@ -92,6 +92,10 @@ export stepRandomWalk
 
 function ramp(gradient::Real=1, p0::Real=0, t0::Real=0)
     x -> gradient.*(x.-t0) .+ p0
+end
+function ramp(p1::Real, p2::Real, t1::Real, t2::Real)
+    gradient = (p2 - p1)/(t2 - t1)
+    ramp(gradient, p1, t1)
 end
 export ramp
 
