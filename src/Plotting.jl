@@ -2,6 +2,14 @@ using Plots
 using Plots.PlotMeasures
 using StatsPlots
 using KernelDensity
+import PyPlot
+
+function widen(x::Union{Tuple, Vector}, s::Number=0.1)
+    #μ = (x[1] + x[2])/2
+    w = x[2] - x[1]
+    y = (x[1] - s*w, x[2] + s*w)
+end
+export widen
 # ------------------------------------------------------------------------------------------------ #
 #                          Plot recipe for Process types (e.g. label axes)                         #
 # ------------------------------------------------------------------------------------------------ #
@@ -31,39 +39,50 @@ using KernelDensity
     return x
 end
 
-function movie(P::Process; vars=1:length(P.X0), downsample=1, trail=10, kwargs...)
+function movie(P::Process; vars=1:length(P.X0), downsample=1, trail=10, seriestype=:trail, kwargs...)
     X = timeseries(P, vars)
     bounds = mapslices(extrema, X)
     𝐭 = times(P)
     I = length(𝐭)
+    plot(;kwargs...)
     anim = @animate for i ∈ 1:downsample:I
         print("\u1b[1GFrame $(i÷downsample)/$(I÷downsample)")
-        trailIdxs = i-(trail*size(X, 1)÷downsample):i
-        trailIdxs = trailIdxs[trailIdxs .> 0]
-        Xtrail = X[trailIdxs, 1]
-        Ytrail = X[trailIdxs, 2]
-        if length(trailIdxs) > 1
-            plot(Xtrail, Ytrail, seriestype=:path,
-                    color=:red,
-                    linealpha=LinRange(0, 1, length(trailIdxs)),
-                    label=:none,
-                    linewidth=2,
+        if seriestype == :trail
+            trailIdxs = i-(trail*size(X, 1)÷downsample):i
+            trailIdxs = trailIdxs[trailIdxs .> 0]
+            Xtrail = X[trailIdxs, 1]
+            Ytrail = X[trailIdxs, 2]
+            if length(trailIdxs) > 1
+                plot!(Xtrail, Ytrail, seriestype=:path,
+                        color=:red,
+                        linealpha=LinRange(0, 1, length(trailIdxs)),
+                        label=:none,
+                        linewidth=2,
+                )
+            end
+            plot!([X[i, 1]], [X[i, 2]]; seriestype=:scatter,
+                markersize=20,
+                color=:black,
+                size=(500, 500),
+                xlims=bounds[1].*1.1,
+                ylims=bounds[2].*1.1,
+                border=:none,
+                label=:none,
+                kwargs...
             )
+            # Add 3D trail?
+        else
+            bounds = widen.(mapslices(extrema, X), (0.3,))
+            x = [X[1:i, v] for v in 1:lastindex(X, 2)]
+            if length(bounds) < 3
+                bounds = hcat(bounds, [nothing])
+            end
+            plot!(x..., seriestype=seriestype, xlims=bounds[1], ylims=bounds[2], zlims=bounds[3])
         end
-        plot!([X[i, 1]], [X[i, 2]]; seriestype=:scatter,
-            markersize=20,
-            color=:black,
-            size=(500, 500),
-            xlims=bounds[1].*1.1,
-            ylims=bounds[2].*1.1,
-            border=:none,
-            label=:none,
-            kwargs...
-        )
     end every 1
     anim
 end
-
+export movie
 
 
 # Bring to the boil... Can extract trail plot function to remove
@@ -141,7 +160,7 @@ export doublePendulumMovie
 #                                     Time series distributions                                    #
 # ------------------------------------------------------------------------------------------------ #
 @shorthands tsdensity
-@recipe function f(::Type{Val{:tsdensity}}, plt::AbstractPlot; colordensity=false, densityoffset=0)
+@recipe function f(::Type{Val{:tsdensity}}, plt::AbstractPlot; colordensity=false)
     x, y = plotattributes[:x], plotattributes[:y]
     i = isfinite.(x) .& isfinite.(y)
     x, y = x[i], y[i]
@@ -235,3 +254,130 @@ export tsdensity
 end
 tscolordensity(P::Process; vars=1, kwargs...) = tscolordensity(timeseries(P, vars); kwargs...)
 export tscolordensity
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                Plot 2D trajectory with time series                               #
+# ------------------------------------------------------------------------------------------------ #
+@shorthands marginaltrajectory2
+@recipe function f(::Type{Val{:marginaltrajectory2}}, plt::AbstractPlot;)
+    x, y = plotattributes[:x], plotattributes[:y]
+    i = isfinite.(x) .& isfinite.(y)
+    x, y = x[i], y[i]
+    xlims, ylims = (extrema(x), extrema(y))
+    top_margin --> 20Plots.mm
+    right_margin --> 20Plots.mm
+    legend --> :none
+    framestyle --> :box
+
+    @series begin
+        seriestype := :path
+        seriescolor --> :black
+        xlims --> xlims
+        ylims --> ylims
+        x := x
+        y := y
+    end
+
+    inset_subplots := [(1, bbox(0.0, -0.1, 1.0, 0.1)), (1, bbox(1.0, 0.0, 0.1, 1.0))]
+    @series begin
+        seriestype := :path
+        seriescolor --> :black
+        ticks := nothing
+        subplot := 2
+        framestyle := :none
+        x := 1:length(y)
+        y := y
+    end
+
+    @series begin
+        seriestype := :path
+        seriescolor --> :black
+        ticks := nothing
+        subplot := 3
+        framestyle := :none
+        y := length(x):-1:1
+        x := x
+    end
+end
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                Plot 3D trajectory with time series                               #
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                         Decide: 2D or 3D                                         #
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                              Plot 3D trajectory with phase portraits                             #
+# ------------------------------------------------------------------------------------------------ #
+
+function set_pane_color(color=(0, 0, 0), ax=PyPlot.gca())
+    PyPlot.svg(true)
+    ax.xaxis.set_pane_color(color)
+    ax.yaxis.set_pane_color(color)
+    ax.zaxis.set_pane_color(color)
+    f = PyPlot.gcf()
+end
+
+@shorthands marginaltrajectory3
+@recipe function f(::Type{Val{:marginaltrajectory3}}, plt::AbstractPlot; buffer=0.3, linewidth=1.0)
+    x, y, z = plotattributes[:x], plotattributes[:y], plotattributes[:z]
+    i = isfinite.(x) .& isfinite.(y) .& isfinite.(z)
+    x, y, z= x[i], y[i], z[i]
+    if all(haskey.((plotattributes,), (:xlims, :ylims, :zlims)))
+        xlims, ylims, zlims = plotattributes[:xlims], plotattributes[:ylims], plotattributes[:zlims]
+    else
+        xlims, ylims , zlims = widen.([extrema(x), extrema(y), extrema(z)], (buffer,))
+    end
+    legend --> :none
+    xlims --> xlims
+    ylims --> ylims
+    zlims --> zlims
+    seriescolor --> :black
+
+    @series begin
+        seriestype := :path
+        #linecolor := :gray
+        linealpha := 0.1
+        linewidth := 0.5*linewidth
+        x := fill(xlims[1], length(x))
+        y := y
+        z := z
+    end
+
+    @series begin
+        seriestype := :path
+        #linecolor := :gray
+        linealpha := 0.1
+        linewidth := 0.5*linewidth
+        x := x
+        y := fill(ylims[2], length(y))
+        z := z
+    end
+
+    @series begin
+        seriestype := :path
+        linealpha := 0.1
+        linewidth := 0.5*linewidth
+        x := x
+        y := y
+        z := fill(zlims[1], length(z))
+    end
+
+    @series begin
+        seriestype := :path
+        linecolor --> :black
+        linewidth --> linewidth
+        x := x
+        y := y
+        z := z
+    end
+
+end
