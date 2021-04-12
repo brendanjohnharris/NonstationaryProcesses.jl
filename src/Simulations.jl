@@ -2,7 +2,6 @@
 #                                   A list of default simulations                                  #
 # ------------------------------------------------------------------------------------------------ #
 
-
 vanderpolSim = Process(
     process = vanderpol,
     X0 = [1.0, 1.0],
@@ -60,11 +59,11 @@ noisyShiftyScalySineSim = Process(
     process = noisyShiftyScalySine,
     X0 = [0.0],
     parameter_profile = (constantParameter, constantParameter, ramp), # (η, C, A)
-    parameter_profile_parameters = ((0.1), (1.0,), (0.0005, 1.0, 0.0)),
+    parameter_profile_parameters = ((0.1), (1.0,), (0.001, 1.0, 0.0)),
     transient_t0 = 0.0,
     t0 = 0.0,
-    dt = 0.01,
-    savedt = 0.01,
+    dt = 0.1,
+    savedt = 0.1,
     tmax = 1000.0,
     alg = nothing,
     solver_opts=Dict())
@@ -198,6 +197,17 @@ gaussianBimodalSim = Process(
 export gaussianBimodalSim
 
 
+bimodalSwitchingSim = Process(
+    process = bimodalSwitching,
+    parameter_profile = (constantParameter, constantParameter),
+    parameter_profile_parameters = ((0.5,), (10.0)),
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    savedt = 1,
+    tmax = 1000.0)
+export bimodalSwitchingSim
+
+
 shiftyNoiseSim = Process(
     process = shiftyNoise,
     parameter_profile = (constantParameter, stepNoise),
@@ -218,3 +228,33 @@ fmWaveSim = Process(
     savedt = 0.01,
     tmax = 100.0)
 export fmWaveSim
+
+
+simplestChaoticFlowSim = Process(
+    process = simplestChaoticFlow,
+    X0 = [0.05, 0.05, 0.05], # As in Sprott's paper
+    parameter_profile = ramp,
+    parameter_profile_parameters = (2.02, 2.07, 0.0, 5000.0),
+    # Parameters should only be between ~2.018 and ~2.082 (otherwise, unbounded)
+    # Range can be different when parameters are time varying
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.0001,
+    savedt = 0.1,
+    tmax = 5000.0,
+    alg = AutoVern7(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-10))
+export simplestChaoticFlowSim
+
+
+
+arSim = Process(
+    process = AR,
+    X0 = [0.0], # Number of initial conditions should really be 1 + num. of parameters, but if you do not specify they default to 0.0
+    parameter_profile = (constant, constant, constant, constant),
+    parameter_profile_parameters = ((0.5,), (0.5,), (0.5,), (0.5,)),
+    t0 = 0,
+    dt = 1,
+    savedt = 1,
+    tmax = 5000)
+export arSim
