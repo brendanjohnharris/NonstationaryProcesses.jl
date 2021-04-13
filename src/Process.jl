@@ -131,10 +131,14 @@ parameter_function(P::Process) = tuplef2ftuple(P.parameter_profile, P.parameter_
 export parameter_function
 
 function parameter_functions(P::Process)
-    if typeof(P.parameter_profile) <: Union{Tuple, Vector}
-        [P.parameter_profile[x](P.parameter_profile_parameters[x]...) for x in 1:length(P.parameter_profile)]
+    if all(isempty.(getps(P)))
+        getprofiles(P)
     else
-        P.parameter_profile(P.parameter_profile_parameters...)
+        if typeof(P.parameter_profile) <: Union{Tuple, Vector}
+            [P.parameter_profile[x](P.parameter_profile_parameters[x]...) for x in 1:length(P.parameter_profile)]
+        else
+            P.parameter_profile(P.parameter_profile_parameters...)
+        end
     end
 end
 export parameter_functions
@@ -150,7 +154,7 @@ function parameterseries(P::Process; p=nothing, kwargs...)
         return ps[p, :]
     end
 end
-export parameters
+export parameterseries
 
 # Access the fields of a process with functions
 for field ∈ keys(process_aliases)

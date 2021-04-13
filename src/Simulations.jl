@@ -58,8 +58,8 @@ export noisySineSim
 noisyShiftyScalySineSim = Process(
     process = noisyShiftyScalySine,
     X0 = [0.0],
-    parameter_profile = (constantParameter, constantParameter, ramp), # (η, C, A)
-    parameter_profile_parameters = ((0.1), (1.0,), (0.001, 1.0, 0.0)),
+    parameter_profile = (ramp, constantParameter, constantParameter), # (η, C, A)
+    parameter_profile_parameters = ((0.001, 2.0, 0.0), (1.0,), (1.0,)),
     transient_t0 = 0.0,
     t0 = 0.0,
     dt = 0.1,
