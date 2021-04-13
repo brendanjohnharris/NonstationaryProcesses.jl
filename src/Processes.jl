@@ -24,6 +24,15 @@ end
 
 function tuplef2ftuple(f, params)
     # turn a tuple of functions into a function of tuples
+    if all(isempty.(params)) # The f's are just functions on their own, no need to add parameters
+        # Be warned that you can't mix these; either use all parameter functions, or all standard functions. Don't be greedy.
+        if typeof(f) <: Tuple
+            pp(t) = [x(t) for x in f]
+        else
+            pp = f
+        end
+        return pp
+    end
     if typeof(f) <: Tuple
         ps = Vector{Function}(undef, length(f))
         for i = 1:length(f)
