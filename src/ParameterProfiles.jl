@@ -99,6 +99,14 @@ function ramp(p1::Real, p2::Real, t1::Real, t2::Real)
 end
 export ramp
 
+function rampInterval(p1::Real, p2::Real, t1::Real, t2::Real)
+    r = ramp(p1, p2, t1, t2)
+    b = unitBump((t1, t2), 0, 1)
+    s = unitStep(t2, 0, p2)
+    return r*b + s
+end
+export rampInterval
+
 
 function sineWave(period::Real=1, amplitude::Real=1, t0::Real=0, baseline::Real=5*amplitude)
     x -> amplitude.*sin.((2π/period).*(x.-t0)) + baseline

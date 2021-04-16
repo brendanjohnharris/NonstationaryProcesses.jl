@@ -200,7 +200,7 @@ export gaussianBimodalSim
 bimodalSwitchingSim = Process(
     process = bimodalSwitching,
     parameter_profile = (constantParameter, constantParameter),
-    parameter_profile_parameters = ((0.5,), (10.0)),
+    parameter_profile_parameters = ((0.9,), (10.0)),
     transient_t0 = 0.0,
     t0 = 0.0,
     savedt = 1,

@@ -3,6 +3,7 @@ import Base.:+
 import Base.:-
 import Base.:*
 import Base.:/
+import Base.:^
 
 """
      Discontinuous
@@ -13,63 +14,18 @@ struct Discontinuous <: Function # Can probably turn into a 'functor'
     f::Function
     d::Set
 end
-# These can be turned into macros later?
-function +(D1::Discontinuous, D2::Discontinuous)
-    f(x) = D1.f(x) + D2.f(x) # Assume f only has one parameter. Maybe can add this as a restriction later
-    d = union(D1.d, D2.d)
-    D = Discontinuous(f, d)
-end
-function -(D1::Discontinuous, D2::Discontinuous)
-    f(x) = D1.f(x) - D2.f(x)
-    d = union(D1.d, D2.d)
-    D = Discontinuous(f, d)
-end
-function *(D1::Discontinuous, D2::Discontinuous)
-    f(x) = D1.f(x)*D2.f(x)
-    d = union(D1.d, D2.d)
-    D = Discontinuous(f, d)
-end
-function /(D1::Discontinuous, D2::Discontinuous)
-    f(x) = D1.f(x)/D2.f(x)
-    d = union(D1.d, D2.d)
-    D = Discontinuous(f, d)
+
+arithmetics = (:+, :-, :*, :/, :^)
+for a ∈ arithmetics
+    eval(quote
+        ($a)(c::Real, D1::Discontinuous) = Discontinuous(x -> ($a)(c, D1.f(x)), D1.d)
+        ($a)(D1::Discontinuous, c::Real, ) = Discontinuous(x -> ($a)(D1.f(x), c), D1.d)
+        ($a)(D1::Discontinuous, D2::Discontinuous) = Discontinuous((x...) -> ($a)(D1.f(x...), D2.f(x...)), union(D1.d, D2.d))
+        ($a)(f::Function, D::Discontinuous) = Discontinuous((x...) -> ($a)(f(x...), D.f(x...)), D.d)
+        ($a)(D::Discontinuous, f::Function) = Discontinuous((x...) -> ($a)(D.f(x...), f(x...)), D.d)
+    end)
 end
 
-# These functions all leave the discontinuity indices unchanged
-function +(D1::Discontinuous, c::Real)
-    g(x) = D1.f(x) + c
-    D = Discontinuous(g, D1.d)
-end
-function -(D1::Discontinuous, c::Real)
-    g(x) = D1.f(x) - c
-    D = Discontinuous(g, D1.d)
-end
-function *(D1::Discontinuous, c::Real)
-    g(x) = D1.f(x)*c
-    D = Discontinuous(g, D1.d)
-end
-function /(D1::Discontinuous, c::Real)
-    g(x) = D1.f(x)/c
-    D = Discontinuous(g, D1.d)
-end
-
-# Maybe these aren't necessary
-function +(c::Real, D1::Discontinuous)
-    g(x) = D1.f(x)+c
-    D = Discontinuous(g, D1.d)
-end
-function -(c::Real, D1::Discontinuous)
-    g(x) = D1.f(x)-c
-    D = Discontinuous(g, D1.d)
-end
-function *(c::Real, D1::Discontinuous)
-    g(x) = D1.f(x)*c
-    D = Discontinuous(g, D1.d)
-end
-function /(c::Real, D1::Discontinuous)
-    g(x) = D1.f(x)/c
-    D = Discontinuous(g, D1.d)
-end
 
 
 # Overload call so that you can use a Discontinuous like a normal (vectorised) function, if you want
