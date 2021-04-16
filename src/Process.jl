@@ -1,4 +1,5 @@
 using DimensionalData
+using DelimitedFiles
 # How best to structure the I/O format and system definitions...
 
 Base.@kwdef mutable struct Process # Not ensemble
@@ -15,7 +16,7 @@ Base.@kwdef mutable struct Process # Not ensemble
     solver_opts::Dict = Dict(:adaptive=>false)
     #parameter_rng::UInt64 = seed()
     solver_rng::UInt64 = seed()
-    inventory_id::UInt64 = abs(rand(UInt64, 1)[1]) # Just a unique number for this simulation
+    id::UInt64 = abs(rand(UInt64, 1)[1]) # Just a unique number for this simulation
     solution = nothing
 end
 function (P::Process)(;kwargs...) # Cleaner way to do this with constructors???
@@ -51,7 +52,7 @@ process_aliases = Dict(
     :alg =>                         [:algorithm, :solver],
     :solver_opts =>                 [:opts, :solopts, :sol_opts, :solveropts],
     :solver_rng =>                  [:rng, :rngseed, :rng_seed, :solverrng],
-    :inventory_id =>                [:id, :identifier],
+    :id =>                          [:identifier, :inventory_id],
     :solution =>                    [:sol, :result, :output]
 )
 function repalias!(D, aliai::Dict)
@@ -69,6 +70,7 @@ end
 # ------------------------------------------------------------------------------------------------ #
 function solution!(P::Process) # vars::Tuple=Tuple(1:size(P.X0)[1])
     if isnothing(P.solution)
+        println("Solving for process $(getprocess(P)) ($(getid(p)))")
         P.solution = P.process(P)
     end
     x = P.solution
@@ -96,8 +98,8 @@ function timeseries(s::AbstractArray, dim::Union{Vector, UnitRange, Real}=1:size
         s[:, dim]
     end
 end
-function timeseries(P::Process, args...; transient::Bool=false)
-    x = timeseries(solution!(P), args...)
+function timeseries!(P::Process, dim=1:length(getX0(P)); transient::Bool=false)
+    x = timeseries(solution!(P), dim)
     if transient
         idxs = 1:length(times(P, transient=true))
     else
@@ -175,5 +177,35 @@ function forcevec(x)
         x = [x]
     else
         x
+    end
+end
+
+function trimTransient!(P::Process)
+    if !isempty(P.solution)
+        P.solution = timeseries(P, transient=false)
+    end
+    P.transient_t0 = P.t0
+    return P
+end
+
+function saveTimeseries(P::Process, folder::String="./", delim::Char=','; transient::Bool=true)
+    X = timeseries(P, transient=transient)
+    if !transient
+        P = trimTransient!(P)
+    end
+    filename = folder*string(getprocess(P))*"_"*string(getid(P))*".csv"
+    writedlm(filename, X, delim)
+end
+export saveTimeseries
+
+function timeseries(P::Process, dim=1:length(getX0(P)); folder::String="./", kwargs...)
+    filename = filter(x->occursin(string(getid(P)), x), readdir(folder))
+    if isempty(filename) || !isnothing(getsolution(P))
+        return timeseries!(P, dim; kwargs...)
+    else
+        filename = filename[1]
+        println("Loading time-series data from $filename")
+        P.solution = readdlm(filename, ',', Float64)
+        return timeseries!(P, dim; kwargs...)
     end
 end
