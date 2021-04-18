@@ -1,5 +1,6 @@
 using DimensionalData
 using DelimitedFiles
+using Dates
 # How best to structure the I/O format and system definitions...
 
 Base.@kwdef mutable struct Process # Not ensemble
@@ -15,9 +16,16 @@ Base.@kwdef mutable struct Process # Not ensemble
     alg::Union{SciMLBase.SciMLAlgorithm, Nothing} = nothing
     solver_opts::Dict = Dict(:adaptive=>false)
     #parameter_rng::UInt64 = seed()
-    solver_rng::UInt64 = seed()
-    id::UInt64 = abs(rand(Int64, 1)[1]) # Just a unique number for this simulation
+    solver_rng::Int64 = seed()
+    id::Int64 = abs(rand(Int64)) # Just a unique number for this simulation
+    date::String = string(Dates.now())
     solution = nothing
+end
+function Process(D::Dict)
+    D[:process] = eval(Meta.parse(D[:process]))
+    D[:parameter_profile] = eval(Meta.parse(D[:parameter_profile]))
+    D[:alg] = eval(Meta.parse(D[:alg]))
+    Process(;D...)
 end
 function (P::Process)(;kwargs...)
     # Can use field aliases here
@@ -27,7 +35,9 @@ function (P::Process)(;kwargs...)
     P2 = deepcopy(P)
     [setfield!(P2, x, y) for (x, y) in kwargs]
     setfield!(P2, :solution, nothing) # You've changed some parameters, so the solution is no longer valid
+    setfield!(P2, :id, abs(rand(Int64))) # New id, yeah?
     setfield!(P2, :solver_rng, seed()) # New random seed, yeah?
+    setfield!(P2, :date, string(Dates.now())) # New datetime, yeah?
     return P2
 end
 export Process
@@ -53,6 +63,7 @@ process_aliases = Dict(
     :solver_opts =>                 [:opts, :solopts, :sol_opts, :solveropts],
     :solver_rng =>                  [:rng, :rngseed, :rng_seed, :solverrng],
     :id =>                          [:identifier, :inventory_id],
+    :date =>                        [:time, :datetime],
     :solution =>                    [:sol, :result, :output]
 )
 function repalias!(D, aliai::Dict)
@@ -70,7 +81,7 @@ end
 # ------------------------------------------------------------------------------------------------ #
 function solution!(P::Process) # vars::Tuple=Tuple(1:size(P.X0)[1])
     if isnothing(P.solution)
-        println("Solving for process $(getprocess(P)) ($(getid(p)))")
+        @info "Solving for process $(getprocess(P)) ($(getid(P)))"
         P.solution = P.process(P)
     end
     x = P.solution
@@ -180,7 +191,7 @@ function forcevec(x)
     end
 end
 
-function trimTransient!(P::Process)
+function trimtransient(P::Process)
     if !isempty(P.solution)
         P.solution = timeseries(P, transient=false)
     end
@@ -188,24 +199,38 @@ function trimTransient!(P::Process)
     return P
 end
 
-function saveTimeseries(P::Process, folder::String="./", delim::Char=','; transient::Bool=true)
+function saveTimeseries!(P::Process, folder::String="./", delim::Char=','; transient::Bool=true, fileroot="timeseries")
     X = timeseries(P, transient=transient)
     if !transient
-        P = trimTransient!(P)
+        P = trimtransient(P)
     end
-    filename = folder*string(getprocess(P))*"_"*string(getid(P))*".csv"
+    filename = joinpath(folder, fileroot*"_"*string(getid(P))*".csv")
+    P.solution = abspath(folder)
+    #P.solution = nothing
+    @info "Saving time-series data to $filename"
     writedlm(filename, X, delim)
 end
-export saveTimeseries
+export saveTimeseries!
 
-function timeseries(P::Process, dim=1:length(getX0(P)); folder::String="./", kwargs...)
-    filename = filter(x->occursin(string(getid(P)), x), readdir(folder))
-    if isempty(filename) || !isnothing(getsolution(P))
-        return timeseries!(P, dim; kwargs...)
+function timeseries(P::Process, dim=1:length(getX0(P)); folder::Union{String, Bool}=(typeof(getsolution(P)) <: String), kwargs...)
+    if typeof(folder) <: Bool && folder
+        if typeof(getsolution(P)) <: String
+            folder = getsolution(P)
+        else
+            folder = "./"
+        end
+    end
+    if typeof(folder) <: String
+        filename = filter(x->occursin("timeseries_"*string(getid(P)), x), readdir(folder))
     else
-        filename = filename[1]
-        println("Loading time-series data from $filename")
-        P.solution = readdlm(filename, ',', Float64)
         return timeseries!(P, dim; kwargs...)
     end
+    if isempty(filename)
+        return timeseries!(P, dim; kwargs...)
+    end
+    filename = filename[1]
+    @info "Loading time-series data from $filename"
+    filename = joinpath(folder, filename)
+    P.solution = readdlm(filename, ',', Float64)
+    return timeseries!(P, dim; kwargs...)
 end
