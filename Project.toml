@@ -4,6 +4,7 @@ authors = ["brendanjohnharris <brendanjohnharris@gmail.com> and contributors"]
 version = "0.1.0"
 
 [deps]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
