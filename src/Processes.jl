@@ -4,10 +4,10 @@ using LaTeXStrings
 
 function seed(theSeed=nothing) # Seed the rng, but return the seed. If no, nothing or NaN argument, randomly seed rng
     if isnothing(theSeed)
-        Random.rand(Random.seed!(), UInt64)
-    else
-        Random.rand(Random.seed!(theSeed), UInt64)
+        theSeed = abs(Random.rand(Int64))
     end
+    Random.seed!(theSeed)
+    return theSeed
 end
 
 # ------------------------------------------------------------------------------------------------ #

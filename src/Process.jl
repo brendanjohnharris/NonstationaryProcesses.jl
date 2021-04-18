@@ -16,10 +16,10 @@ Base.@kwdef mutable struct Process # Not ensemble
     solver_opts::Dict = Dict(:adaptive=>false)
     #parameter_rng::UInt64 = seed()
     solver_rng::UInt64 = seed()
-    id::UInt64 = abs(rand(UInt64, 1)[1]) # Just a unique number for this simulation
+    id::UInt64 = abs(rand(Int64, 1)[1]) # Just a unique number for this simulation
     solution = nothing
 end
-function (P::Process)(;kwargs...) # Cleaner way to do this with constructors???
+function (P::Process)(;kwargs...)
     # Can use field aliases here
     kwargs = Dict(kwargs)
     repalias!(kwargs, process_aliases)
