@@ -234,16 +234,16 @@ simplestChaoticFlowSim = Process(
     process = simplestChaoticFlow,
     X0 = [0.05, 0.05, 0.05], # As in Sprott's paper
     parameter_profile = ramp,
-    parameter_profile_parameters = (2.02, 2.07, 0.0, 5000.0),
+    parameter_profile_parameters = (2.02, 2.07, 0.0, 10000.0),
     # Parameters should only be between ~2.018 and ~2.082 (otherwise, unbounded)
     # Range can be different when parameters are time varying
     transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.0001,
-    savedt = 0.1,
-    tmax = 5000.0,
-    alg = AutoVern7(Rodas5()),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-10))
+    savedt = 0.5,
+    tmax = 10000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => false))
 export simplestChaoticFlowSim
 
 

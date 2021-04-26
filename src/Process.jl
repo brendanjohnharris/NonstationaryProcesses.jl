@@ -22,9 +22,11 @@ Base.@kwdef mutable struct Process # Not ensemble
     solution = nothing
 end
 function Process(D::Dict)
-    D[:process] = eval(Meta.parse(D[:process]))
-    D[:parameter_profile] = eval(Meta.parse(D[:parameter_profile]))
-    D[:alg] = eval(Meta.parse(D[:alg]))
+    for s ∈ setdiff(keys(D), (:date, :solution))
+        if typeof(D[s]) <: String
+            D[s] = eval(Meta.parse(D[s]))
+        end
+    end
     Process(;D...)
 end
 function (P::Process)(;kwargs...)
@@ -190,6 +192,15 @@ function forcevec(x)
         x
     end
 end
+export forcevec
+
+function forcemat(x)
+    if typeof(x) <: AbstractVector
+        x = reshape(x, :, 1)
+    end
+    return x
+end
+export forcemat
 
 function trimtransient(P::Process)
     if !isempty(P.solution)
