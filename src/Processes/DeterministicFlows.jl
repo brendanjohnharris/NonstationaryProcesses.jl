@@ -52,6 +52,30 @@ end
 
 
 # ------------------------------------------------------------------------------------------------ #
+#                                        Harmonic Oscillator                                       #
+# ------------------------------------------------------------------------------------------------ #
+
+@inline @inbounds function pitchfork(x::Vector, p::Function, t::Real)
+    (μ, α) = p(t)
+    dx = μ*x[1] + α*x[1]^3
+    return [dx]
+end
+
+@inline @inbounds function pitchfork_J(x::Vector, p::Function, t::Real)
+    (μ, α) = p(t)
+    J = [μ + 3α*x[1]^2]
+end
+
+function pitchfork(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=pitchfork_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
 #                                     Skewed Harmonic Oscillator                                   #
 # ------------------------------------------------------------------------------------------------ #
 

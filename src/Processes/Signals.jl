@@ -6,10 +6,6 @@ function fmWave(P::Process)
     T = P.transient_t0:P.savedt:P.tmax
     p = parameter_functions(P)
     Δ𝑓 = 1.0
-    # Δ𝑓 = 1/(2*abs(.-(extrema(p.(T))...)))
-    # if isinf(Δ𝑓)
-    #     Δ𝑓 = 0.0
-    # end
     sol = zeros(size(T))
     pint = 0.0
     for i ∈ 2:lastindex(T)
