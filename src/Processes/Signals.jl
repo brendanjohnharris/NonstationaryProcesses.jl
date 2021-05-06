@@ -1,4 +1,3 @@
-using QuadGK
 # ------------------------------------------------------------------------------------------------ #
 #                                           FM Signal                                              #
 # ------------------------------------------------------------------------------------------------ #
@@ -11,7 +10,14 @@ function fmWave(P::Process)
     # if isinf(Δ𝑓)
     #     Δ𝑓 = 0.0
     # end
-    sol = [cos(2π*(t + Δ𝑓*(quadgk(p, 0.0, t, rtol=1e-8))[1])) for t in T] # Probably a more efficient way to integrate, but this will do for now
+    sol = zeros(size(T))
+    pint = 0.0
+    for i ∈ 2:lastindex(T)
+        t = T[i]
+        pint += (p(t-P.savedt) + p(t))*P.savedt/2 # Crude integration, should be fine
+        sol[i] = cos(2π*(t + Δ𝑓*pint))
+    end
+    return sol
 end
 
 
