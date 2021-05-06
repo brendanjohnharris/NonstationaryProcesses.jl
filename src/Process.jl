@@ -186,7 +186,7 @@ for field ∈ keys(process_aliases)
 end
 
 function forcevec(x)
-    if !(typeof(x) <: AbstractArray)
+    if !(typeof(x) <: Union{AbstractArray, Tuple})
         x = [x]
     else
         x

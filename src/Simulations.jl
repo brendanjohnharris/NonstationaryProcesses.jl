@@ -258,3 +258,19 @@ arSim = Process(
     savedt = 1,
     tmax = 5000)
 export arSim
+
+
+
+pitchforkSim = Process(
+    process = pitchfork,
+    X0 = [0.01],
+    parameter_profile = (constantParameter, constantParameter),
+    parameter_profile_parameters = (1.0, -1.0),# Supercritical by default
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.01,
+    savedt = 0.05,
+    tmax = 1000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => false))
+export pitchforkSim
