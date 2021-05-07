@@ -327,7 +327,7 @@ function set_pane_color(color=(0, 0, 0), ax=PyPlot.gca())
 end
 
 @shorthands marginaltrajectory3
-@recipe function f(::Type{Val{:marginaltrajectory3}}, plt::AbstractPlot; buffer=0.3, linewidth=1.0)
+@recipe function f(::Type{Val{:marginaltrajectory3}}, plt::AbstractPlot; buffer=0.3, linewidth=1.0, colormethod=nothing, marginalcolor=nothing)
     x, y, z = plotattributes[:x], plotattributes[:y], plotattributes[:z]
     i = isfinite.(x) .& isfinite.(y) .& isfinite.(z)
     x, y, z= x[i], y[i], z[i]
@@ -340,11 +340,23 @@ end
     xlims --> xlims
     ylims --> ylims
     zlims --> zlims
-    seriescolor --> :black
+
+    if colormethod == :velocity
+        velocity = sqrt.(sum([(r[2:end] .- collect(r[1:end-1])).^2 for r ∈ [x, y, z]], dims=1)[1])
+    elseif !isnothing(colormethod) && colormethod != :none
+        @error "Not a supported colormethod"
+    end
+    if isnothing(marginalcolor) && !isnothing(colormethod) && colormethod != :none
+        line_z := velocity
+    end
 
     @series begin
         seriestype := :path
-        #linecolor := :gray
+        if !isnothing(marginalcolor)
+            linecolor := marginalcolor
+        else
+            linecolor --> :black
+        end
         linealpha := 0.1
         linewidth := 0.5*linewidth
         x := fill(xlims[1], length(x))
@@ -354,7 +366,11 @@ end
 
     @series begin
         seriestype := :path
-        #linecolor := :gray
+        if !isnothing(marginalcolor)
+            linecolor := marginalcolor
+        else
+            linecolor --> :black
+        end
         linealpha := 0.1
         linewidth := 0.5*linewidth
         x := x
@@ -364,6 +380,11 @@ end
 
     @series begin
         seriestype := :path
+        if !isnothing(marginalcolor)
+            linecolor := marginalcolor
+        else
+            linecolor --> :black
+        end
         linealpha := 0.1
         linewidth := 0.5*linewidth
         x := x
@@ -373,7 +394,10 @@ end
 
     @series begin
         seriestype := :path
-        linecolor --> :black
+        if !isnothing(colormethod) && colormethod != :none
+            line_z := velocity
+        end
+        linealpha := 0.75
         linewidth --> linewidth
         x := x
         y := y
