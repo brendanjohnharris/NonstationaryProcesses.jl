@@ -116,3 +116,28 @@ end
 
 
 
+# ------------------------------------------------------------------------------------------------ #
+#                              Thomas' cyclically symmetric attractor                              #
+# ------------------------------------------------------------------------------------------------ #
+# From Sprott, or https://doi.org/10.1142/S0218127499001383
+
+@inline @inbounds function thomasCyclicallySymmetric(X::AbstractArray, 𝑏::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    𝑥̇ = -𝑏(𝑡)*𝑥 + sin(𝑦)
+    𝑦̇ = -𝑏(𝑡)*𝑦 + sin(𝑧)
+    𝑧̇ = -𝑏(𝑡)*𝑧 + sin(𝑥)
+    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+end
+
+@inline @inbounds function thomasCyclicallySymmetric_J(X::AbstractArray, 𝑏::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    J = @SMatrix [  -𝑏(𝑡)   cos(𝑦)   0.0;
+                    0.0     -𝑏(𝑡)    cos(𝑧);
+                    cos(𝑥)  0.0      -𝑏(𝑡)]
+end
+
+function thomasCyclicallySymmetric(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=thomasCyclicallySymmetric_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+end
