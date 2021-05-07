@@ -33,10 +33,10 @@ end
 (D::Discontinuous)(x::Union{Array, StepRange, StepRangeLen}) = D.f.(x)
 
 
-function Plots.plot(xr, D::Discontinuous, args...)
-    Plots.plot(xr, D(xr), args...)
+function Plots.plot(xr, D::Discontinuous, args...; kwargs...)
+    Plots.plot(xr, D(xr), args...; kwargs...)
 end
-function Plots.plot(D::Discontinuous, args...)
+function Plots.plot(D::Discontinuous, args...) # Actually this can be a recipe?
     xr = extrema(collect(D.d))
     scale = abs(-(xr...))
     if scale == 0.0
