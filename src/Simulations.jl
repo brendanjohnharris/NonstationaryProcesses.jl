@@ -274,3 +274,18 @@ pitchforkSim = Process(
     alg = RK4(),
     solver_opts = Dict(:adaptive => false))
 export pitchforkSim
+
+
+thomasCyclicallySymmetricSim = Process(
+    process = thomasCyclicallySymmetric,
+    X0 = [0.5, 0.0, 0.0],
+    parameter_profile = constantParameter,
+    parameter_profile_parameters = (0.22,),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.05,
+    tmax = 1000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => true))
+export thomasCyclicallySymmetricSim
