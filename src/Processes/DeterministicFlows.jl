@@ -25,6 +25,18 @@ end
 #     end
 # end
 
+vanderpolSim = Process(
+    process = vanderpol,
+    X0 = [1.0, 1.0],
+    parameter_profile = unitStep,
+    parameter_profile_parameters = (1000.0, 0.0, 20.0), # (threshold, baseline, stepHeight)
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.1,
+    tmax = 2000.0,
+    alg = RK4()) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ
+export vanderpolSim
 
 
 
@@ -48,11 +60,24 @@ function harmonic(P::Process)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
+harmonicSim = Process(
+    process = harmonic,
+    X0 = [1.0, 0.0],
+    parameter_profile = unitStep,
+    parameter_profile_parameters = (50.0, 2π, 4π), # (threshold, baseline, stepHeight)
+    transient_t0 = -10.0,
+    t0 = 0.0,
+    dt = 0.0001,
+    savedt = 0.001,
+    tmax = 100.0,
+    alg = RK4())
+export harmonicSim
+
 
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                        Harmonic Oscillator                                       #
+#                         Normal form for a pitchfork bifurcation                                  #
 # ------------------------------------------------------------------------------------------------ #
 
 @inline @inbounds function pitchfork(x::Vector, p::Function, t::Real)
@@ -72,6 +97,19 @@ function pitchfork(P::Process)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
+pitchforkSim = Process(
+    process = pitchfork,
+    X0 = [0.01],
+    parameter_profile = (constantParameter, constantParameter),
+    parameter_profile_parameters = (1.0, -1.0),# Supercritical by default
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.01,
+    savedt = 0.05,
+    tmax = 1000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => false))
+export pitchforkSim
 
 
 
@@ -96,4 +134,17 @@ end
 #     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=skewedHarmonic_J)
 #     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 # end
+
+# skewedHarmonicSim = Process(
+#     process = skewedHarmonic,
+#     X0 = [1.0, 0.0],
+#     parameter_profile = (constantParameter, constantParameter),
+#     parameter_profile_parameters = ((1.0π,), (10.0,)), # (threshold, baseline, stepHeight)
+#     transient_t0 = -10.0,
+#     t0 = 0.0,
+#     dt = 0.0001,
+#     savedt = 0.001,
+#     tmax = 100.0,
+#     alg = RK4())
+# export skewedHarmonicSim
 

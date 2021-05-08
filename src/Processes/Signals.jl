@@ -16,6 +16,15 @@ function fmWave(P::Process)
     return sol
 end
 
+fmWaveSim = Process(
+    process = fmWave,
+    parameter_profile = (stepNoise),
+    parameter_profile_parameters = ((0.0, 100.0), 10.0, 0.5, 0.0),
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    savedt = 0.01,
+    tmax = 100.0)
+export fmWaveSim
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -25,6 +34,19 @@ function noisySine(P::Process)
     seed(P.solver_rng)
     sol = [sin(t) + parameter_function(P)(t)*randn() for t in P.transient_t0:P.savedt:P.tmax]
 end
+
+noisySineSim = Process(
+    process = noisySine,
+    X0 = [0.0],
+    parameter_profile = unitStep,
+    parameter_profile_parameters = (100.0, 0.0, 0.1), # (threshold, baseline, stepHeight)
+    transient_t0 = -10.0,
+    dt = 0.01,
+    savedt = 0.01,
+    tmax = 200.0,
+    alg = nothing,
+    solver_opts=Dict())
+export noisySineSim
 
 
 
@@ -45,3 +67,30 @@ function shcalySine(P::Process)
     sol = [A(t)*(sin(t) + 1.0*randn() + 1.0) for t in P.transient_t0:P.savedt:P.tmax]
 end
 
+noisyShiftyScalySineSim = Process(
+    process = noisyShiftyScalySine,
+    X0 = [0.0],
+    parameter_profile = (ramp, constantParameter, constantParameter), # (η, C, A)
+    parameter_profile_parameters = ((0.001, 2.0, 0.0), (1.0,), (1.0,)),
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    dt = 0.1,
+    savedt = 0.1,
+    tmax = 1000.0,
+    alg = nothing,
+    solver_opts=Dict())
+export noisyShiftyScalySineSim
+
+shcalySineSim = Process(
+    process = shcalySine,
+    X0 = [0.0],
+    parameter_profile = ramp, # (η, C, A)
+    parameter_profile_parameters = (0.001, 1.0, 0.0),
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    dt = 0.01,
+    savedt = 0.01,
+    tmax = 1000.0,
+    alg = nothing,
+    solver_opts=Dict())
+export shcalySineSim

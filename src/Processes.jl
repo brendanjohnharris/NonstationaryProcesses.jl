@@ -1,6 +1,4 @@
 using LaTeXStrings
-# A list of process EOM's, Jacobians and simulators (a simulator is a just a function that wraps up parameters for automation)
-
 
 function seed(theSeed=nothing) # Seed the rng, but return the seed. If no, nothing or NaN argument, randomly seed rng
     if isnothing(theSeed)

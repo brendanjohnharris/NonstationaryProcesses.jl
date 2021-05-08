@@ -18,3 +18,16 @@ function henon(P::Process)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=henon_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
+
+henonSim = Process(
+    process = henon,
+    X0 = [0.0, 0.0],
+    parameter_profile = (unitStep, constantParameter),
+    parameter_profile_parameters = ((1000, 1.4, -0.4), (0.3,)), # (threshold, baseline, stepHeight)
+    transient_t0 = 0,
+    t0 = 0,
+    dt = 1,
+    savedt = 1,
+    tmax = 2000,
+    alg = FunctionMap()) # The only discrete solver, pretty much
+export henonSim
