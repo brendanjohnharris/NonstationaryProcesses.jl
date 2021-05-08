@@ -263,7 +263,7 @@ thomasCyclicallySymmetricArt = Process(
     savedt = 0.05,
     tmax = 5000.0,
     alg = RadauIIA3(),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-8))
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
 export thomasCyclicallySymmetricArt
 
 
@@ -323,8 +323,8 @@ doubleScrollArt = Process(
     dt = 0.001,
     savedt = 0.01,
     tmax = 5000.0,
-    alg = RK4(),
-    solver_opts = Dict(:adaptive => true))
+    alg = AutoVern7(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
 export doubleScrollArt
 
 
@@ -377,8 +377,8 @@ diffusionlessLorenzArt = Process(
     dt = 0.001,
     savedt = 0.01,
     tmax = 5000.0,
-    alg = RK4(),
-    solver_opts = Dict(:adaptive => true))
+    alg = AutoVern7(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
 export diffusionlessLorenzArt
 
 
@@ -437,6 +437,66 @@ piecewiseLinearHyperchaosArt = Process(
     dt = 0.001,
     savedt = 0.01,
     tmax = 5000.0,
-    alg = RK4(),
-    solver_opts = Dict(:adaptive => true))
+    alg = AutoVern7(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
 export piecewiseLinearHyperchaosArt
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                        simplifiedLorenz4D                                        #
+# ------------------------------------------------------------------------------------------------ #
+# * Li2014a and Gao2006
+
+@inline @inbounds function simplifiedLorenz4D(X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧, 𝑢) = X
+    (𝑎, 𝑏) = p(𝑡)
+
+    𝑥̇ = 𝑦 - 𝑥
+    𝑦̇ = -𝑥*𝑧 + 𝑢
+    𝑧̇ = 𝑥*𝑦 - 𝑎
+    𝑢̇ = -𝑏*𝑦
+
+    return SVector{4}(𝑥̇, 𝑦̇, 𝑧̇, 𝑢̇)
+end
+@inline @inbounds function simplifiedLorenz4D_J(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧, 𝑢) = X
+    (𝑎, 𝑏) = p(𝑡)
+    J = @SMatrix [  -1.0        1.0        0.0          0.0;
+                    -𝑧          0.0        -𝑥           1.0;
+                    𝑦           𝑥          0.0          0.0;
+                    0.0         -𝑏         0.0          0.0]
+end
+
+function simplifiedLorenz4D(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=simplifiedLorenz4D_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+simplifiedLorenz4DSim = Process(
+    process = simplifiedLorenz4D,
+    X0 = [2.0, 4.0, 0.0, 0.0],
+    parameter_profile = (constantParameter, constantParameter),
+    parameter_profile_parameters = (2.6, 0.44),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.0001,
+    savedt = 0.05,
+    tmax = 1000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => false))
+export simplifiedLorenz4DSim
+
+simplifiedLorenz4DArt = Process(
+    process = simplifiedLorenz4D,
+    X0 = [2.0, 4.0, 0.0, 0.0],
+    parameter_profile = (constantParameter, constantParameter),
+    parameter_profile_parameters = (2.6, 0.44),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.01,
+    tmax = 5000.0,
+    alg = AutoVern7(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
+export simplifiedLorenz4DArt
