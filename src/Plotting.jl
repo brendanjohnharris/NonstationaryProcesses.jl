@@ -14,9 +14,21 @@ export widen
 #                          Plot recipe for Process types (e.g. label axes)                         #
 # ------------------------------------------------------------------------------------------------ #
 
-@recipe function f(P::Process; vars=1:size(P.X0)[1], transient=false, downsample=1)
+@recipe function f(P::Process; vars=1:size(P.X0)[1], transient=false, downsample=1, colormethod=nothing)
     linecolor --> :black
     markercolor --> :black
+
+    if colormethod == :velocity
+        velocity = sqrt.(sum([(r[2:end] .- collect(r[1:end-1])).^2 for r ∈ [timeseries(P, i; transient) for i in 1:lastindex(getX0(P))]], dims=1)[1])
+        seriestype := :path
+        line_z := velocity
+        linealpha --> 0.1
+        linewidth --> 1.0
+        colorbar --> nothing
+    elseif !isnothing(colormethod) && colormethod != :none
+        @error "Not a supported colormethod"
+    end
+
     if length(vars) == 1
         t = times(P, transient=transient)
         x = (t, timeseries(P, vars, transient=transient))
@@ -26,12 +38,14 @@ export widen
         label --> nothing
         title --> String(Symbol(P.process))
     else
-        x = timeseries(P, vars, transient=transient)
+        x = deepcopy(timeseries(P, vars, transient=transient))
         x = Tuple([x[:, i] for i in 1:size(x)[2]])
-        seriestype --> :scatter
-        markersize --> 1
+        if colormethod != :velocity
+            seriestype --> :scatter
+            markersize --> 1
+            markerstrokewidth --> 0
+        end
         label --> nothing
-        markerstrokewidth --> 0
     end
     if downsample != 1
         x = tuple([xx[1:downsample:end] for xx in x]...)
@@ -327,7 +341,7 @@ function set_pane_color(color=(0, 0, 0), ax=PyPlot.gca())
 end
 
 @shorthands marginaltrajectory3
-@recipe function f(::Type{Val{:marginaltrajectory3}}, plt::AbstractPlot; buffer=0.3, linewidth=1.0, colormethod=nothing, marginalcolor=nothing)
+@recipe function f(::Type{Val{:marginaltrajectory3}}, plt::AbstractPlot; buffer=0.3, linewidth=1.0, colormethod=nothing, marginalcolor=nothing, mainalpha=0.75)
     x, y, z = plotattributes[:x], plotattributes[:y], plotattributes[:z]
     i = isfinite.(x) .& isfinite.(y) .& isfinite.(z)
     x, y, z= x[i], y[i], z[i]
@@ -397,7 +411,7 @@ end
         if !isnothing(colormethod) && colormethod != :none
             line_z := velocity
         end
-        linealpha := 0.75
+        linealpha := mainalpha
         linewidth --> linewidth
         x := x
         y := y
