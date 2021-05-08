@@ -10,7 +10,8 @@ mkpath(dir)
         thomasCyclicallySymmetricArt()          => 1:2,
         doubleScrollArt()                       => 1:3,
         diffusionlessLorenzArt()                => 1:3,
-        piecewiseLinearHyperchaosArt()          => [1, 3]
+        piecewiseLinearHyperchaosArt()          => [1, 3],
+        simplifiedLorenz4DArt()                 => [1, 3, 4],
 )
 
 for (S, vars) ∈ 𝒮
@@ -21,7 +22,7 @@ for (S, vars) ∈ 𝒮
 
         # 16:9
         mkpath(joinpath(dir, "WallpaperSquare"))
-        p = plot(S; vars, colormethod=:velocity, linecolor=colorgradient, background_color=:black, axis=nothing, framestyle=:none, size=(1600, 900), aspect_ratio=:equal, margin=20Plots.mm, dpi=1000, linewidth=1.5);
+        p = plot(S; vars, colormethod=:velocity, linecolor=colorgradient, background_color=:black, axis=nothing, framestyle=:none, size=(1600, 900), aspect_ratio=:equal, margin=10Plots.mm, dpi=1000, linewidth=1.5);
         savefig(p, joinpath(dir, "WallpaperSquare", string(getprocess(S))*".png"))
 
         # 16:9 fill

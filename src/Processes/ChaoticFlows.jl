@@ -375,10 +375,10 @@ diffusionlessLorenzArt = Process(
     transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.001,
-    savedt = 0.01,
-    tmax = 5000.0,
+    savedt = 0.025,
+    tmax = 20000.0,
     alg = AutoVern7(Rodas5()),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-8))
 export diffusionlessLorenzArt
 
 
@@ -429,16 +429,16 @@ export piecewiseLinearHyperchaosSim
 
 piecewiseLinearHyperchaosArt = Process(
     process = piecewiseLinearHyperchaos,
-    X0 = [0.2, 0.0, 1.0, 0.0],
-    parameter_profile = constantParameter,
+    X0 = [0.01, 0.01, 0.01, 0.01],
+    parameter_profile = (constantParameter, constantParameter),
     parameter_profile_parameters = (1.0, 0.25),
     transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.001,
-    savedt = 0.01,
-    tmax = 5000.0,
-    alg = AutoVern7(Rodas5()),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
+    savedt = 0.05,
+    tmax = 15000.0,
+    alg = AutoVern9(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-14))
 export piecewiseLinearHyperchaosArt
 
 
@@ -491,12 +491,12 @@ simplifiedLorenz4DArt = Process(
     process = simplifiedLorenz4D,
     X0 = [2.0, 4.0, 0.0, 0.0],
     parameter_profile = (constantParameter, constantParameter),
-    parameter_profile_parameters = (2.6, 0.44),
+    parameter_profile_parameters = (0.15, 0.8),
     transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.001,
-    savedt = 0.01,
-    tmax = 5000.0,
+    savedt = 0.05,
+    tmax = 10000.0,
     alg = AutoVern7(Rodas5()),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-9))
 export simplifiedLorenz4DArt
