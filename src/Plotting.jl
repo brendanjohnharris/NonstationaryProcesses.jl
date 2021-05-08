@@ -18,10 +18,22 @@ export widen
     linecolor --> :black
     markercolor --> :black
 
+
     if colormethod == :velocity
         velocity = sqrt.(sum([(r[2:end] .- collect(r[1:end-1])).^2 for r ∈ [timeseries(P, i; transient) for i in 1:lastindex(getX0(P))]], dims=1)[1])
         seriestype := :path
         line_z := velocity
+        linealpha --> 0.1
+        linewidth --> 1.0
+        colorbar --> nothing
+    elseif colormethod == :fourth
+        if length(vars) < 4
+            @error "Cannot color by the fourth variable if there are not four variables specified"
+        end
+        thefourth = vec(timeseries(P, vars[4]; transient))
+        vars = vars[1:3]
+        seriestype := :path
+        line_z := thefourth
         linealpha --> 0.1
         linewidth --> 1.0
         colorbar --> nothing
@@ -38,7 +50,9 @@ export widen
         label --> nothing
         title --> String(Symbol(P.process))
     else
-        # TODO Add coloring by 4th variable
+        if length(vars) > 3
+            vars = vars[1:3] # Can only plot in 3d
+        end
         x = deepcopy(timeseries(P, vars, transient=transient))
         x = Tuple([x[:, i] for i in 1:size(x)[2]])
         if colormethod != :velocity
@@ -357,7 +371,7 @@ end
     zlims --> zlims
 
     # TODO Add coloring by 4th variable
-    
+
     if colormethod == :velocity
         velocity = sqrt.(sum([(r[2:end] .- collect(r[1:end-1])).^2 for r ∈ [x, y, z]], dims=1)[1])
     elseif !isnothing(colormethod) && colormethod != :none
