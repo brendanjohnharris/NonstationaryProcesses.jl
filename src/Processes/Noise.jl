@@ -18,6 +18,16 @@ function gaussianBimodal(P::Process)
     sol = [gaussianBimodal(parameter_function(P)(t)...) for t in P.transient_t0:P.savedt:P.tmax]
 end
 
+gaussianBimodalSim = Process(
+    process = gaussianBimodal,
+    parameter_profile = (ramp, constantParameter, constantParameter),
+    parameter_profile_parameters = ((0.001, 0.1, 0.0), (1.0,), (0.1)),
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    savedt = 1,
+    tmax = 10000.0)
+export gaussianBimodalSim
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                                         Bimodal Switching                                        #
@@ -38,6 +48,16 @@ function bimodalSwitching(P::Process)
     sol = bimodalSwitching(P.transient_t0:P.savedt:P.tmax, p1, p2)
 end
 
+bimodalSwitchingSim = Process(
+    process = bimodalSwitching,
+    parameter_profile = (constantParameter, constantParameter),
+    parameter_profile_parameters = ((0.9,), (10.0)),
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    savedt = 1,
+    tmax = 1000.0)
+export bimodalSwitchingSim
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                                           Shifty Noise                                           #
@@ -48,6 +68,17 @@ function shiftyNoise(P::Process)
     (η, C) = parameter_functions(P)
     sol = [η(t)*randn() + C(t) for t in P.transient_t0:P.savedt:P.tmax]
 end
+
+
+shiftyNoiseSim = Process(
+    process = shiftyNoise,
+    parameter_profile = (constantParameter, stepNoise),
+    parameter_profile_parameters = [(1.0,), ((0.0, 1000.0), 100.0, 2.0, 0.0)],
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    savedt = 1,
+    tmax = 1000.0)
+export shiftyNoiseSim
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -66,3 +97,14 @@ function AR(P::Process)
     end
     return X[Int.(times(P, transient=true) .- (gett0(P)-1)), 1:length(getX0(P))]
 end
+
+arSim = Process(
+    process = AR,
+    X0 = [0.0], # Number of initial conditions should really be 1 + num. of parameters, but if you do not specify they default to 0.0
+    parameter_profile = (constant, constant, constant, constant),
+    parameter_profile_parameters = ((0.2,), (0.2,), (0.2,), (0.2,)),
+    t0 = 0,
+    dt = 1,
+    savedt = 1,
+    tmax = 5000)
+export arSim

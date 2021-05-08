@@ -10,7 +10,6 @@ include("Discontinuous.jl")
 include("ParameterProfiles.jl")
 include("Process.jl")
 include("Processes.jl")
-include("Simulations.jl")
 include("Plotting.jl")
 
 using BifurcationKit
