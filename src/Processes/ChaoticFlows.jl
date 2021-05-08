@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------------------------ #
 #                                  Sprott's simplest chaotic flow                                  #
 # ------------------------------------------------------------------------------------------------ #
-# Sprott, or Sprott1997
+# * Sprott, or Sprott1997
 @inline @inbounds function simplestChaoticFlow(X::AbstractArray, 𝐴::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     𝑥̇ = 𝑦
@@ -57,7 +57,7 @@ export simplestChaoticFlowArt
 # ------------------------------------------------------------------------------------------------ #
 #                                          Double Pendulum                                         #
 # ------------------------------------------------------------------------------------------------ #
-# https://scienceworld.wolfram.com/physics/DoublePendulum.html
+# * https://scienceworld.wolfram.com/physics/DoublePendulum.html
 
 polarReduce(x::Real) = x - 2π*(x÷π);
 polarReduce(X::AbstractArray) = X .- 2π.*(X.÷π);
@@ -142,7 +142,7 @@ export cartesianDoublePendulumArt
 # ------------------------------------------------------------------------------------------------ #
 #                                        Wave-drive Harmonic                                       #
 # ------------------------------------------------------------------------------------------------ #
-# Sprott, or Chernikov1988
+# * Sprott, or Chernikov1988
 @inline @inbounds function waveDrivenHarmonic(X::AbstractArray, p::Function, t::Real)
     (ω, ε, k, Ω) = p(t)
     dX2 = -ω^2.0*X[1] + ε*sin(k*X[1] - Ω*t)
@@ -215,7 +215,7 @@ export pulseDrivenHarmonicSim
 # ------------------------------------------------------------------------------------------------ #
 #                              Thomas' cyclically symmetric attractor                              #
 # ------------------------------------------------------------------------------------------------ #
-# From Sprott, or Elwakil2001
+# * From Sprott, or Thomas1999
 
 @inline @inbounds function thomasCyclicallySymmetric(X::AbstractArray, 𝑏::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
@@ -270,7 +270,7 @@ export thomasCyclicallySymmetricArt
 # ------------------------------------------------------------------------------------------------ #
 #                                           Double Scroll                                          #
 # ------------------------------------------------------------------------------------------------ #
-# From Sprott, or Elwakil2001
+# * From Sprott, or Elwakil2001
 
 @inline @inbounds function doubleScroll(X::AbstractArray, 𝑎::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
@@ -331,7 +331,7 @@ export doubleScrollArt
 # ------------------------------------------------------------------------------------------------ #
 #                                    Diffusionless Lorenz System                                   #
 # ------------------------------------------------------------------------------------------------ #
-# Li2014, Sprott2010a (Elegant Chaos), and Schrier2000
+# * Li2014, Sprott2010a (Elegant Chaos), and Schrier2000
 
 @inline @inbounds function diffusionlessLorenz(X::AbstractArray, 𝑎::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
@@ -380,3 +380,63 @@ diffusionlessLorenzArt = Process(
     alg = RK4(),
     solver_opts = Dict(:adaptive => true))
 export diffusionlessLorenzArt
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    Piecewise-Linear Hyperchaos                                   #
+# ------------------------------------------------------------------------------------------------ #
+# * Li2014
+
+@inline @inbounds function piecewiseLinearHyperchaos(X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧, 𝑢) = X
+    (𝑎, 𝑏) = p(𝑡)
+
+    𝑥̇ = 𝑦 - 𝑥
+    𝑦̇ = -𝑧*sign(𝑥) + 𝑢
+    𝑧̇ = abs(𝑥) - 𝑎
+    𝑢̇ = -𝑏*𝑦
+
+    return SVector{4}(𝑥̇, 𝑦̇, 𝑧̇, 𝑢̇)
+end
+@inline @inbounds function piecewiseLinearHyperchaos_J(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧, 𝑢) = X
+    (𝑎, 𝑏) = p(𝑡)
+    J = @SMatrix [  -1.0        1.0        0.0          0.0;
+                    -2*𝛿(𝑧)     0.0        -sign(𝑥)     1.0; # ? Again, hope we miss the zero
+                    sign(𝑥)     0.0        0.0          0.0;
+                    0.0         -𝑏         0.0          0.0]
+end
+
+function piecewiseLinearHyperchaos(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=piecewiseLinearHyperchaos_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+piecewiseLinearHyperchaosSim = Process(
+    process = piecewiseLinearHyperchaos,
+    X0 = [0.2, 0.0, 1.0, 0.0],
+    parameter_profile = (constantParameter, constantParameter),
+    parameter_profile_parameters = (1.0, 0.25), # * 𝑎 is an amplitude, so set to 1 without loss of generality
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.05,
+    tmax = 1000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => false))
+export piecewiseLinearHyperchaosSim
+
+piecewiseLinearHyperchaosArt = Process(
+    process = piecewiseLinearHyperchaos,
+    X0 = [0.2, 0.0, 1.0, 0.0],
+    parameter_profile = constantParameter,
+    parameter_profile_parameters = (1.0, 0.25),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.01,
+    tmax = 5000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => true))
+export piecewiseLinearHyperchaosArt

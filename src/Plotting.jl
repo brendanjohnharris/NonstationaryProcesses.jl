@@ -38,6 +38,7 @@ export widen
         label --> nothing
         title --> String(Symbol(P.process))
     else
+        # TODO Add coloring by 4th variable
         x = deepcopy(timeseries(P, vars, transient=transient))
         x = Tuple([x[:, i] for i in 1:size(x)[2]])
         if colormethod != :velocity
@@ -355,6 +356,8 @@ end
     ylims --> ylims
     zlims --> zlims
 
+    # TODO Add coloring by 4th variable
+    
     if colormethod == :velocity
         velocity = sqrt.(sum([(r[2:end] .- collect(r[1:end-1])).^2 for r ∈ [x, y, z]], dims=1)[1])
     elseif !isnothing(colormethod) && colormethod != :none

@@ -9,7 +9,8 @@ mkpath(dir)
 𝒮 = Dict(simplestChaoticFlowArt()               => 2:3,
         thomasCyclicallySymmetricArt()          => 1:2,
         doubleScrollArt()                       => 1:3,
-        diffusionlessLorenzArt()                => 1:3
+        diffusionlessLorenzArt()                => 1:3,
+        piecewiseLinearHyperchaosArt()          => [1, 3]
 )
 
 for (S, vars) ∈ 𝒮
