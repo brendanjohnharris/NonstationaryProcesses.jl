@@ -83,7 +83,7 @@ end
 # ------------------------------------------------------------------------------------------------ #
 function solution!(P::Process) # vars::Tuple=Tuple(1:size(P.X0)[1])
     if isnothing(P.solution)
-        @info "Solving for process $(getprocess(P)) ($(getid(P)))"
+        @info "Solving for the $(getprocess(P)) ($(getid(P))) process"
         P.solution = P.process(P)
     end
     x = P.solution
