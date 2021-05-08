@@ -6,9 +6,10 @@ dir = "../ProcessImages/"
 mkpath(dir)
 
 # Dict of system => variables to plot
-𝒮 = Dict(simplestChaoticFlowArt() => 2:3,
-        thomasCyclicallySymmetricArt() => 1:2,
-        doubleScrollArt() => 1:3
+𝒮 = Dict(simplestChaoticFlowArt()               => 2:3,
+        thomasCyclicallySymmetricArt()          => 1:2,
+        doubleScrollArt()                       => 1:3,
+        diffusionlessLorenzArt()                => 1:3
 )
 
 for (S, vars) ∈ 𝒮

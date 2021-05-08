@@ -326,3 +326,57 @@ doubleScrollArt = Process(
     alg = RK4(),
     solver_opts = Dict(:adaptive => true))
 export doubleScrollArt
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    Diffusionless Lorenz System                                   #
+# ------------------------------------------------------------------------------------------------ #
+# Li2014, Sprott2010a (Elegant Chaos), and Schrier2000
+
+@inline @inbounds function diffusionlessLorenz(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    𝑥̇ = 𝑦 - 𝑥
+    𝑦̇ = -𝑥*𝑧
+    𝑧̇ = 𝑥*𝑦 - 𝑎(𝑡)
+    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+end
+@inline @inbounds function diffusionlessLorenz_J(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    J = @SMatrix [  -1.0   1.0   0.0;
+                    -𝑧     0.0   -𝑥;
+                    𝑦      𝑥     0.0]
+end
+
+function diffusionlessLorenz(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=diffusionlessLorenz_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+diffusionlessLorenzSim = Process(
+    process = diffusionlessLorenz,
+    X0 = [1.0, 0.0, 1.0],
+    parameter_profile = constantParameter,
+    parameter_profile_parameters = (1.0,),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.05,
+    tmax = 1000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => false))
+export diffusionlessLorenzSim
+
+diffusionlessLorenzArt = Process(
+    process = diffusionlessLorenz,
+    X0 = [1.0, 0.0, 1.0],
+    parameter_profile = constantParameter,
+    parameter_profile_parameters = (1.0,),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.01,
+    tmax = 5000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => true))
+export diffusionlessLorenzArt
