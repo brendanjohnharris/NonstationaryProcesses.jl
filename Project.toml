@@ -27,6 +27,7 @@ DimensionalData = ">= 0.16"
 KernelDensity = ">= 0.6"
 Plots = ">= 1.10"
 Reexport = ">= 0.1.0"
+Setfield = "0.7"
 StatsPlots = ">= 0.14"
 julia = "1"
 
