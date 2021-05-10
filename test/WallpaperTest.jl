@@ -11,7 +11,7 @@ mkpath(dir)
         doubleScrollArt()                       => 1:3,
         diffusionlessLorenzArt()                => 1:3,
         piecewiseLinearHyperchaosArt()          => [1, 3],
-        simplifiedLorenz4DArt()                 => [1, 3, 4],
+        simplifiedLorenz4DArt()                 => [3, 2, 4],
 )
 
 for (S, vars) ∈ 𝒮

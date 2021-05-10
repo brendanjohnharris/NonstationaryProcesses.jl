@@ -266,7 +266,6 @@ thomasCyclicallySymmetricArt = Process(
     solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
 export thomasCyclicallySymmetricArt
 
-
 # ------------------------------------------------------------------------------------------------ #
 #                                           Double Scroll                                          #
 # ------------------------------------------------------------------------------------------------ #
@@ -491,12 +490,12 @@ simplifiedLorenz4DArt = Process(
     process = simplifiedLorenz4D,
     X0 = [2.0, 4.0, 0.0, 0.0],
     parameter_profile = (constantParameter, constantParameter),
-    parameter_profile_parameters = (0.15, 0.8),
+    parameter_profile_parameters = (2.6, 0.45),
     transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.001,
     savedt = 0.05,
-    tmax = 10000.0,
-    alg = AutoVern7(Rodas5()),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-9))
+    tmax = 7500.0,
+    alg = Vern9(),
+    solver_opts = Dict(:adaptive => false))#, :reltol => 1e-12))
 export simplifiedLorenz4DArt
