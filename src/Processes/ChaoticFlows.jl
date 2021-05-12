@@ -397,7 +397,7 @@ export diffusionlessLorenzArt
 
     return SVector{4}(𝑥̇, 𝑦̇, 𝑧̇, 𝑢̇)
 end
-@inline @inbounds function piecewiseLinearHyperchaos_J(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+@inline @inbounds function piecewiseLinearHyperchaos_J(X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
     (𝑎, 𝑏) = p(𝑡)
     J = @SMatrix [  -1.0        1.0        0.0          0.0;
@@ -457,7 +457,7 @@ export piecewiseLinearHyperchaosArt
 
     return SVector{4}(𝑥̇, 𝑦̇, 𝑧̇, 𝑢̇)
 end
-@inline @inbounds function simplifiedLorenz4D_J(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+@inline @inbounds function simplifiedLorenz4D_J(X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
     (𝑎, 𝑏) = p(𝑡)
     J = @SMatrix [  -1.0        1.0        0.0          0.0;
@@ -499,3 +499,65 @@ simplifiedLorenz4DArt = Process(
     alg = Vern9(),
     solver_opts = Dict(:adaptive => false))#, :reltol => 1e-12))
 export simplifiedLorenz4DArt
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                           Chen's System                                          #
+# ------------------------------------------------------------------------------------------------ #
+# * Song2004
+
+@inline @inbounds function chensSystem(X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝑎, 𝑏, 𝑐) = p(𝑡)
+
+    𝑥̇ = 𝑎*(𝑦 - 𝑥)
+    𝑦̇ = (𝑐 - 𝑎)*𝑥 - 𝑥*𝑧 + 𝑐*𝑦
+    𝑧̇ = 𝑥*𝑦 - 𝑏*𝑧
+
+    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+end
+@inline @inbounds function chensSystem_J(X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝑎, 𝑏, 𝑐) = p(𝑡)
+    J = @SMatrix [-𝑎        𝑎       0.0;
+                  𝑐-𝑎-𝑧     𝑐       -𝑥;
+                  𝑦         𝑥       -𝑏]
+end
+
+function chensSystem(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=chensSystem_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+end
+export chensSystem
+yetAnotherChaoticAttractor = chensSystem
+export yetAnotherChaoticAttractor
+
+chensSystemSim = Process(
+    process = chensSystem,
+    X0 = [-3.0, 2.0, 20.0],
+    parameter_profile = (ramp, ramp, ramp),
+    parameter_profile_parameters = ((42.0, 46.0, 0.0, 500.0), (4.0, 11.0, 0.0, 500.0), (28.0, 38.0, 0.0, 500.0)),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.025,
+    tmax = 500.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => false))
+export chensSystemSim
+
+chensSystemArt = Process(
+    process = chensSystem,
+    X0 = [-3.0, 2.0, 20.0],
+    parameter_profile = (constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters = (35.0, 8.0/3.0, 28.0),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.0001,
+    savedt = 0.001,
+    tmax = 1000.0,
+    alg = Vern9(),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-9))
+export chensSystemArt
