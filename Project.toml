@@ -35,6 +35,7 @@ Reexport = ">= 0.1.0"
 Requires = "1.1"
 Setfield = "0.7"
 StaticArrays = "1.1"
+StatsBase = "0.33"
 StatsPlots = "0.14"
 julia = "1"
 
