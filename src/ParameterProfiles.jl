@@ -99,13 +99,39 @@ function ramp(p1::Real, p2::Real, t1::Real, t2::Real)
 end
 export ramp
 
+"""
+Define a line over an interval. Saturate before and after this interval
+"""
 function rampInterval(p1::Real, p2::Real, t1::Real, t2::Real)
     r = ramp(p1, p2, t1, t2)
     b = unitBump((t1, t2), 0, 1)
-    s = unitStep(t2, 0, p2)
-    return r*b + s
+    s1 = unitStep(t1, p1, -p1)
+    s2 = unitStep(t2, 0, p2)
+    return r*b + s1 + s2
 end
 export rampInterval
+
+"""
+Define a line over an interval. Before this interval, saturate, but after, extrapolate.
+"""
+function rampOn(p1::Real, p2::Real, t1::Real, t2::Real)
+    r = ramp(p1, p2, t1, t2)
+    b = unitStep(t1, 0, 1)
+    s1 = unitStep(t1, p1, -p1)
+    return r*b + s1
+end
+export rampOn
+
+"""
+Define a line over an interval. After this interval, saturate, but before, extrapolate.
+"""
+function rampOff(p1::Real, p2::Real, t1::Real, t2::Real)
+    r = ramp(p1, p2, t1, t2)
+    b = unitStep(t2, 1, -1)
+    s2 = unitStep(t2, 0, p2)
+    return r*b + s2
+end
+export rampOff
 
 
 function sineWave(period::Real=1, amplitude::Real=1, t0::Real=0, baseline::Real=5*amplitude)
