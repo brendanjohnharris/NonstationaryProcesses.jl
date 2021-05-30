@@ -52,13 +52,20 @@ export noisySineSim
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                      Noisy Trendy Scaly Sine                                     #
+#                                      Noisy Shifty Scaly Sine                                     #
 # ------------------------------------------------------------------------------------------------ #
 function noisyShiftyScalySine(P::Process)
     # Parameters (η, C, A)
     seed(P.solver_rng)
     (η, C, A) = parameter_functions(P)
     sol = [A(t)*sin(t) + η(t)*randn() + C(t) for t in P.transient_t0:P.savedt:P.tmax]
+end
+
+function noisyShiftyShcalySine(P::Process)
+    # Parameters (η, C, A)
+    seed(P.solver_rng)
+    (η, C, A) = parameter_functions(P)
+    sol = [A(t)*(sin(t) + η(t)*randn() + C(t)) for t in P.transient_t0:P.savedt:P.tmax]
 end
 
 function shcalySine(P::Process)
@@ -80,6 +87,20 @@ noisyShiftyScalySineSim = Process(
     alg = nothing,
     solver_opts=Dict())
 export noisyShiftyScalySineSim
+
+noisyShiftyShcalySineSim = Process(
+    process = noisyShiftyShcalySine,
+    X0 = [0.0],
+    parameter_profile = (ramp, constantParameter, constantParameter), # (η, C, A)
+    parameter_profile_parameters = ((0.001, 2.0, 0.0), (1.0,), (1.0,)),
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    dt = 0.1,
+    savedt = 0.1,
+    tmax = 1000.0,
+    alg = nothing,
+    solver_opts=Dict())
+export noisyShiftyShcalySineSim
 
 shcalySineSim = Process(
     process = shcalySine,
