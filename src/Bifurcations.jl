@@ -35,7 +35,7 @@ function constantine(P::Process; param)
     p_profiles′ = (p_profiles[1:param-1]..., constantParameter, p_profiles[param+1:end]...)
     function f(X::AbstractArray, 𝑝, 𝑡)
         p_parameters′ = (p_parameters[1:param-1]..., 𝑝[1], p_parameters[param+1:end]...)
-        if typeof(p_profiles′) <: Union{Tuple, Vector} && length(p_profiles′) == 1
+        if p_profiles′ isa Union{Tuple, Vector} && length(p_profiles′) == 1
             p_profiles′ = p_profiles′[1]
         end
         pf = tuplef2ftuple(p_profiles′, p_parameters′)

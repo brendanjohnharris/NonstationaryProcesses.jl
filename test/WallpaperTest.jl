@@ -3,7 +3,7 @@ using Plots
 
 function wallPlot(S, vars)
         # Square ones
-        if typeof(vars[2]) <: String
+        if vars[2] isa String
                 vars, name = vars
         else
                 name = getprocess(S)
