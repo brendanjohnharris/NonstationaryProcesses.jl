@@ -13,7 +13,7 @@ end
 # ------------------------------------------------------------------------------------------------ #
 
 function dsolve(prob, alg; kwargs...)
-    if typeof(prob.p) <: Discontinuous
+    if prob.p isa Discontinuous
         DifferentialEquations.solve(prob, alg; kwargs..., tstops=sort(collect(prob.p.d))) # May need to check tstops isn't in args in the future
     else
         DifferentialEquations.solve(prob, alg; kwargs...)
@@ -24,14 +24,14 @@ function tuplef2ftuple(f, params)
     # turn a tuple of functions into a function of tuples
     if all(isempty.(params)) # The f's are just functions on their own, no need to add parameters
         # Be warned that you can't mix these; either use all parameter functions, or all standard functions. Don't be greedy.
-        if typeof(f) <: Tuple
+        if f isa Tuple
             pp(t) = [x(t) for x in f]
         else
             pp = f
         end
         return pp
     end
-    if typeof(f) <: Tuple
+    if f isa Tuple
         ps = Vector{Function}(undef, length(f))
         for i = 1:length(f)
             ps[i] = f[i](params[i]...)

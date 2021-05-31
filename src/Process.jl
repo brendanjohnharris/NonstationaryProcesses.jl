@@ -23,7 +23,7 @@ Base.@kwdef mutable struct Process # Not ensemble
 end
 function Process(D::Dict)
     for s ∈ setdiff(keys(D), (:date, :solution))
-        if typeof(D[s]) <: String
+        if D[s] isa String
             D[s] = eval(Meta.parse(D[s]))
         end
     end
@@ -102,7 +102,7 @@ export simulate!
 timeseries(s::SciMLBase.AbstractTimeseriesSolution, dim::Real) = s[dim, :]
 timeseries(s::SciMLBase.AbstractTimeseriesSolution, dim::Union{Vector, UnitRange}=1:size(s.u[1], 1)) = copy(s[dim, :]')
 function timeseries(s::AbstractArray, dim::Union{Vector, UnitRange, Real}=1:size(s, 2))
-    if typeof(s) <: Vector
+    if s isa Vector
         if length(dim) != 1 || dim[1] != 1
             error("Cannot index the second dimension of the input, which is a vector")
         end
@@ -149,7 +149,7 @@ function parameter_functions(P::Process)
     if all(isempty.(getps(P)))
         getprofiles(P)
     else
-        if typeof(P.parameter_profile) <: Union{Tuple, Vector}
+        if P.parameter_profile isa Union{Tuple, Vector}
             [P.parameter_profile[x](P.parameter_profile_parameters[x]...) for x in 1:length(P.parameter_profile)]
         else
             P.parameter_profile(P.parameter_profile_parameters...)
@@ -163,7 +163,7 @@ function parameterseries(P::Process; p=nothing, kwargs...)
     if size(ps, 1) == 1 # This 1 × N array, which should be a vector
         ps = ps[:]
     end
-    if isnothing(p) || (typeof(ps)<:Vector)
+    if isnothing(p) || (ps isa Vector)
         return ps
     else
         return ps[p, :]
@@ -186,7 +186,7 @@ for field ∈ keys(process_aliases)
 end
 
 function forcevec(x)
-    if !(typeof(x) <: Union{AbstractArray, Tuple})
+    if !(x isa Union{AbstractArray, Tuple})
         x = [x]
     else
         x
@@ -195,7 +195,7 @@ end
 export forcevec
 
 function forcemat(x)
-    if typeof(x) <: AbstractVector
+    if x isa AbstractVector
         x = reshape(x, :, 1)
     end
     return x
@@ -223,15 +223,15 @@ function saveTimeseries!(P::Process, folder::String="./", delim::Char=','; trans
 end
 export saveTimeseries!
 
-function timeseries(P::Process, dim=1:length(getX0(P)); folder::Union{String, Bool}=(typeof(getsolution(P)) <: String), kwargs...)
-    if typeof(folder) <: Bool && folder
-        if typeof(getsolution(P)) <: String
+function timeseries(P::Process, dim=1:length(getX0(P)); folder::Union{String, Bool}=(getsolution(P) isa String), kwargs...)
+    if folder isa Bool && folder
+        if getsolution(P) isa String
             folder = getsolution(P)
         else
             folder = "./"
         end
     end
-    if typeof(folder) <: String
+    if folder isa String
         filename = filter(x->occursin("timeseries_"*string(getid(P)), x), readdir(folder))
     else
         return timeseries!(P, dim; kwargs...)
