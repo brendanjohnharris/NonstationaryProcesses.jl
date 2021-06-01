@@ -125,6 +125,8 @@ function timeseries!(P::Process, dim=1:length(getX0(P)); transient::Bool=false)
         x = DimArray(x[idxs], (Ti(saveTimes),))
     end
 end
+timeDims(T::DimArray) = dims(T, Ti).val
+variableDims(T::DimArray) = dims(T, :Variable).val
 # function timeseries(s::Tuple, dim::Union{Real, Vector, Tuple}=1)
 #     timeseries(s[1], dim) # You gave the metadata as well
 # end
