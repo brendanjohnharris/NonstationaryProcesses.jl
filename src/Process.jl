@@ -83,7 +83,7 @@ end
 # ------------------------------------------------------------------------------------------------ #
 function solution!(P::Process) # vars::Tuple=Tuple(1:size(P.X0)[1])
     if isnothing(P.solution)
-        @info "Solving for the $(getprocess(P)) process ($(getid(P)))"
+        @debug "Solving for the $(getprocess(P)) process ($(getid(P)))"
         P.solution = P.process(P)
     end
     x = P.solution
@@ -220,7 +220,7 @@ function saveTimeseries!(P::Process, folder::String="./", delim::Char=','; trans
     filename = joinpath(folder, fileroot*"_"*string(getid(P))*".csv")
     P.solution = abspath(folder)
     #P.solution = nothing
-    @info "Saving time-series data to $filename"
+    @debug "Saving time-series data to $filename"
     writedlm(filename, X, delim)
 end
 export saveTimeseries!
@@ -242,7 +242,7 @@ function timeseries(P::Process, dim=1:length(getX0(P)); folder::Union{String, Bo
         return timeseries!(P, dim; kwargs...)
     end
     filename = filename[1]
-    @info "Loading time-series data from $filename"
+    @debug "Loading time-series data from $filename"
     filename = joinpath(folder, filename)
     P.solution = readdlm(filename, ',', Float64)
     return timeseries!(P, dim; kwargs...)
