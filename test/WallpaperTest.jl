@@ -29,7 +29,8 @@ dir = "../ProcessImages/"
 mkpath(dir)
 
 # Dict of system => variables to plot
-𝒮 = Dict(simplestChaoticFlowArt()               => 2:3,
+𝒮 = Dict(
+        simplestChaoticFlowArt()                => 2:3,
         thomasCyclicallySymmetricArt()          => 1:2,
         doubleScrollArt()                       => 1:3,
         diffusionlessLorenzArt()                => 1:3,
@@ -38,6 +39,13 @@ mkpath(dir)
         chensSystemArt()                        => [1, 2, 3],
         chensSystemArt(parameters=(46.0, 11.0, 29.0), tmax=500.0)
                                                 => ([1, 2, 3], "chensSystem46"),
+        cartesianDoublePendulumSim(profiles=(constant, constant, constant, constant),
+                                   parameters=(0.5, 1.0, 1.0, 1.0),
+                                   X0=[π/4, π, 0.0, 0.0],
+                                   tmax=2000.0,
+                                   savedt= 0.01)
+                                                => [3, 4],
+        lorenzArt()                             => 1:3,
 )
 
 
