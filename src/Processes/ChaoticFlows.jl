@@ -1,7 +1,3 @@
-# ------------------------------------------------------------------------------------------------ #
-#                                  Sprott's simplest chaotic flow                                  #
-# ------------------------------------------------------------------------------------------------ #
-# * Sprott, or Sprott1997
 @inline @inbounds function simplestChaoticFlow(X::AbstractArray, 𝐴::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     𝑥̇ = 𝑦
@@ -17,6 +13,11 @@ end
                     2.0*𝑦   -𝐴(𝑡)   -1.0]
 end
 
+"""
+    Sprott's simplest chaotic flow
+
+Sprott, or Sprott1997
+"""
 function simplestChaoticFlow(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=simplestChaoticFlow_J)
@@ -54,11 +55,6 @@ simplestChaoticFlowArt = Process(
 export simplestChaoticFlowArt
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                          Double Pendulum                                         #
-# ------------------------------------------------------------------------------------------------ #
-# * https://scienceworld.wolfram.com/physics/DoublePendulum.html
-
 polarReduce(x::Real) = x - 2π*(x÷π);
 polarReduce(X::AbstractArray) = X .- 2π.*(X.÷π);
 
@@ -84,6 +80,11 @@ function doublePendulum(P::Process)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
+"""
+    Your classic double pendulum, with Hamiltonian equations of motion
+
+    https://scienceworld.wolfram.com/physics/DoublePendulum.html
+"""
 function cartesianDoublePendulum(P::Process)
     # Should the initial conditions be set in cartesian coordinates?
     sol = doublePendulum(P(process=doublePendulum))
@@ -138,11 +139,6 @@ export cartesianDoublePendulumArt
 
 
 
-
-# ------------------------------------------------------------------------------------------------ #
-#                                        Wave-drive Harmonic                                       #
-# ------------------------------------------------------------------------------------------------ #
-# * Sprott, or Chernikov1988
 @inline @inbounds function waveDrivenHarmonic(X::AbstractArray, p::Function, t::Real)
     (ω, ε, k, Ω) = p(t)
     dX2 = -ω^2.0*X[1] + ε*sin(k*X[1] - Ω*t)
@@ -155,11 +151,17 @@ end
     J = @SMatrix [0.0 1.0; ε*k*cos(k*X[1] - Ω*t)-ω^2 0.0]
 end
 
+"""
+    An harmonic oscillator driven by a plane wave propagating in the x-direction
+
+Sprott, or Chernikov1988
+"""
 function waveDrivenHarmonic(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=waveDrivenHarmonic_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
+
 
 waveDrivenHarmonicSim = Process(# parameters:  (ω, ε, k, Ω)
     process = waveDrivenHarmonic,
@@ -176,9 +178,6 @@ waveDrivenHarmonicSim = Process(# parameters:  (ω, ε, k, Ω)
 export waveDrivenHarmonicSim
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                        Pulse-drive Harmonic                                      #
-# ------------------------------------------------------------------------------------------------ #
 @inline @inbounds function pulseDrivenHarmonic(X::AbstractArray, p::Function, t::Real)
     (ω, ε, k, Ω) = p(t)
     dX2 = -ω^2.0*X[1] + ε*sin(k*X[1] - Ω*t)^2
@@ -191,6 +190,10 @@ end
 #     J = @SMatrix [0.0 1.0; 2*ε*k*cos(k*X[1] - Ω*t)-ω^2 0.0]
 # end
 
+
+"""
+    An harmonic oscillator driven by directional 'pulses'
+"""
 function pulseDrivenHarmonic(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))#, jac=waveDrivenHarmonic_J)
@@ -212,11 +215,6 @@ export pulseDrivenHarmonicSim
 
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                              Thomas' cyclically symmetric attractor                              #
-# ------------------------------------------------------------------------------------------------ #
-# * From Sprott, or Thomas1999
-
 @inline @inbounds function thomasCyclicallySymmetric(X::AbstractArray, 𝑏::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     𝑥̇ = -𝑏(𝑡)*𝑥 + sin(𝑦)
@@ -232,6 +230,11 @@ end
                     cos(𝑥)  0.0      -𝑏(𝑡)]
 end
 
+"""
+    Thomas' cyclically symmetric attractor
+
+From Sprott, or Thomas1999
+"""
 function thomasCyclicallySymmetric(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=thomasCyclicallySymmetric_J)
@@ -266,10 +269,7 @@ thomasCyclicallySymmetricArt = Process(
     solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
 export thomasCyclicallySymmetricArt
 
-# ------------------------------------------------------------------------------------------------ #
-#                                           Double Scroll                                          #
-# ------------------------------------------------------------------------------------------------ #
-# * From Sprott, or Elwakil2001
+
 
 @inline @inbounds function doubleScroll(X::AbstractArray, 𝑎::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
@@ -292,6 +292,11 @@ end
                     -𝑎(𝑡)*(1.0-2.0*𝛿(x))  -𝑎(𝑡)  -𝑎(𝑡)] # Need to worry about integrating delta? Hopefully we never hit 0.0...
 end
 
+"""
+    Double scroll attractor
+
+From Sprott, or Elwakil2001
+"""
 function doubleScroll(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=doubleScroll_J)
@@ -327,10 +332,64 @@ doubleScrollArt = Process(
 export doubleScrollArt
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                    Diffusionless Lorenz System                                   #
-# ------------------------------------------------------------------------------------------------ #
-# * Li2014, Sprott2010a (Elegant Chaos), and Schrier2000
+
+@inline @inbounds function lorenz(X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝜎, 𝑟, 𝑏) = p(𝑡)
+    𝑥̇ = 𝜎*(𝑦 - 𝑥)
+    𝑦̇ = -𝑥*𝑧 + 𝑟*𝑥 - 𝑦
+    𝑧̇ = 𝑥*𝑦 - 𝑏*𝑧
+    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+end
+@inline @inbounds function lorenz_J(X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝜎, 𝑟, 𝑏) = p(𝑡)
+    J = @SMatrix [  -𝜎      𝜎       0.0;
+                    𝑟-𝑧     -1.0    -𝑥;
+                    𝑦       𝑥       -𝑏]
+end
+
+"""
+    Lorenz system
+
+Sprott, Shin1998, Balcerzak2018
+"""
+function lorenz(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=lorenz_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+
+lorenzSim= Process(
+    process = lorenz,
+    X0 = [0.0, -0.01, 9.0],
+    parameter_profile = (constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters = (10.0, 28.0, 8/3), # Sprott's recomendation
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.0005,
+    savedt = 0.05,
+    tmax = 1000.0,
+    alg = RK4(),
+    solver_opts = Dict(:adaptive => false))
+export lorenzSim
+
+lorenzArt= Process(
+    process = lorenz,
+    X0 = [0.0, 0.01, 9.0],
+    parameter_profile = (constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters = (10.0, 28.0, 8/3),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.0005,
+    savedt = 0.001,
+    tmax = 1000.0,
+    alg = AutoVern7(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-15))
+export lorenzArt
+
+
 
 @inline @inbounds function diffusionlessLorenz(X::AbstractArray, 𝑎::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
@@ -346,6 +405,11 @@ end
                     𝑦      𝑥     0.0]
 end
 
+"""
+    Diffusionless Lorenz system
+
+See Li2014, Sprott2010a (Elegant Chaos), and Schrier2000
+"""
 function diffusionlessLorenz(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=diffusionlessLorenz_J)
@@ -381,10 +445,6 @@ diffusionlessLorenzArt = Process(
 export diffusionlessLorenzArt
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                    Piecewise-Linear Hyperchaos                                   #
-# ------------------------------------------------------------------------------------------------ #
-# * Li2014
 
 @inline @inbounds function piecewiseLinearHyperchaos(X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
@@ -406,6 +466,11 @@ end
                     0.0         -𝑏         0.0          0.0]
 end
 
+"""
+    A simple, piecewise-linear, hyperchaotic flow
+
+Li2014
+"""
 function piecewiseLinearHyperchaos(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=piecewiseLinearHyperchaos_J)
@@ -441,10 +506,7 @@ piecewiseLinearHyperchaosArt = Process(
 export piecewiseLinearHyperchaosArt
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                        simplifiedLorenz4D                                        #
-# ------------------------------------------------------------------------------------------------ #
-# * Li2014a and Gao2006
+
 
 @inline @inbounds function simplifiedLorenz4D(X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
@@ -466,6 +528,11 @@ end
                     0.0         -𝑏         0.0          0.0]
 end
 
+"""
+    The simplified 4D Lorenz system, whose attractors are exclusively hidden and can be hyperchaotic
+
+Li2014a and Gao2006
+"""
 function simplifiedLorenz4D(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=simplifiedLorenz4D_J)
@@ -502,11 +569,6 @@ export simplifiedLorenz4DArt
 
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                           Chen's System                                          #
-# ------------------------------------------------------------------------------------------------ #
-# * Song2004
-
 @inline @inbounds function chensSystem(X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     (𝑎, 𝑏, 𝑐) = p(𝑡)
@@ -525,6 +587,12 @@ end
                   𝑦         𝑥       -𝑏]
 end
 
+
+"""
+    Yet another chaotic attractor
+
+Chen1999, Song2004
+"""
 function chensSystem(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=chensSystem_J)

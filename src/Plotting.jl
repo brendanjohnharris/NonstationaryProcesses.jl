@@ -18,29 +18,6 @@ export widen
     linecolor --> :black
     markercolor --> :black
 
-
-    if colormethod == :velocity
-        velocity = sqrt.(sum([(r[2:end] .- collect(r[1:end-1])).^2 for r ∈ [timeseries(P, i; transient) for i in 1:lastindex(getX0(P))]], dims=1)[1])
-        seriestype := :path
-        line_z := velocity
-        linealpha --> 0.1
-        linewidth --> 1.0
-        colorbar --> nothing
-    elseif colormethod == :fourth
-        if length(vars) < 4
-            @error "Cannot color by the fourth variable if there are not four variables specified"
-        end
-        thefourth = vec(timeseries(P, vars[4]; transient))
-        vars = vars[1:3]
-        seriestype := :path
-        line_z := thefourth
-        linealpha --> 0.1
-        linewidth --> 1.0
-        colorbar --> nothing
-    elseif !isnothing(colormethod) && colormethod != :none
-        @error "Not a supported colormethod"
-    end
-
     if length(vars) == 1
         t = times(P, transient=transient)
         x = (t, timeseries(P, vars, transient=transient))
@@ -65,6 +42,29 @@ export widen
     if downsample != 1
         x = tuple([xx[1:downsample:end] for xx in x]...)
     end
+
+    if colormethod == :velocity
+        velocity = sqrt.(sum([(r[2:end] .- collect(r[1:end-1])).^2 for r ∈ [x[i] for i in 1:lastindex(getX0(P))]], dims=1)[1])
+        seriestype := :path
+        line_z := velocity
+        linealpha --> 0.1
+        linewidth --> 1.0
+        colorbar --> nothing
+    elseif colormethod == :fourth
+        if length(vars) < 4
+            @error "Cannot color by the fourth variable if there are not four variables specified"
+        end
+        thefourth = vec(x[4])
+        vars = vars[1:3]
+        seriestype := :path
+        line_z := thefourth
+        linealpha --> 0.1
+        linewidth --> 1.0
+        colorbar --> nothing
+    elseif !isnothing(colormethod) && colormethod != :none
+        @error "Not a supported colormethod"
+    end
+
     return x
 end
 
