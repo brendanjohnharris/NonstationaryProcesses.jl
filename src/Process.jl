@@ -214,6 +214,7 @@ end
 
 function saveTimeseries!(P::Process, folder::String="./", delim::Char=','; transient::Bool=true, fileroot="timeseries")
     X = timeseries(P, transient=transient)
+    mkpath(folder)
     if !transient
         P = trimtransient(P)
     end
