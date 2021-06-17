@@ -18,13 +18,6 @@ function vanderpol(P::Process)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
-# You want to get fancy? Let's store some stuff about the process using multiple dispatch 📜👽
-# function vanderpol(s::Symbol)
-#     if s == :Equation || s == :equation
-#         latexstring("y = \\dot{x}\n\\dot{y} = \\mu(1-x^2)y - x")
-#     end
-# end
-
 vanderpolSim = Process(
     process = vanderpol,
     X0 = [1.0, 1.0],
