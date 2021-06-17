@@ -1,4 +1,5 @@
 using Distributions
+using PyCall
 # ------------------------------------------------------------------------------------------------ #
 #                                         Gaussian Bimodal                                         #
 # ------------------------------------------------------------------------------------------------ #
@@ -108,3 +109,33 @@ arSim = Process(
     savedt = 1,
     tmax = 5000)
 export arSim
+
+
+"""
+Wrap the main function of the python package colorednoise
+"""
+function colorednoise(β, N)
+    cn.powerlaw_psd_gaussian(β, N)
+end
+export colorednoise
+
+# """
+# Colored noise with a power-law spectrum described by the exponent β
+# """
+# function coloredNoise(P::Process)
+#     # Parameter β
+#     seed(P.solver_rng) # Does this carry over to python? Not a huge deal if not
+#     (β,) = parameter_functions(P)
+#     sol = [η(t)*randn() + C(t) for t in P.transient_t0:P.savedt:P.tmax]
+# end
+
+
+shiftyNoiseSim = Process(
+    process = shiftyNoise,
+    parameter_profile = (constantParameter, stepNoise),
+    parameter_profile_parameters = [(1.0,), ((0.0, 1000.0), 100.0, 2.0, 0.0)],
+    transient_t0 = 0.0,
+    t0 = 0.0,
+    savedt = 1,
+    tmax = 1000.0)
+export shiftyNoiseSim
