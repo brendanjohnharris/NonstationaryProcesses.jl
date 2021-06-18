@@ -68,6 +68,37 @@ export widen
     return x
 end
 
+
+# Plot a trajectory with a trail
+@recipe function f(::Type{Val{:trail}}, x, y, z, trailcolor=nothing)
+    if length(x) > 1
+        @series begin
+            if !isnothing(trailcolor)
+                seriescolor := trailcolor
+            end
+            seriescolor --> :black
+            label := nothing
+            seriestype := :path
+            linealpha := LinRange(0, 1, length(x))
+            linewidth --> 2.5
+            linewidth := LinRange(0.0, plotattributes[:linewidth], length(x))
+            x := x
+            y := y
+            z := z
+        end
+    end
+    seriestype := :scatter
+    x := x[end]
+    label --> nothing
+    seriescolor --> :black
+    markersize --> 5
+    !isnothing(y) ? y := y[end] : nothing
+    !isnothing(z) ? z := y[end] : nothing
+    ()
+end
+
+
+
 function movie(P::Process; vars=1:length(P.X0), downsample=1, trail=10, seriestype=:trail, kwargs...)
     X = timeseries(P, vars)
     bounds = mapslices(extrema, X)
@@ -77,29 +108,18 @@ function movie(P::Process; vars=1:length(P.X0), downsample=1, trail=10, seriesty
     anim = @animate for i ∈ 1:downsample:I
         print("\u1b[1GFrame $(i÷downsample)/$(I÷downsample)")
         if seriestype == :trail
-            trailIdxs = i-(trail*size(X, 1)÷downsample):i
+            trailIdxs = (i-trail:1:i) #i-(trail*size(X, 1)÷downsample):i
             trailIdxs = trailIdxs[trailIdxs .> 0]
             Xtrail = X[trailIdxs, 1]
             Ytrail = X[trailIdxs, 2]
-            if length(trailIdxs) > 1
-                plot!(Xtrail, Ytrail, seriestype=:path,
-                        color=:red,
-                        linealpha=LinRange(0, 1, length(trailIdxs)),
-                        label=:none,
-                        linewidth=2,
-                )
-            end
-            plot!([X[i, 1]], [X[i, 2]]; seriestype=:scatter,
-                markersize=20,
-                color=:black,
-                size=(500, 500),
-                xlims=bounds[1].*1.1,
-                ylims=bounds[2].*1.1,
-                border=:none,
-                label=:none,
-                kwargs...
-            )
-            # Add 3D trail?
+            plot(Xtrail, Ytrail, seriestype=:trail, markersize=20,
+            color=:black,
+            size=(500, 500),
+            xlims=bounds[1].*1.1,
+            ylims=bounds[2].*1.1,
+            border=:none,
+            label=:none,
+            kwargs...)
         else
             bounds = widen.(mapslices(extrema, X), (0.3,))
             x = [X[1:i, v] for v in 1:lastindex(X, 2)]
@@ -435,4 +455,85 @@ end
         z := z
     end
 
+end
+
+
+
+
+"""
+Plot and animate a system evolving alongside its power spectrum
+"""
+function animatespectrum(S::Process; downsample=1, trail=1000, nperseg=1000, phasogram=false)
+    t = times(S)
+    p = parameterseries(S)[end, :]
+    X = timeseries(S)
+    bounds = extrema(X)
+    x = vec(X[:, 1])
+    y = vec(X[:, 2])
+    if size(X, 2) > 3
+        z = vec(X[:, 3])
+    else
+        z = fill(nothing, size(x))
+    end
+    if phasogram
+        g = (3, 1)
+        s = (400, 800)
+    else
+        g = (2, 1)
+        s = (400, 600)
+    end
+    anim = @animate for i = 1:downsample:length(x)
+            print("\u1b[1GFrame $(i÷downsample)/$(length(x)÷downsample)")
+            trailidxs = i-trail:i
+            trailidxs = trailidxs[trailidxs .> 0]
+            if isempty(trailidxs)
+                trailidxs = [1]
+            end
+            plot(t, x, seriestype=:spectrogram, teval=t[i], layout=grid(g..., heights=(1-(g[1]-1)*0.2, fill(0.2, g[1]-1)...)), subplot=2, size=s, framestyle=:box, left_margin=5Plots.mm, ylims=(10^-15, 10^5), nperseg=nperseg, ticks=nothing)
+            if phasogram
+                plot!(t, x, seriestype=:spectrogram, teval=t[i], subplot=3, nperseg=nperseg, phasogram=true, linez=p[i], colorbar=nothing)
+            end
+            plot!(x[trailidxs], y[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, lims=(floor(bounds[1]), ceil(bounds[2])), markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing)
+    end
+    anim
+end
+export animatespectrum
+
+
+# Plot the spectrogram of a time series as a heatmap. Optionally give a time at which to evaluate the spectrogram, in which case the plot will be a path.
+@recipe function f(::Type{Val{:spectrogram}}, x, y, z; teval=nothing, nperseg=1000, phasogram=false)
+    t = x
+    Δt = (t[2] - t[1])
+    fs = 1/Δt
+    #@assert all((t[2:end] .- t[1:end-1]) .≈ Δt) # Check regularly sampled
+    𝑓, 𝑡, 𝑍 = stft(y; fs=fs, nperseg=nperseg)
+    𝑡 .+= t[1]
+    if phasogram # Show phases instead of spectrum
+        S = angle.(𝑍)
+        yguide := "ϕ"
+        ylims := (-π, π)
+        scale := :linear
+    else
+        S = abs.(𝑍).^2
+    end
+    if isnothing(teval)
+        seriestype := heatmap
+        yscale --> :log
+        x := 𝑡
+        y := 𝑓[2:end]
+        colorbar_title := "log₁₀(S)"
+        z := Surface(log10.(S[2:end, :]))
+    else
+        seriestype := :path
+        _, tidx = findmin(abs.(𝑡.-teval))
+        scale --> :log
+        legend --> nothing
+        seriescolor --> :black
+        linewidth --> 2.5
+        xguide --> "f"
+        yguide --> "S"
+        x := 𝑓[2:end]
+        y := S[2:end, tidx]
+    end
+    ()
 end

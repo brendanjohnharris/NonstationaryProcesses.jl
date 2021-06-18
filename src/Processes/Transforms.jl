@@ -88,7 +88,7 @@ export selfAffineSim
 
 Generate a non-stationary surrogate time series from an input `x` after performing manipulations in (short-time) Fourier space. The function `g(A, t)` is applied to the amplitudes of the Fourier coefficients whereas `h(𝜑, t)` is applied to the phases. After modifying the short-time fourier representation of the time series, the inverse short-time Fourier transform is used to construct the surrogate time series. `x` should be regularly sampled, and the time coordinates in `t` are crucial for correctly evaluating `g` and `h`. Optional `kwargs` are passed to python's `stft` and `istft` functions.
 """
-function fouriersurrogate(x::AbstractVector, t; g::Function=(𝑓, 𝑡, A)->A, h::Function=(𝑓, 𝑡, 𝜑)->𝜑, nperseg=256, kwargs...)
+function fouriersurrogate(x::AbstractVector, t; g::Function=(𝑓, 𝑡, A)->A, h::Function=(𝑓, 𝑡, 𝜑)->𝜑, nperseg=1000, kwargs...)
     Δt = (t[2] - t[1])
     fs = 1/Δt
     @assert all((t[2:end] .- t[1:end-1]) .≈ Δt) # Check regularly sampled
@@ -124,10 +124,12 @@ Take a Process and use the dark magic to produce a corrupted version, which has 
 """
 function corruptphase(P::Process, parameter_profile=constant, parameter_profile_parameters=0.0)
     S = P()
-    S.parameter_profile = (getparameter_profile(P)..., parameter_profile)
     ps = getparameter_profile_parameters(P)
-    if length(getparameter_profile(P)) == 1
+    if getparameter_profile(P) isa Function || length(getparameter_profile(P)) == 1
+        S.parameter_profile = (getparameter_profile(P), parameter_profile)
         ps = [ps]
+    else
+        S.parameter_profile = (getparameter_profile(P)..., parameter_profile)
     end
     S.parameter_profile_parameters = (ps..., parameter_profile_parameters)
     pr = string(getprocess(P))
@@ -137,10 +139,16 @@ function corruptphase(P::Process, parameter_profile=constant, parameter_profile_
         function ($fname)(S::Process)
             D = S()
             D.parameter_profile = getparameter_profile(S)[1:end-1]
+            if length(D.parameter_profile) == 1
+                D.parameter_profile = D.parameter_profile[1]
+            end
             D.parameter_profile_parameters = getparameter_profile_parameters(S)[1:end-1]
+            if length(D.parameter_profile_parameters) == 1
+                D.parameter_profile_parameters = D.parameter_profile_parameters[1]
+            end
             D.process = $pr
             x = timeseries(D, transient=true)
-            𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end])
+            𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
             ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
             x = hcat([fouriersurrogate(y, times(S, transient=true); h=(𝑓, 𝑡, 𝜑)->corruptangle(𝜑, 𝜂(𝑡))) for y ∈ ys]...)
         end
