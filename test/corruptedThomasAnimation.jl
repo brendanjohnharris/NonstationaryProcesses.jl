@@ -16,5 +16,5 @@ tom = thomasCyclicallySymmetricSim(
 
 𝔱𝔬𝔪 = corruptphase(tom, ramp, (0.0, 1.0, 0.0, 2000.0))()
 
-a = animatespectrum(𝔱𝔬𝔪, downsample=100, trail=5000)
+a = animatespectrum(𝔱𝔬𝔪, downsample=100, trail=20000, nperseg=2000)
 gif(a, fps=24)
