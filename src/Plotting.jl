@@ -70,7 +70,7 @@ end
 
 
 # Plot a trajectory with a trail
-@recipe function f(::Type{Val{:trail}}, x, y, z, trailcolor=nothing)
+@recipe function f(::Type{Val{:trail}}, x, y, z; trailcolor=nothing, symmetric=false)
     if length(x) > 1
         @series begin
             if !isnothing(trailcolor)
@@ -79,7 +79,7 @@ end
             seriescolor --> :black
             label := nothing
             seriestype := :path
-            linealpha := LinRange(0, 1, length(x))
+            linealpha := (symmetric ? vcat(LinRange(0, 1, length(x)/2 |> floor |> Int), LinRange(1, 0, length(x)/2 |> ceil |> Int)) : LinRange(0, 1, length(x)))
             linewidth --> 2.5
             linewidth := LinRange(0.0, plotattributes[:linewidth], length(x))
             x := x
@@ -463,11 +463,11 @@ end
 """
 Plot and animate a system evolving alongside its power spectrum
 """
-function animatespectrum(S::Process; downsample=1, trail=1000, nperseg=1000, phasogram=false)
+function animatespectrum(S::Process; downsample=1, trail=1000, nperseg=1000, phasogram=false, colorgradient=cgrad([:black, :crimson]), dpi=200)
     t = times(S)
     p = parameterseries(S)[end, :]
     X = timeseries(S)
-    bounds = extrema(X)
+    bounds = mapslices(extrema, X, dims=1)
     x = vec(X[:, 1])
     y = vec(X[:, 2])
     if size(X, 2) > 3
@@ -475,13 +475,7 @@ function animatespectrum(S::Process; downsample=1, trail=1000, nperseg=1000, pha
     else
         z = fill(nothing, size(x))
     end
-    if phasogram
-        g = (3, 1)
-        s = (400, 800)
-    else
-        g = (2, 1)
-        s = (400, 600)
-    end
+    xprev = zeros(size(x))
     anim = @animate for i = 1:downsample:length(x)
             print("\u1b[1GFrame $(i÷downsample)/$(length(x)÷downsample)")
             trailidxs = i-trail:i
@@ -489,11 +483,19 @@ function animatespectrum(S::Process; downsample=1, trail=1000, nperseg=1000, pha
             if isempty(trailidxs)
                 trailidxs = [1]
             end
-            plot(t, x, seriestype=:spectrogram, teval=t[i], layout=grid(g..., heights=(1-(g[1]-1)*0.2, fill(0.2, g[1]-1)...)), subplot=2, size=s, framestyle=:box, left_margin=5Plots.mm, ylims=(10^-15, 10^5), nperseg=nperseg, ticks=nothing)
+            plot(t, x, seriestype=:spectrogram, teval=t[i], layout=(phasogram ? (@layout [a{0.8h}; b{0.65w} c{0.35w}]) : (@layout [a{0.7h}; b])), subplot=2, size=(1000, 1000), framestyle=:box, left_margin=10Plots.mm, ylims=(10^-15, 10^5), nperseg=nperseg, axis=nothing, grid=true, colorbar=false, color=:black, gridlinewidth=4.0, dpi=dpi)
             if phasogram
-                plot!(t, x, seriestype=:spectrogram, teval=t[i], subplot=3, nperseg=nperseg, phasogram=true, linez=p[i], colorbar=nothing)
+                # Gonna be very tricky here. Only take the top half of frequencies, and perform all sorts of rotations to get a nice visualisation
+                alignshift = -mean(x[Int(ceil(length(x)/2)):end]) # Becuase only relative phases really matter, rotate so that the phases betwene frames are mostly aligned
+                alignreflect = sum(x .- xprev) > sum(x.+alignshift) ? -1.0 : 1.0 # Should we also reflect? 
+                plot!(t, alignreflect.*(x.+alignshift), seriestype=:spectrogram, teval=t[i], subplot=3, nperseg=nperseg, phasogram=true, colorbar=nothing, topfreqs = 2, axis=nothing, gridlinewidth=4.0, margin = 2Plots.mm, foreground_text_color=:white)
             end
-            plot!(x[trailidxs], y[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, lims=(floor(bounds[1]), ceil(bounds[2])), markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing)
+            if size(X, 2) == 2
+                plot!(x[trailidxs], y[trailidxs], z[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1], ylims=bounds[2], zlims=bounds[3], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient)
+            else
+                plot!(x[trailidxs], y[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1], ylims=bounds[2], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient, symmetric=true)
+            end
+            xprev = copy(x)
     end
     anim
 end
@@ -501,7 +503,7 @@ export animatespectrum
 
 
 # Plot the spectrogram of a time series as a heatmap. Optionally give a time at which to evaluate the spectrogram, in which case the plot will be a path.
-@recipe function f(::Type{Val{:spectrogram}}, x, y, z; teval=nothing, nperseg=1000, phasogram=false)
+@recipe function f(::Type{Val{:spectrogram}}, x, y, z; teval=nothing, nperseg=1000, phasogram=false, topfreqs=nothing)
     t = x
     Δt = (t[2] - t[1])
     fs = 1/Δt
@@ -510,30 +512,57 @@ export animatespectrum
     𝑡 .+= t[1]
     if phasogram # Show phases instead of spectrum
         S = angle.(𝑍)
-        yguide := "ϕ"
-        ylims := (-π, π)
-        scale := :linear
+        if !isnothing(topfreqs)
+            idxs = Int(ceil(length(𝑓)/topfreqs)):length(𝑓)
+            𝑓 = 𝑓[idxs]
+            S = S[idxs, :]
+        end
     else
         S = abs.(𝑍).^2
     end
     if isnothing(teval)
-        seriestype := heatmap
+        seriestype := :heatmap
+        if phasogram
+            scale := :linear
+            colorbar_title := "ϕ"
+            z := Surface((S[2:end, :]))
+        else
+            colorbar_title := "log₁₀(S)"
+            z := Surface(log10.(S[2:end, :]))
+        end
         yscale --> :log
         x := 𝑡
         y := 𝑓[2:end]
-        colorbar_title := "log₁₀(S)"
-        z := Surface(log10.(S[2:end, :]))
     else
-        seriestype := :path
+        seriestype := (phasogram ? :phasogram : :path)
         _, tidx = findmin(abs.(𝑡.-teval))
-        scale --> :log
+        if phasogram
+            title --> ""
+            dolog := true
+        else
+            scale --> :log
+            xguide --> "f"
+            yguide --> "S"
+            linewidth --> 2.5
+        end
         legend --> nothing
         seriescolor --> :black
-        linewidth --> 2.5
-        xguide --> "f"
-        yguide --> "S"
         x := 𝑓[2:end]
         y := S[2:end, tidx]
     end
+    ()
+end
+
+
+
+@recipe function f(::Type{Val{:phasogram}}, x, y, z; dolog=false)
+    projection := :polar
+    seriestype := :scatter
+    x := dolog ? y[x .> 0] : y
+    y := dolog ? log10.(x[x .> 0]) .- min(log10.(x[x .> 0])...) : x
+    markersize --> 2
+    markercolor --> :black
+    title --> (dolog ? "log₁₀(f)" : "f") #(dolog ? "log₁₀(f) + min[log₁₀(f)]" : "f")
+    label --> nothing
     ()
 end
