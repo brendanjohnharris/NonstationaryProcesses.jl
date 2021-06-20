@@ -463,7 +463,8 @@ end
 """
 Plot and animate a system evolving alongside its power spectrum
 """
-function animatespectrum(S::Process; downsample=1, trail=1000, nperseg=1000, phasogram=false, colorgradient=cgrad([:black, :crimson]), dpi=200)
+function animatespectrum(S::Process; downsample=100, trail=1000, nperseg=1000, phasogram=false, colorgradient=cgrad([:black, :crimson]), dpi=200)
+    # Phasogram really requires a high sampling period
     t = times(S)
     p = parameterseries(S)[end, :]
     X = timeseries(S)
@@ -503,6 +504,7 @@ export animatespectrum
 
 
 # Plot the spectrogram of a time series as a heatmap. Optionally give a time at which to evaluate the spectrogram, in which case the plot will be a path.
+@shorthands spectrogram
 @recipe function f(::Type{Val{:spectrogram}}, x, y, z; teval=nothing, nperseg=1000, phasogram=false, topfreqs=nothing)
     t = x
     Δt = (t[2] - t[1])
