@@ -88,14 +88,14 @@ export selfAffineSim
 
 Generate a non-stationary surrogate time series from an input `x` after performing manipulations in (short-time) Fourier space. The function `g(A, t)` is applied to the amplitudes of the Fourier coefficients whereas `h(𝜑, t)` is applied to the phases. After modifying the short-time fourier representation of the time series, the inverse short-time Fourier transform is used to construct the surrogate time series. `x` should be regularly sampled, and the time coordinates in `t` are crucial for correctly evaluating `g` and `h`. Optional `kwargs` are passed to python's `stft` and `istft` functions.
 """
-function fouriersurrogate(x::AbstractVector, t; g::Function=(𝑓, 𝑡, A)->A, h::Function=(𝑓, 𝑡, 𝜑)->𝜑, nperseg=1000, kwargs...)
+function fouriersurrogate(x::AbstractVector, t::AbstractVector; g::Function=(𝑓, 𝑡, A)->A, h::Function=(𝑓, 𝑡, 𝜑)->𝜑, nperseg=1000, kwargs...)::AbstractVector
     Δt = (t[2] - t[1])
     fs = 1/Δt
-    @assert all((t[2:end] .- t[1:end-1]) .≈ Δt) # Check regularly sampled
-    𝑓, 𝑡, 𝑍 = stft(x; fs=fs, nperseg=nperseg, kwargs...)
+    @assert all(diff(t, dims=1) .≈ Δt) # Check regularly sampled
+    𝑓, 𝑡, 𝑍 = stft(x; fs, nperseg, kwargs...)
     𝑡 .+= t[1] # Offset the start time to match input signal
     @tullio 𝑍[i, j] = g(𝑓[i], 𝑡[j], abs(𝑍[i, j]))*cis(h(𝑓[i], 𝑡[j], angle(𝑍[i, j])))
-    𝑡, x̂ = istft(𝑍; fs=fs, nperseg=nperseg, kwargs...)
+    𝑡, x̂ = istft(𝑍; fs, nperseg, kwargs...)
     @assert (𝑡[2] - 𝑡[1]) == (t[2] - t[1])
     x̂ = x̂[1:length(x)] # The stft is zero-padded by python to fit evenly into the windows, so the istft is longer than the input x even though it has the same sampling frequency.
 end
@@ -123,6 +123,7 @@ end
 Take a Process and use the dark magic to produce a corrupted version, which has an extra parameter controlling the probability of the phase of each fourier coefficient being randomised.
 """
 function corruptphase(P::Process, parameter_profile=constant, parameter_profile_parameters=0.0)
+    # In this case, savedt should really be a multiple of dt
     S = P()
     ps = getparameter_profile_parameters(P)
     if getparameter_profile(P) isa Function || length(getparameter_profile(P)) == 1
@@ -146,11 +147,14 @@ function corruptphase(P::Process, parameter_profile=constant, parameter_profile_
             if length(D.parameter_profile_parameters) == 1
                 D.parameter_profile_parameters = D.parameter_profile_parameters[1]
             end
+            downsample = floor(D.savedt/D.dt) |> Int
+            D.savedt = D.dt # To keep accuracy for the transforms
             D.process = $pr
             x = timeseries(D, transient=true)
             𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
             ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
             x = hcat([fouriersurrogate(y, times(S, transient=true); h=(𝑓, 𝑡, 𝜑)->corruptangle(𝜑, 𝜂(𝑡))) for y ∈ ys]...)
+            x = x[1:downsample:end, :]
         end
     end
     S.process = @eval $fname
