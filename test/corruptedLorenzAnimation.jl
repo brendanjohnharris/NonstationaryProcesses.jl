@@ -13,7 +13,7 @@ lorenz = lorenzSim(
     alg = AutoVern7(Rodas5()),
     solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
 
-𝔩𝔬𝔯𝔢𝔫𝔷 = corruptphase(lorenz, rampInterval, (0.0, 0.2, 500.0, 1000.0))()
+𝔩𝔬𝔯𝔢𝔫𝔷 = corruptphase(lorenz, rampInterval, (0.0, 0.2, 250.0, 1000.0))()
 
-a = animatespectrum(𝔩𝔬𝔯𝔢𝔫𝔷, downsample=100, trail=2000, colorgradient=cgrad([:black, :crimson]), phasogram=true, nperseg=1000, dpi=100)
+a = animatespectrum(𝔩𝔬𝔯𝔢𝔫𝔷, downsample=100, trail=5000, colorgradient=cgrad([:black, :crimson]), phasogram=true, nperseg=1000, dpi=100)
 gif(a, "./corruptlorenzsym.gif", fps=24)

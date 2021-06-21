@@ -180,4 +180,4 @@ phaseCorruptedLorenzSim = corruptphase(lorenzSim(
     savedt = 0.05,
     tmax = 1000.0,
     alg = AutoVern7(Rodas5()),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-15)), rampInterval, (0.0, 0.5, 0.0, 1000.0))
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-15)), rampInterval, (0.0, 0.25, 0.0, 1000.0))
