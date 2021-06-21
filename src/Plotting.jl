@@ -492,7 +492,7 @@ function animatespectrum(S::Process; downsample=100, trail=1000, nperseg=1000, p
                 plot!(t, alignreflect.*(x.+alignshift), seriestype=:spectrogram, teval=t[i], subplot=3, nperseg=nperseg, phasogram=true, colorbar=nothing, topfreqs = 2, axis=nothing, gridlinewidth=4.0, margin = 2Plots.mm, foreground_text_color=:white)
             end
             if size(X, 2) == 2
-                plot!(x[trailidxs], y[trailidxs], z[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1], ylims=bounds[2], zlims=bounds[3], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient)
+                plot!(x[trailidxs], y[trailidxs], z[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1], ylims=bounds[2], zlims=bounds[3], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient, linewidth=1.5)
             else
                 plot!(x[trailidxs], y[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1], ylims=bounds[2], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient, symmetric=true)
             end
