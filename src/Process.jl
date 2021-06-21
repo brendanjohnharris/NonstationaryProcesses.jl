@@ -221,7 +221,7 @@ function saveTimeseries!(P::Process, folder::String="./", delim::Char=','; trans
     filename = joinpath(folder, fileroot*"_"*string(getid(P))*".csv")
     P.solution = abspath(folder)
     #P.solution = nothing
-    @debug "Saving time-series data to $filename"
+    @info "Saving time-series data to $filename"
     writedlm(filename, X, delim)
 end
 export saveTimeseries!
