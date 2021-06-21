@@ -120,7 +120,7 @@ end
 
 
 """
-Take a Process and use the dark magic to produce a corrupted version, which has an extra parameter controlling the probability of the phase of each fourier coefficient being randomised.
+Take a Process and use the dark magic to produce a corrupted version, which has an extra parameter controlling the probability of the phase of each fourier coefficient being randomised. If planning to save and load this process, an instance of it must first be loaded so that the simulating function is exported
 """
 function corruptphase(P::Process, parameter_profile=constant, parameter_profile_parameters=0.0)
     # In this case, savedt should really be a multiple of dt
@@ -136,7 +136,7 @@ function corruptphase(P::Process, parameter_profile=constant, parameter_profile_
     pr = string(getprocess(P))
     fname = Symbol("phaseCorrupted"*titlecase(pr))
     pr = Symbol(pr)
-    @eval begin # 😢
+    @eval begin # Cry me a river 😢
         function ($fname)(S::Process)
             D = S()
             D.parameter_profile = getparameter_profile(S)[1:end-1]
@@ -153,9 +153,10 @@ function corruptphase(P::Process, parameter_profile=constant, parameter_profile_
             x = timeseries(D, transient=true)
             𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
             ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
-            x = hcat([fouriersurrogate(y, times(S, transient=true); h=(𝑓, 𝑡, 𝜑)->corruptangle(𝜑, 𝜂(𝑡))) for y ∈ ys]...)
+            x = hcat([fouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, 𝜑)->corruptangle(𝜑, 𝜂(𝑡))) for y ∈ ys]...)
             x = x[1:downsample:end, :]
         end
+        export $fname
     end
     S.process = @eval $fname
     return S
@@ -165,3 +166,18 @@ export corruptphase
 
 
 
+
+"""
+E.g. Lorenz attractor with corrupted phases
+"""
+phaseCorruptedLorenzSim = corruptphase(lorenzSim(
+    X0 = [0.0, -0.01, 9.0],
+    parameter_profile = (constant, constant, constant),
+    parameter_profile_parameters = (10.0, 28.0, 8/3),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.05,
+    tmax = 1000.0,
+    alg = AutoVern7(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-15)), rampInterval, (0.0, 0.5, 0.0, 1000.0))
