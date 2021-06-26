@@ -527,13 +527,13 @@ export animatespectrum
         if phasogram
             scale := :linear
             colorbar_title := "ϕ"
-            z := Surface((S[2:end, :]))
+            z := Surface((S[2:end, 1:end-1]))
         else
             colorbar_title := "log₁₀(S)"
-            z := Surface(log10.(S[2:end, :]))
+            z := Surface(log10.(S[2:end, 1:end-1]))
         end
         yscale --> :log
-        x := 𝑡
+        x := 𝑡[1:end-1]
         y := 𝑓[2:end]
     else
         seriestype := (phasogram ? :phasogram : :path)

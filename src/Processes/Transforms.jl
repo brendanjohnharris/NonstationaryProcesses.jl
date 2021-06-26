@@ -136,7 +136,7 @@ function corruptphase(P::Process, parameter_profile=constant, parameter_profile_
     pr = string(getprocess(P))
     fname = Symbol("phaseCorrupted"*titlecase(pr))
     pr = Symbol(pr)
-    @eval begin # Cry me a river 😢
+    @eval begin # Cry me a river
         function ($fname)(S::Process)
             D = S()
             D.parameter_profile = getparameter_profile(S)[1:end-1]
@@ -153,7 +153,7 @@ function corruptphase(P::Process, parameter_profile=constant, parameter_profile_
             x = timeseries(D, transient=true)
             𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
             ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
-            x = hcat([fouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, 𝜑)->corruptangle(𝜑, 𝜂(𝑡))) for y ∈ ys]...)
+            x = hcat([fouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, 𝜑)->corruptangle(𝜑, 𝜂(𝑡)), nperseg=1000*downsample) for y ∈ ys]...)
             x = x[1:downsample:end, :]
         end
         export $fname
