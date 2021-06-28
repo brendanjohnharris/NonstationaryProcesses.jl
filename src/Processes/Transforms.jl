@@ -118,6 +118,16 @@ function corruptangle(𝜑, 𝜂)
 end
 
 
+"""
+Function for randomising phases below a threshold frequency ν
+"""
+function thresholdcorrupt(𝑓, 𝜑, ν)
+    #p = sum(imag.(𝜑) > eps)/length(𝜑)
+    idxs = (𝑓 .< ν) .& (imag(𝜑) .> eps)
+    𝜑[idxs] .= corruptangle.(𝜑[idxs])
+end
+
+
 
 """
 Take a Process and use the dark magic to produce a corrupted version, which has an extra parameter controlling the probability of the phase of each fourier coefficient being randomised. If planning to save and load this process, an instance of it must first be loaded so that the simulating function is exported
