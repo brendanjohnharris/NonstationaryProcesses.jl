@@ -489,7 +489,7 @@ function animatespectrum(S::Process; downsample=100, trail=1000, nperseg=1000, p
                 # Gonna be very tricky here. Only take the top half of frequencies, and perform all sorts of rotations to get a nice visualisation
                 alignshift = 0.0# -mean(x[Int(ceil(length(x)/2)):end]) # Becuase only relative phases really matter, rotate so that the phases betwene frames are mostly aligned
                 alignreflect = 1.0 # sum(x .- xprev) > sum(x.+alignshift) ? -1.0 : 1.0 # Should we also reflect? 
-                plot!(t, alignreflect.*(x.+alignshift), seriestype=:spectrogram, teval=t[i], subplot=3, nperseg=nperseg, phasogram=true, colorbar=nothing, topfreqs = 2, axis=nothing, gridlinewidth=4.0, margin = 2Plots.mm, foreground_text_color=:white)
+                plot!(t, alignreflect.*(x.+alignshift), seriestype=:spectrogram, teval=t[i], subplot=3, nperseg=nperseg, phasogram=true, colorbar=nothing, topfreqs = nothing, axis=nothing, gridlinewidth=4.0, margin = 2Plots.mm, foreground_text_color=:white)
             end
             if size(X, 2) == 2
                 plot!(x[trailidxs], y[trailidxs], z[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1], ylims=bounds[2], zlims=bounds[3], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient, linewidth=1.5)
@@ -514,7 +514,7 @@ export animatespectrum
     𝑡 .+= t[1]
     if phasogram # Show phases instead of spectrum
         S = angle.(𝑍)
-        if false # !isnothing(topfreqs)
+        if !isnothing(topfreqs)
             idxs = Int(ceil(length(𝑓)/topfreqs)):length(𝑓)
             𝑓 = 𝑓[idxs]
             S = S[idxs, :]
@@ -540,7 +540,7 @@ export animatespectrum
         _, tidx = findmin(abs.(𝑡.-teval))
         if phasogram
             title --> ""
-            dolog := true
+            dolog := false
         else
             scale --> :log
             xguide --> "f"
