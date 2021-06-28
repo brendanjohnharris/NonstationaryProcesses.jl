@@ -243,7 +243,7 @@ function wft(x, t; nwindows=20)
     @assert all(diff(t, dims=1) .≈ Δt) # Check regularly sampled
     remainder = length(x)%nwindows
     remainder > 1 ? (@warn "The time series does not divide well into the number of windows supplied. The remainder is $remainder") : nothing
-    𝑓 = rfftfreq((length(x) - remainder)÷20, fs)
+    𝑓 = rfftfreq((length(x) - remainder)÷nwindows, fs)
     𝑥, 𝑡 = [reshape(i[1:end-remainder], ((length(i)-remainder)÷nwindows, nwindows)) for i ∈ (x, t)]
     # Have to be careful with floating points here. Start by converting all times to integers, since we know they are equally spaced
     𝑡ᵢ = Int.(round.(𝑡./Δt))
@@ -258,16 +258,23 @@ export wft
 Inverse of wft transformation. Just simple windows. If the original time series did not fit well into the number of windows, give a remainder here and it will append that many samples onto the end of the time series, which all have the same value as the last point in the reconstructed time series (shouldn't be a massive deal if the remainder is only 1 or 2 and the sampling period is small).
 """
 function iwft(𝑡, 𝑍; remainder=0)
-    nwindows = size(𝑍, 2)
-    Δ𝑡 = (𝑡[2] - 𝑡[1])
-    @assert all(diff(𝑡, dims=1) .≈ Δ𝑡) # Equally spaced window centres
-    x̂ = irfft(𝑍, 2*size(𝑍, 1)-2, 1)
-    x̂ = reshape(x̂, length(x̂))
-    Δt̂ = Δ𝑡/((length(x̂))÷nwindows)
-    N = Δ𝑡/Δt̂
-    t̂₀ = 𝑡[1]-Δt̂*(N-1)/2
-    append!(x̂, fill(x̂[end], remainder))
-    t̂ = t̂₀:Δt̂:Δt̂*(N*nwindows-1 + remainder)
+    if length(𝑡) == 1
+        x̂ = irfft(𝑍, 2*size(𝑍, 1)-1, 1) # Not usually even in this case
+        x̂ = reshape(x̂, length(x̂))
+        t̂ = 1:length(x̂) # Can't do a whole lot better with one window time
+    else
+        nwindows = size(𝑍, 2)
+        @assert nwindows == length(𝑡) # 𝑡 has window centres
+        Δ𝑡 = (𝑡[2] - 𝑡[1])
+        @assert all(diff(𝑡, dims=1) .≈ Δ𝑡) # Equally spaced window centres
+        x̂ = irfft(𝑍, 2*size(𝑍, 1)-2, 1)
+        x̂ = reshape(x̂, length(x̂))
+        Δt̂ = Δ𝑡/((length(x̂))÷nwindows)
+        N = Δ𝑡/Δt̂
+        t̂₀ = 𝑡[1]-Δt̂*(N-1)/2
+        append!(x̂, fill(x̂[end], remainder))
+        t̂ = t̂₀:Δt̂:Δt̂*(N*nwindows-1 + remainder)
+    end
     return (x̂, t̂)
 end
 iwft(𝑓, 𝑡, 𝑍; kwargs...) = iwft(𝑡, 𝑍; kwargs...) # 𝑓 not needed, but in case you want to pass wft result directly to iwft
@@ -275,7 +282,7 @@ iwft(𝑍::AbstractDimArray; kwargs...) = iwft(timeDims(𝑍), Array(𝑍); kwar
 export iwft
 
 
-function windowedfouriersurrogate(x::AbstractVector, t::AbstractVector; g::Function=(𝑓, 𝑡, A)->A, h::Function=(𝑓, 𝑡, 𝜑)->𝜑, nwindows=20, kwargs...)::AbstractVector
+function windowedfouriersurrogate(x::AbstractVector, t::AbstractVector; g::Function=(𝑓, 𝑡, A)->A, h::Function=(𝑓, 𝑡, 𝜑)->𝜑, nwindows=20)::AbstractVector
     Δt = (t[2] - t[1])
     fs = 1/Δt
     @assert all(diff(t, dims=1) .≈ Δt) # Check regularly sampled
@@ -283,14 +290,15 @@ function windowedfouriersurrogate(x::AbstractVector, t::AbstractVector; g::Funct
     #display(heatmap(log10.(abs.(𝑍[2:end-1, :])), scale=:log))
     @tullio 𝑍[i, j] = g(𝑓[i], 𝑡[j], abs(𝑍[i, j]))*cis(h(𝑓[i], 𝑡[j], angle(𝑍[i, j])))
     #display(heatmap(log10.(abs.(𝑍[2:end-1, :])), scale=:log))
-    x̂, 𝑡 = iwft(𝑡, 𝑍, remainder=1) # For most situations in which this function is a good idea, this remainder will be 1
-    @assert (𝑡[2] - 𝑡[1]) == (t[2] - t[1])
+    remainder = Int(length(x)%nwindows)
+    x̂, 𝑡 = iwft(𝑡, 𝑍, remainder=remainder) # For most situations in which this function is a good idea, this remainder will be 1
+    @assert nwindows == 1 || (𝑡[2] - 𝑡[1]) == (t[2] - t[1])
     return x̂
 end
 
 function windowedfouriersurrogate(x::DimArray; kwargs...)
     t = timeDims(x)
-    x̂ = fouriersurrogate(Array(x), t; kwargs...)
+    x̂ = windowedfouriersurrogate(Array(x), t; kwargs...)
     DimArray(x̂, (Ti(t),))
 end
 
@@ -300,7 +308,7 @@ export windowedfouriersurrogate
 """
 Take a Process and produce a corrupted version, which has an extra parameter controlling the probability of the phase of each fourier coefficient being randomised. If planning to save and load this process, an instance of it must first be loaded so that the simulating function is exported
 """
-function corruptphase(P::Process, parameter_profile=constant, parameter_profile_parameters=0.0, originalres=false)
+function corruptphase(P::Process, parameter_profile=constant, parameter_profile_parameters=0.0; originalres=false, nwindows=20)
     # In this case, savedt should really be a multiple of dt
     S = P()
     ps = getparameter_profile_parameters(P)
@@ -335,7 +343,7 @@ function corruptphase(P::Process, parameter_profile=constant, parameter_profile_
             x = timeseries(D, transient=true)
             𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
             ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
-            x = hcat([windowedfouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, 𝜑)->corruptangle(𝜑, 𝜂(𝑡)), nperseg=1000*downsample) for y ∈ ys]...)
+            x = hcat([windowedfouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, 𝜑)->corruptangle(𝜑, 𝜂(𝑡)), nwindows=$nwindows) for y ∈ ys]...)
             x = x[1:downsample:end, :]
         end
         export $fname
