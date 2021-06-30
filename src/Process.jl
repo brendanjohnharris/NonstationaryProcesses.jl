@@ -207,12 +207,13 @@ export forcemat
 function trimtransient(P::Process)
     if !isempty(P.solution)
         P.solution = timeseries(P, transient=false)
+        P.X0 = P.solution[1, :] # If you want to resimulate, start at this point. Assumes the entire description of the system is contained in time and position, which is not unreasonable
     end
     P.transient_t0 = P.t0
     return P
 end
 
-function saveTimeseries!(P::Process, folder::String="./", delim::Char=','; transient::Bool=true, fileroot="timeseries")
+function saveTimeseries!(P::Process, folder::String="./", delim::Char=','; transient::Bool=false, fileroot="timeseries")
     X = timeseries(P, transient=transient)
     mkpath(folder)
     if !transient
@@ -226,6 +227,10 @@ function saveTimeseries!(P::Process, folder::String="./", delim::Char=','; trans
 end
 export saveTimeseries!
 
+function gettimeseriesfile(P::Process, folder::String)
+    filename = filter(x->occursin("timeseries_"*string(getid(P)), x), readdir(folder))
+end
+
 function timeseries(P::Process, dim=1:length(getX0(P)); folder::Union{String, Bool}=(getsolution(P) isa String), kwargs...)
     if folder isa Bool && folder
         if getsolution(P) isa String
@@ -235,7 +240,7 @@ function timeseries(P::Process, dim=1:length(getX0(P)); folder::Union{String, Bo
         end
     end
     if folder isa String
-        filename = filter(x->occursin("timeseries_"*string(getid(P)), x), readdir(folder))
+        gettimeseriesfile(P, folder)
     else
         return timeseries!(P, dim; kwargs...)
     end
