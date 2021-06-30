@@ -240,7 +240,7 @@ function timeseries(P::Process, dim=1:length(getX0(P)); folder::Union{String, Bo
         end
     end
     if folder isa String
-        gettimeseriesfile(P, folder)
+        filename = gettimeseriesfile(P, folder)
     else
         return timeseries!(P, dim; kwargs...)
     end
