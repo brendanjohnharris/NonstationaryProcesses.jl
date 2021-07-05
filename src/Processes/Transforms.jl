@@ -96,7 +96,9 @@ function fouriersurrogate(x::AbstractVector, t::AbstractVector; g::Function=(�
     @assert all(diff(t, dims=1) .≈ Δt) # Check regularly sampled
     𝑓, 𝑡, 𝑍 = stft(x; fs, nperseg, kwargs...)
     𝑡 .+= t[1] # Offset the start time to match input signal
-    @tullio 𝑍[i, j] = g(𝑓[i], 𝑡[j], abs(𝑍[i, j]))*cis(h(𝑓[i], 𝑡[j], angle(𝑍[i, j])))
+    gg .= g((𝑓,), 𝑡, (abs.(𝑍[:, j]),), (angle.(𝑍[:, j]),))
+    hh .= h((𝑓,), 𝑡, (abs.(𝑍[:, j]),), (angle.(𝑍[:, j]),))
+    𝑍 = gg.*cis.(hh)
     𝑡, x̂ = istft(𝑍; fs, nperseg, kwargs...)
     @assert (𝑡[2] - 𝑡[1]) == (t[2] - t[1])
     x̂ = x̂[1:length(x)] # The stft is zero-padded by python to fit evenly into the windows, so the istft is longer than the input x even though it has the same sampling frequency.
@@ -114,30 +116,40 @@ export fouriersurrogate
 """
 Function for randomising (from a uniform distribution between 0 and 2π) an angle with a probability of 𝜂.
 """
-function corruptangle(𝜑, 𝜂)
+function corruptangle(𝜑::Number, 𝜂)
     𝜑 %= 2π
     rand() < 𝜂 ? rand()*2π : 𝜑
 end
+corruptangle(𝜑::Vector, 𝜂) = corruptangle.(𝜑, (𝜂,))
 
 
-"""
-Function for randomising phases below a threshold frequency ν
-"""
-function thresholdcorrupt(𝑓, 𝜑, ν)
-    #p = sum(imag.(𝜑) > eps)/length(𝜑)
-    idxs = (𝑓 .< ν)# .& (imag(𝜑) .> eps)
-    𝜑[idxs] .= corruptangle.(𝜑[idxs])
-end
 
 """
 Set phases below a threshold to 0 (synchronised)
 Should prevent any issues with the desnity of randomisation interfering with power spectrum
 """
-function thresholdsynchronise(𝑓, 𝜑, ν)
+function thresholdsynchronise(𝑓::Vector, 𝜑::Number, ν)
     𝑓 < ν ? 0.0 : 𝜑
 end
+thresholdsynchronise(𝑓::Vector, 𝜑::Vector, ν) = thresholdsynchronise(𝑓, 𝜑, (ν,))
 
 
+"""
+Randomise phases of frequencies that constitute a propotion `p` of power (from the high to low frequencies)
+"""
+function thresholdcorrupt(𝜑, A, 𝑝)
+    A[1] = 0 # The first amplitude is just the offset, which we don't care about (i.e. we want power of a mean-centred signal)
+    psd = (A.^2)./sum(A.^2)
+    cpsd = cumsum(psd)
+    # display(plot(cpsd))
+    # display(plot(A))
+    idx = findfirst(cpsd .> 1-𝑝)
+    isnothing(idx) ? (return 𝜑) : nothing
+    phi = deepcopy(𝜑)
+    phi[idx:end] .= rand(length(phi[idx:end])).*2π
+    return phi
+end
+thresholdcorrupt(𝑝) = (𝑓, 𝜑, 𝑍)-> thresholdcorrupt(𝑓, 𝜑, 𝑍, 𝑝)
 
 # """
 # Take a Process and use the dark magic to produce a corrupted version, which has an extra parameter controlling the probability of the phase of each fourier coefficient being randomised. If planning to save and load this process, an instance of it must first be loaded so that the simulating function is exported
@@ -221,7 +233,7 @@ function synchronisephase(P::Process, parameter_profile=constant, parameter_prof
             x = timeseries(D, transient=true)
             ν = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
             ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
-            x = hcat([fouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, 𝜑)->thresholdsynchronise(𝑓, 𝜑, ν(𝑡)), nperseg=1000*downsample) for y ∈ ys]...)
+            x = hcat([fouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, A, 𝜑)->thresholdsynchronise(𝑓, 𝜑, ν(𝑡)), nperseg=1000*downsample) for y ∈ ys]...)
             x = x[1:downsample:end, :]
         end
         export $fname
@@ -282,13 +294,18 @@ iwft(𝑍::AbstractDimArray; kwargs...) = iwft(timeDims(𝑍), Array(𝑍); kwar
 export iwft
 
 
-function windowedfouriersurrogate(x::AbstractVector, t::AbstractVector; g::Function=(𝑓, 𝑡, A)->A, h::Function=(𝑓, 𝑡, 𝜑)->𝜑, nwindows=20)::AbstractVector
+function windowedfouriersurrogate(x::AbstractVector, t::AbstractVector; g::Function=(𝑓, 𝑡, A, 𝜑)->A, h::Function=(𝑓, 𝑡, A, 𝜑)->𝜑, nwindows=20)::AbstractVector
     Δt = (t[2] - t[1])
     fs = 1/Δt
     @assert all(diff(t, dims=1) .≈ Δt) # Check regularly sampled
     𝑓, 𝑡, 𝑍 = wft(x, t; nwindows)
     #display(heatmap(log10.(abs.(𝑍[2:end-1, :])), scale=:log))
-    @tullio 𝑍[i, j] = g(𝑓[i], 𝑡[j], abs(𝑍[i, j]))*cis(h(𝑓[i], 𝑡[j], angle(𝑍[i, j])))
+    @tullio gg[j] := g(𝑓, 𝑡[j], abs.(𝑍[:, j]), angle.(𝑍[:, j]))
+    @tullio hh[j] := h(𝑓, 𝑡[j], abs.(𝑍[:, j]), angle.(𝑍[:, j]))
+    gg = hcat(gg...)
+    hh = hcat(hh...)
+    𝑍 = gg.*cis.(hh)
+    #@tullio 𝑍[i, j] = g(𝑓[i], 𝑡[j], abs(𝑍[i, j]), angle(𝑍[i, j]))*cis(h(𝑓[i], 𝑡[j], abs(𝑍[i, j]), angle(𝑍[i, j])))
     #display(heatmap(log10.(abs.(𝑍[2:end-1, :])), scale=:log))
     remainder = Int(length(x)%nwindows)
     x̂, 𝑡 = iwft(𝑡, 𝑍, remainder=remainder) # For most situations in which this function is a good idea, this remainder will be 1
@@ -343,7 +360,7 @@ function corruptphase(P::Process, parameter_profile=constant, parameter_profile_
             x = timeseries(D, transient=true)
             𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
             ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
-            x = hcat([windowedfouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, 𝜑)->corruptangle(𝜑, 𝜂(𝑡)), nwindows=$nwindows) for y ∈ ys]...)
+            x = hcat([windowedfouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, A, 𝜑)->thresholdcorrupt(𝜑, A, 𝜂(𝑡)), nwindows=$nwindows) for y ∈ ys]...)
             x = x[1:downsample:end, :]
         end
         export $fname
