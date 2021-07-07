@@ -24,7 +24,15 @@ end
 function Process(D::Dict)
     for s ∈ setdiff(keys(D), (:date, :solution))
         if D[s] isa String
-            D[s] = eval(Meta.parse(D[s]))
+            if s == :process
+                try
+                    D[s] = eval(Meta.parse(D[s])) # Maybe we can't parse the process as a function
+                catch
+                    D[s] = D[s] # It must be a string. You won't be able to solve this process, so the timeseries better be supplied.
+                end
+            else
+                D[s] = eval(Meta.parse(D[s]))
+            end
         end
     end
     Process(;D...)
