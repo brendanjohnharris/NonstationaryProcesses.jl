@@ -1,8 +1,8 @@
-using PyCall
-using Distributions
-using Tullio
-using FFTW
-using StatsBase
+using .PyCall
+using .Distributions
+using .Tullio
+using .FFTW
+using .StatsBase
 
 
 """
@@ -134,22 +134,6 @@ end
 thresholdsynchronise(𝑓::Vector, 𝜑::Vector, ν) = thresholdsynchronise(𝑓, 𝜑, (ν,))
 
 
-"""
-Randomise phases of frequencies that constitute a propotion `p` of power (from the high to low frequencies)
-"""
-function thresholdcorrupt(𝜑, A, 𝑝)
-    A[1] = 0 # The first amplitude is just the offset, which we don't care about (i.e. we want power of a mean-centred signal)
-    psd = (A.^2)./sum(A.^2)
-    cpsd = cumsum(psd)
-    # display(plot(cpsd))
-    # display(plot(A))
-    idx = findfirst(cpsd .> 1-𝑝)
-    isnothing(idx) ? (return 𝜑) : nothing
-    phi = deepcopy(𝜑)
-    phi[idx:end] .= rand(length(phi[idx:end])).*2π
-    return phi
-end
-thresholdcorrupt(𝑝) = (𝑓, 𝜑, 𝑍)-> thresholdcorrupt(𝑓, 𝜑, 𝑍, 𝑝)
 
 # """
 # Take a Process and use the dark magic to produce a corrupted version, which has an extra parameter controlling the probability of the phase of each fourier coefficient being randomised. If planning to save and load this process, an instance of it must first be loaded so that the simulating function is exported
@@ -294,6 +278,30 @@ iwft(𝑍::AbstractDimArray; kwargs...) = iwft(timeDims(𝑍), Array(𝑍); kwar
 export iwft
 
 
+
+
+"""
+Randomise phases of frequencies that constitute a propotion `p` of power (from the high to low frequencies)
+"""
+function thresholdcorrupt(𝜑, A, 𝑝)
+    𝜑 .= (𝜑 .+ 2π).%2π
+    A[1] = 0 # The first amplitude is just the offset, which we don't care about (i.e. we want power of a mean-centred signal)
+    psd = (A.^2)./sum(A.^2)
+    cpsd = cumsum(psd)
+    # display(plot(cpsd))
+    # display(plot(A))
+    idx = findfirst(cpsd .> 1-𝑝)
+    isnothing(idx) ? (return 𝜑) : nothing
+    phi = deepcopy(𝜑)
+    phi[idx:end] .= rand(length(phi[idx:end])).*2π
+    #display(plot([𝜑, phi]))
+    return phi
+end
+thresholdcorrupt(𝑝) = (𝑓, 𝜑, 𝑍) -> thresholdcorrupt(𝜑, 𝑍, 𝑝)
+
+
+
+
 function windowedfouriersurrogate(x::AbstractVector, t::AbstractVector; g::Function=(𝑓, 𝑡, A, 𝜑)->A, h::Function=(𝑓, 𝑡, A, 𝜑)->𝜑, nwindows=20)::AbstractVector
     Δt = (t[2] - t[1])
     fs = 1/Δt
@@ -305,11 +313,12 @@ function windowedfouriersurrogate(x::AbstractVector, t::AbstractVector; g::Funct
     gg = hcat(gg...)
     hh = hcat(hh...)
     𝑍 = gg.*cis.(hh)
+    #display(plot(angle.(𝑍)))
     #@tullio 𝑍[i, j] = g(𝑓[i], 𝑡[j], abs(𝑍[i, j]), angle(𝑍[i, j]))*cis(h(𝑓[i], 𝑡[j], abs(𝑍[i, j]), angle(𝑍[i, j])))
     #display(heatmap(log10.(abs.(𝑍[2:end-1, :])), scale=:log))
     remainder = Int(length(x)%nwindows)
     x̂, 𝑡 = iwft(𝑡, 𝑍, remainder=remainder) # For most situations in which this function is a good idea, this remainder will be 1
-    @assert nwindows == 1 || (𝑡[2] - 𝑡[1]) == (t[2] - t[1])
+    @assert nwindows == 1 || (𝑡[2] - 𝑡[1]) ≈ (t[2] - t[1])
     return x̂
 end
 
@@ -357,11 +366,14 @@ function corruptphase(P::Process, parameter_profile=constant, parameter_profile_
                 downsample = 1
             end
             D.process = $pr
-            x = timeseries(D, transient=true)
+            x = timeseries(D, transient=false)
+            Y = timeseries(D, transient=true)
             𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
             ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
-            x = hcat([windowedfouriersurrogate(y, times(D, transient=true); h=(𝑓, 𝑡, A, 𝜑)->thresholdcorrupt(𝜑, A, 𝜂(𝑡)), nwindows=$nwindows) for y ∈ ys]...)
-            x = x[1:downsample:end, :]
+            x = hcat([windowedfouriersurrogate(y, times(D, transient=false); h=(𝑓, 𝑡, A, 𝜑)->thresholdcorrupt(𝜑, A, 𝜂(𝑡)), nwindows=$nwindows) for y ∈ ys]...)
+            idx = findfirst(D.t0 .== times(D, transient=true))
+            Y[idx:end, :] = x[1:downsample:end, :]
+            return Y
         end
         export $fname
     end
@@ -407,3 +419,57 @@ phaseSynchronisedLorenzSim = synchronisephase(lorenzSim(
     solver_opts = Dict(:adaptive => true, :reltol => 1e-15)), rampInterval, (0.0, 1.0, 0.0, 1000.0))
 
 
+
+
+function lowpass(𝑓, x::Vector, p)
+    idxs = 𝑓 .> p
+    xx = deepcopy(x)
+    xx[idxs] .= 0.0
+    return xx
+end
+
+
+"""
+Pass a process through a low pass fourier filter
+"""
+function lowpass(P::Process, parameter_profile=constant, parameter_profile_parameters=0.0; nwindows=20)
+    # In this case, savedt should really be a multiple of dt
+    S = P()
+    ps = getparameter_profile_parameters(P)
+    if getparameter_profile(P) isa Function || length(getparameter_profile(P)) == 1
+        S.parameter_profile = (getparameter_profile(P), parameter_profile)
+        ps = [ps]
+    else
+        S.parameter_profile = (getparameter_profile(P)..., parameter_profile)
+    end
+    S.parameter_profile_parameters = (ps..., parameter_profile_parameters)
+    pr = string(getprocess(P))
+    fname = Symbol("lowpass"*titlecase(pr))
+    pr = Symbol(pr)
+    @eval begin
+        function ($fname)(S::Process)
+            D = S()
+            D.parameter_profile = getparameter_profile(S)[1:end-1]
+            if length(D.parameter_profile) == 1
+                D.parameter_profile = D.parameter_profile[1]
+            end
+            D.parameter_profile_parameters = getparameter_profile_parameters(S)[1:end-1]
+            if length(D.parameter_profile_parameters) == 1
+                D.parameter_profile_parameters = D.parameter_profile_parameters[1]
+            end
+            D.process = $pr
+            x = timeseries(D, transient=false)
+            Y = timeseries(D, transient=true)
+            𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
+            ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
+            x = hcat([windowedfouriersurrogate(y, times(D, transient=false); g=(𝑓, 𝑡, A, 𝜑)->lowpass(𝑓, A, 𝜂(𝑡)), h=(𝑓, 𝑡, A, 𝜑)->lowpass(𝑓, 𝜑, 𝜂(𝑡)), nwindows=$nwindows) for y ∈ ys]...)
+            idx = findfirst(D.t0 .== times(D, transient=true))
+            Y[idx:end, :] = x
+            return Y
+        end
+        export $fname
+    end
+    S.process = @eval $fname
+    return S
+end
+export lowpass
