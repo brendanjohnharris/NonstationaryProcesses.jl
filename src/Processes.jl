@@ -1,4 +1,10 @@
-using LaTeXStrings
+using .PyCall
+using .DifferentialEquations
+const cn = PyNULL()
+const signal = PyNULL()
+run(`$(PyCall.python) -m pip install colorednoise`)
+copy!(cn, pyimport("colorednoise"))
+copy!(signal, pyimport_conda("scipy.signal", "scipy"))
 
 function seed(theSeed=nothing) # Seed the rng, but return the seed. If no, nothing or NaN argument, randomly seed rng
     if isnothing(theSeed)
