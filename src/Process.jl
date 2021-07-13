@@ -1,6 +1,7 @@
 using DimensionalData
 using DelimitedFiles
 using Dates
+using SciMLBase
 # How best to structure the I/O format and system definitions...
 
 Base.@kwdef mutable struct Process # Not ensemble

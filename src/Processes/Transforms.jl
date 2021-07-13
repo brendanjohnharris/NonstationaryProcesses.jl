@@ -1,8 +1,8 @@
-using PyCall
-using Distributions
-using Tullio
-using FFTW
-using StatsBase
+using .PyCall
+using .Distributions
+using .Tullio
+using .FFTW
+using .StatsBase
 
 
 """
@@ -419,3 +419,57 @@ phaseSynchronisedLorenzSim = synchronisephase(lorenzSim(
     solver_opts = Dict(:adaptive => true, :reltol => 1e-15)), rampInterval, (0.0, 1.0, 0.0, 1000.0))
 
 
+
+
+function lowpass(𝑓, x::Vector, p)
+    idxs = 𝑓 .> p
+    xx = deepcopy(x)
+    xx[idxs] .= 0.0
+    return xx
+end
+
+
+"""
+Pass a process through a low pass fourier filter
+"""
+function lowpass(P::Process, parameter_profile=constant, parameter_profile_parameters=0.0; nwindows=20)
+    # In this case, savedt should really be a multiple of dt
+    S = P()
+    ps = getparameter_profile_parameters(P)
+    if getparameter_profile(P) isa Function || length(getparameter_profile(P)) == 1
+        S.parameter_profile = (getparameter_profile(P), parameter_profile)
+        ps = [ps]
+    else
+        S.parameter_profile = (getparameter_profile(P)..., parameter_profile)
+    end
+    S.parameter_profile_parameters = (ps..., parameter_profile_parameters)
+    pr = string(getprocess(P))
+    fname = Symbol("lowpass"*titlecase(pr))
+    pr = Symbol(pr)
+    @eval begin
+        function ($fname)(S::Process)
+            D = S()
+            D.parameter_profile = getparameter_profile(S)[1:end-1]
+            if length(D.parameter_profile) == 1
+                D.parameter_profile = D.parameter_profile[1]
+            end
+            D.parameter_profile_parameters = getparameter_profile_parameters(S)[1:end-1]
+            if length(D.parameter_profile_parameters) == 1
+                D.parameter_profile_parameters = D.parameter_profile_parameters[1]
+            end
+            D.process = $pr
+            x = timeseries(D, transient=false)
+            Y = timeseries(D, transient=true)
+            𝜂 = getparameter_profile(S)[end](getparameter_profile_parameters(S)[end]...)
+            ys = [Vector(x[:, i]) for i ∈ 1:size(x, 2)]
+            x = hcat([windowedfouriersurrogate(y, times(D, transient=false); g=(𝑓, 𝑡, A, 𝜑)->lowpass(𝑓, A, 𝜂(𝑡)), h=(𝑓, 𝑡, A, 𝜑)->lowpass(𝑓, 𝜑, 𝜂(𝑡)), nwindows=$nwindows) for y ∈ ys]...)
+            idx = findfirst(D.t0 .== times(D, transient=true))
+            Y[idx:end, :] = x
+            return Y
+        end
+        export $fname
+    end
+    S.process = @eval $fname
+    return S
+end
+export lowpass
