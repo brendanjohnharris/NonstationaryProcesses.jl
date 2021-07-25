@@ -1,5 +1,5 @@
-using .PyCall
-using .DifferentialEquations
+using PyCall
+using DifferentialEquations
 const cn = PyNULL()
 const signal = PyNULL()
 run(`$(PyCall.python) -m pip install colorednoise`)

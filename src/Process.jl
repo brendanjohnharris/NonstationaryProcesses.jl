@@ -2,11 +2,11 @@ using DimensionalData
 using DelimitedFiles
 using Dates
 using SciMLBase
-# How best to structure the I/O format and system definitions...
+using DiffEqBase
 
 Base.@kwdef mutable struct Process # Not ensemble
     process = nothing
-    parameter_profile::Union{Function, Tuple, Array} = constantParameter # Can be a tuple of symbols, if the system has more than one parameter
+    parameter_profile::Union{Function, Tuple, Array} = constantParameter # Can be a tuple of functions, if the system has more than one parameter
     parameter_profile_parameters::Union{Tuple, Array} = [0] # Can be a tuple of tuples
     X0::Vector = [nothing]
     t0::Union{Float64, Int64} = 0.0
