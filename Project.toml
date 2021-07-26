@@ -25,6 +25,7 @@ StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 
 [compat]
+DifferentialEquations = "6"
 DiffEqBase = "6"
 DimensionalData = "0.16, 0.17"
 Distributions = "0.24, 0.25"
