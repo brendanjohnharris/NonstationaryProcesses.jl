@@ -7,6 +7,7 @@ using PyCall
 using Distributions
 using Tullio
 using FFTW
+using Setfield
 using StatsBase
 
 
@@ -20,7 +21,7 @@ end
 include("Discontinuous.jl")
 include("ParameterProfiles.jl")
 include("Process.jl")
-include("Plotting.jl")
+include("Plotting/Plotting.jl")
 include("Processes.jl")
 
 end
