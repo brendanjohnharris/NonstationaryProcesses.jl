@@ -11,20 +11,37 @@ You can give the single parameter you want to vary, param, and the range over wh
 function bifurcation_diagram(P::Process; param=1, prange=extrema(parameterseries(P, p=param)), kwargs...)
     f = constantine(P; param)
     ode = ODEProblem(f, P.X0, (P.transient_t0, P.tmax); atol = 1e-10, rtol = 1e-9)
-    opts = ContinuationPar(pMin = min(prange...),
-                            pMax = max(prange...),
-                            ds = 0.01, dsmax = 0.05,
-	                        nInversion = 16,
-                            detectBifurcation = 3,
-                            maxBisectionSteps = 50,
+    opts = ContinuationPar(pMin = min(prange...)|>Float64,
+                            pMax = max(prange...)|>Float64,
+                            ds = 0.01,
+                            dsmax = 0.05,
+	                        # nInversion = 16,
+                            # detectBifurcation = 3,
+                            # maxBisectionSteps = 50,
                             nev = 3,
-                            kwargs...)
-    br, = continuation((x, p) -> Array(f(x, p, 0.0)), P.X0, [parameterseries(P, p=param)[1]],
+                            kwargs...) # parameterseries(P, p=param)[1]
+    br, = continuation((x, p) -> Array(f(x, p, 0.0)), P.X0, [min(prange...)],
                             (@lens _[1]), opts;
                             plot = true,
-                            verbosity = 1)
+                            verbosity = 0)
 end
 export bifurcation_diagram
+
+# jet = BifurcationKit.get3Jet(f)
+# opts = ContinuationPar(pMin = min(prange...)|>Float64,
+#                         pMax = max(prange...)|>Float64,
+#                         ds = 0.01,
+#                         dsmax = 0.05,
+#                         # nInversion = 16,
+#                         # detectBifurcation = 3,
+#                         # maxBisectionSteps = 50,
+#                         nev = 3)
+# bifurcationdiagram(jet...,
+#     P.X0, 10.0, (@lens _[1]),
+# 	# important argument: this is the maximal
+# 	# recursion level
+# 	5,
+#     opts)
 
 
 function constantine(P::Process; param)
@@ -43,3 +60,23 @@ function constantine(P::Process; param)
     end
     return f
 end
+
+
+
+# optnew = NewtonPar(verbose = true, tol = 1e-12)
+# opts = ContinuationPar(dsmin = 0.0001, dsmax = 0.01, ds = 0.01, pMax = 1.,
+# 	newtonOptions = setproperties(optnew; maxIter = 30, tol = 1e-8),
+# 	maxSteps = 300, plotEveryStep = 40,
+# 	detectBifurcation = 3, nInversion = 4, tolBisectionEigenvalue = 1e-17, dsminBisection = 1e-7)
+
+#     function optrec(x, p, l; opt = opts)
+#         return setproperties(opt; maxSteps = 300, detectBifurcation = 3, detectLoop = false)
+#     end
+
+# g = (x, p) -> collect(f(x, p, 0.0))
+# J = (x, p) -> x0 -> BifurcationKit.ForwardDiff.jacobian(y->g(y, p), x0)
+# jet = BifurcationKit.get3Jet(g, J)
+# diagram = @time bifurcationdiagram(jet...,
+# 	[0.1], 1.0, (@lens _[1]),
+# 	# here we specify a maximum branching level of 4
+# 	4, optrec)

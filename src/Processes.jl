@@ -30,7 +30,11 @@ end
 Whip up an ODEproblem from a Process
 """
 function process2problem(P::Process)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
+    if getalg(P) isa FunctionMap
+        DiscreteProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
+    else
+        ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
+    end
 end
 export process2problem
 

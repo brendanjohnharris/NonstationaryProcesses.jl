@@ -128,8 +128,10 @@ function timeseries!(P::Process, dim=1:length(getX0(P)); transient::Bool=false)
         idxs = (length(P.transient_t0:P.savedt:P.t0)):1:length(times(P, transient=true))
     end
     saveTimes = (P.transient_t0:P.savedt:P.tmax)[idxs]
+    vars = Char.([(120:122)..., (117:119)...])
+    namevars(x) = (length(x) <= length(vars) ? vars[x] : x)
     if size(x, 2) > 1
-        x = DimArray(x[idxs, :], (Ti(saveTimes), Dim{:Variable}(1:size(x, 2))))
+        x = DimArray(x[idxs, :], (Ti(saveTimes), Dim{:Variable}(namevars(1:size(x, 2)))))
     else
         x = DimArray(x[idxs], (Ti(saveTimes),))
     end
@@ -262,3 +264,30 @@ function timeseries(P::Process, dim=1:length(getX0(P)); folder::Union{String, Bo
     P.solution = readdlm(filename, ',', Float64)
     return timeseries!(P, dim; kwargs...)
 end
+
+
+function updateparam(P::Process, p::Integer, profile, value)
+    profiles = [getparameter_profile(P)...]
+    values = [getparameter_profile_parameters(P)...]
+    if length(profiles) == 1
+        @assert p == 1
+        profiles = [profile]
+        values = value |> typeof(values[p])
+    else
+        profiles[p] = profile
+        values[p] = value |> typeof(values[p])
+    end
+    return P(parameter_profile=Tuple(profiles), parameter_profile_parameters=values)
+end
+function updateparam(P::Process, p::Integer, profile::Function)
+    value = getparameter_profile_parameters(P)
+    profiles = [getparameter_profile(P)...]
+    value = (length(profiles) == 1 && p == 1) ? value : value[p]
+    return updateparam(P, p, profile, value)
+end
+function updateparam(P::Process, p::Integer, value::Union{Number, Tuple, Vector})
+    profile = getparameter_profile(P)
+    profile = (length(profile) == 1 && p == 1) ? profile : profile[p]
+    return updateparam(P, p, profile, value)
+end
+export updateparam

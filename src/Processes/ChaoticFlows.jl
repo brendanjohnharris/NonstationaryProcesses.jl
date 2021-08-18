@@ -361,7 +361,7 @@ function lorenz(P::Process)
 end
 
 
-lorenzSim= Process(
+lorenzSim = Process(
     process = lorenz,
     X0 = [0.0, -0.01, 9.0],
     parameter_profile = (constantParameter, constantParameter, constantParameter),
@@ -369,9 +369,9 @@ lorenzSim= Process(
     transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.0005,
-    savedt = 0.05,
-    tmax = 1000.0,
-    alg = RK4(),
+    savedt = 0.01,
+    tmax = 500.0,
+    alg = Vern8(),
     solver_opts = Dict(:adaptive => false))
 export lorenzSim
 
