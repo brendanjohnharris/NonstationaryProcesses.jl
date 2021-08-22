@@ -23,8 +23,8 @@ end
 henonSim = Process(
     process = henon,
     X0 = [0.0, 0.0],
-    parameter_profile = (unitStep, constantParameter),
-    parameter_profile_parameters = ((1000, 1.4, -0.4), (0.3,)), # (threshold, baseline, stepHeight)
+    parameter_profile = (constantParameter, constantParameter),
+    parameter_profile_parameters = (1.4, 0.3),
     transient_t0 = 0,
     t0 = 1000,
     dt = 1,

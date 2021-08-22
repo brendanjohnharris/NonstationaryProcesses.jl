@@ -1,9 +1,7 @@
 using .Distributions
 using .PyCall
-# ------------------------------------------------------------------------------------------------ #
-#                                         Gaussian Bimodal                                         #
-# ------------------------------------------------------------------------------------------------ #
 
+"""Gaussian Bimodal"""
 function gaussianBimodal(μ=0.0, σ=1.0, α=0.5)
     # μ is the mean of the satellite gaussian, σ is the width (SD) and α is the proportional probability (i.e. the mass of the satellite compared to the central gaussian)
     if rand() > α # Draw from the first distribution
@@ -30,9 +28,7 @@ gaussianBimodalSim = Process(
 export gaussianBimodalSim
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                         Bimodal Switching                                        #
-# ------------------------------------------------------------------------------------------------ #
+"""Bimodal Switching"""
 function bimodalSwitching(t⃗, α::Function, δ::Function)
     v = zeros(length(t⃗))
     for t ∈ 2:length(t⃗)
@@ -60,9 +56,7 @@ bimodalSwitchingSim = Process(
 export bimodalSwitchingSim
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                           Shifty Noise                                           #
-# ------------------------------------------------------------------------------------------------ #
+"""Shifty Noise"""
 function shiftyNoise(P::Process)
     # Parameters (η, C)
     seed(P.solver_rng)
@@ -82,9 +76,7 @@ shiftyNoiseSim = Process(
 export shiftyNoiseSim
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                                AR                                                #
-# ------------------------------------------------------------------------------------------------ #
+"""AR"""
 function AR(P::Process)
     # Variable number of AR parameters (ϕ₁, ϕ₂, ϕ₃, ...)
     seed(P.solver_rng)

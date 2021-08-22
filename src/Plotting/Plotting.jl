@@ -13,7 +13,8 @@ export widen
 #                          Plot recipe for Process types (e.g. label axes)                         #
 # ------------------------------------------------------------------------------------------------ #
 
-@recipe function f(P::Process; vars=1:size(P.X0)[1], transient=false, downsample=1, cmode=nothing)
+@recipe function f(P::Process; vars=1:size(P.X0)[1], transient=false, downsample=1, colormode=nothing)
+    cmode = colormode
     linecolor --> :black
     markercolor --> :black
 
@@ -43,7 +44,9 @@ export widen
     end
 
     if cmode == :velocity
-        velocity = sqrt.(sum([(r[2:end] .- collect(r[1:end-1])).^2 for r ∈ [x[i] for i in 1:lastindex(getX0(P))]], dims=1)[1])
+        vx = deepcopy(timeseries(P, transient=transient))
+        vx = Tuple([vx[:, i] for i in 1:size(vx)[2]])
+        velocity = sqrt.(sum([(r[2:end] .- collect(r[1:end-1])).^2 for r ∈ [vx[i] for i in 1:length(vx)]], dims=1)[1]) # So colours by velocity over all vars
         seriestype := :path
         line_z := velocity
         linealpha --> 0.1

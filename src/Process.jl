@@ -53,9 +53,7 @@ function (P::Process)(;kwargs...)
 end
 export Process
 
-# ------------------------------------------------------------------------------------------------ #
-#                                           Field Aliases                                          #
-# ------------------------------------------------------------------------------------------------ #
+"""Field Aliases for Process constructors"""
 process_aliases = Dict(
     :process =>                     [:sim, :system, :processes],
     :parameter_profile =>           [:profile, :profiles, :𝑝, :𝑃],
@@ -87,9 +85,7 @@ function repalias!(D, aliai::Dict)
     end
 end
 
-# ------------------------------------------------------------------------------------------------ #
-#               A function to handle simulations that are specified with a Process type            #
-# ------------------------------------------------------------------------------------------------ #
+"""A function to handle simulations that are specified with a Process type"""
 function solution!(P::Process) # vars::Tuple=Tuple(1:size(P.X0)[1])
     if isnothing(P.solution)
         @debug "Solving for the $(getprocess(P)) process ($(getid(P)))"
@@ -107,7 +103,7 @@ simulate!(P::Process) = begin P.solution = solution!(P); return nothing end
 export simulate
 export simulate!
 
-# --------- Might have various solution types, so timeseries gets all of them as an array -------- #
+# * Might have various solution types, so timeseries gets all of them as an array
 timeseries(s::SciMLBase.AbstractTimeseriesSolution, dim::Real) = s[dim, :]
 timeseries(s::SciMLBase.AbstractTimeseriesSolution, dim::Union{Vector, UnitRange}=1:size(s.u[1], 1)) = copy(s[dim, :]')
 function timeseries(s::AbstractArray, dim::Union{Vector, UnitRange, Real}=1:size(s, 2))
@@ -128,7 +124,7 @@ function timeseries!(P::Process, dim=1:length(getX0(P)); transient::Bool=false)
         idxs = (length(P.transient_t0:P.savedt:P.t0)):1:length(times(P, transient=true))
     end
     saveTimes = (P.transient_t0:P.savedt:P.tmax)[idxs]
-    vars = Char.([(120:122)..., (117:119)...])
+    vars = Char.([(120:122)..., 119, 117, 118])
     namevars(x) = (length(x) <= length(vars) ? vars[x] : x)
     if size(x, 2) > 1
         x = DimArray(x[idxs, :], (Ti(saveTimes), Dim{:Variable}(namevars(1:size(x, 2)))))
@@ -143,9 +139,7 @@ variableDims(T::DimArray) = dims(T, :Variable).val
 # end
 export timeseries
 
-# ------------------------------------------------------------------------------------------------ #
-#                              Convenient access to some solution info                             #
-# ------------------------------------------------------------------------------------------------ #
+"""Convenient access to some solution info"""
 function times(P::Process; transient::Bool=false)
     if transient
         P.transient_t0:P.savedt:P.tmax

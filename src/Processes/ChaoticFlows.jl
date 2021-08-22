@@ -333,13 +333,15 @@ export doubleScrollArt
 
 
 
-@inline @inbounds function lorenz(X::AbstractArray, p::Function, 𝑡::Real)
+@inline @inbounds function lorenz(dX, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     (𝜎, 𝑟, 𝑏) = p(𝑡)
     𝑥̇ = 𝜎*(𝑦 - 𝑥)
     𝑦̇ = -𝑥*𝑧 + 𝑟*𝑥 - 𝑦
     𝑧̇ = 𝑥*𝑦 - 𝑏*𝑧
-    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+    dX[1] = 𝑥̇
+    dX[2] = 𝑦̇
+    dX[3] = 𝑧̇
 end
 @inline @inbounds function lorenz_J(X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
@@ -368,11 +370,11 @@ lorenzSim = Process(
     parameter_profile_parameters = (10.0, 28.0, 8/3), # Sprott's recomendation
     transient_t0 = -100.0,
     t0 = 0.0,
-    dt = 0.0005,
+    dt = 0.005,
     savedt = 0.01,
-    tmax = 500.0,
-    alg = Vern8(),
-    solver_opts = Dict(:adaptive => false))
+    tmax = 250.0,
+    alg = Vern9(),
+    solver_opts = Dict(:adaptive => true, :abstol => 1e-10, :reltol => 1e-10))
 export lorenzSim
 
 lorenzArt= Process(
@@ -487,8 +489,8 @@ piecewiseLinearHyperchaosSim = Process(
     dt = 0.001,
     savedt = 0.05,
     tmax = 1000.0,
-    alg = RK4(),
-    solver_opts = Dict(:adaptive => false))
+    alg = Vern9(),
+    solver_opts = Dict(:adaptive => false, :reltol => 1e-10, :abstol => 1e-10))
 export piecewiseLinearHyperchaosSim
 
 piecewiseLinearHyperchaosArt = Process(

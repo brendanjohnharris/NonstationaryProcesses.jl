@@ -47,4 +47,3 @@ function Plots.plot(D::Discontinuous, args...) # Actually this can be a recipe?
     Plots.plot(xr, D, args...)
     plot!(xlabel="t", ylabel="p(t)", legend=nothing)
 end
-

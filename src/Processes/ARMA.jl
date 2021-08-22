@@ -1,6 +1,4 @@
-# ------------------------------------------------------------------------------------------------ #
-#                                           ARMA process                                           #
-# ------------------------------------------------------------------------------------------------ #
+"""ARMA process"""
 function ARMA(X⃗::AbstractVector, ξ⃗::AbstractVector, ϕ⃗::AbstractVector, θ⃗::AbstractVector) # No constant, too boring
     # Just one update of an ARMA process
     if !all(length(X⃗)-1 .== (length(ξ⃗)-1, length(ϕ⃗), length(θ⃗)))
@@ -41,9 +39,7 @@ function ARMA(X0::AbstractVector, ϕ::Vector{Float64}, θ::Vector{Float64}, T::I
     ARMA(X0, ξ, ϕ, θ, T)
 end
 
-# ------------------------------------------------------------------------------------------------ #
-#                                            AR process                                            #
-# ------------------------------------------------------------------------------------------------ #
+"""AR process"""
 function AR(X⃗::AbstractVector, ξ⃗::AbstractVector, ϕ⃗::AbstractVector)
     θ⃗ = zeros(length(ϕ⃗))
     ARMA(X⃗, ξ⃗, ϕ⃗, θ⃗)
@@ -64,9 +60,7 @@ function AR(X0::AbstractVector, ϕ::Vector{Float64}, T::Int)
     ARMA(X0, ξ, ϕ, θ, T)
 end
 
-# ------------------------------------------------------------------------------------------------ #
-#                                            MA process                                            #
-# ------------------------------------------------------------------------------------------------ #
+"""MA process"""
 function MA(X⃗::AbstractVector, ξ⃗::AbstractVector, θ⃗::AbstractVector)
     ϕ⃗ = zeros(length(θ⃗))
     ARMA(X⃗, ξ⃗, ϕ⃗, θ⃗)
