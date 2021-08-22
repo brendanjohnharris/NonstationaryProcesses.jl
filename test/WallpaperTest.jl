@@ -30,14 +30,14 @@ mkpath(dir)
 
 # Dict of system => variables to plot
 𝒮 = Dict(
-        simplestChaoticFlowArt()                => 2:3,
-        thomasCyclicallySymmetricArt()          => 1:2,
-        doubleScrollArt()                       => 1:3,
-        diffusionlessLorenzArt()                => 1:3,
-        piecewiseLinearHyperchaosArt()          => [1, 3],
-        simplifiedLorenz4DArt()                 => [3, 2, 4],
-        chensSystemArt()                        => [1, 2, 3],
-        chensSystemArt(parameters=(46.0, 11.0, 29.0), tmax=500.0)
+        simplestChaoticFlowVis()                => 2:3,
+        thomasCyclicallySymmetricVis()          => 1:2,
+        doubleScrollVis()                       => 1:3,
+        diffusionlessLorenzVis()                => 1:3,
+        piecewiseLinearHyperchaosVis()          => [1, 3],
+        simplifiedLorenz4DVis()                 => [3, 2, 4],
+        chensSystemVis()                        => [1, 2, 3],
+        chensSystemVis(parameters=(46.0, 11.0, 29.0), tmax=500.0)
                                                 => ([1, 2, 3], "chensSystem46"),
         cartesianDoublePendulumSim(profiles=(constant, constant, constant, constant),
                                    parameters=(0.5, 1.0, 1.0, 1.0),
@@ -45,7 +45,7 @@ mkpath(dir)
                                    tmax=2000.0,
                                    savedt= 0.01)
                                                 => [3, 4],
-        lorenzArt()                             => 1:3,
+        lorenzVis()                             => 1:3,
 )
 
 
