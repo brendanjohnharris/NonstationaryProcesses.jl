@@ -1,7 +1,4 @@
-# ------------------------------------------------------------------------------------------------ #
-#                           Functions for constructing parameter profiles                          #
-# ------------------------------------------------------------------------------------------------ #
-
+"""Functions for constructing parameter profiles"""
 constantParameter(offset::Real=0.0) = x -> offset
 export constantParameter
 constant = constantParameter
@@ -33,7 +30,6 @@ julia> D = unitStep();
 D([-1, 0, 1])
 ```
 """
-
 function unitStep(threshold::Real=0.0, baseline::Real=0.0, stepHeight::Real=1.0, stepOpt::Real=1.0)
     Discontinuous(x -> (heaviside(x-threshold, stepOpt).*stepHeight)+baseline, Set([threshold]))
 end
@@ -71,7 +67,6 @@ julia> D = stepNoise();
 D([-1, 0, 1])
 ```
 """
-
 function stepNoise(T::Tuple, stepWidth::Real=100, stepHeight::Real=1, baseline::Real=0)
     stepIdxs = T[1]:stepWidth:T[2]-stepWidth
     steps = stepHeight.*randn(Float64, (1, length(stepIdxs)))

@@ -22,7 +22,7 @@ fourseas_palette = torgba.([
 ], (0.7,))
 
 
-_themes[:fourseas] = Plots.PlotThemes.PlotTheme(
+fourseas = Plots.PlotThemes.PlotTheme(
     foreground_color_text = :black,
     fgguide = :black,
     fglegend = :black,
@@ -49,4 +49,10 @@ _themes[:fourseas] = Plots.PlotThemes.PlotTheme(
     legendtitlefontsize = 10,
     fontfamily = "Computer Modern",
     minorticks = 2,
-); Plots.showtheme(:fourseas)
+); # Plots.showtheme(:fourseas)
+Plots.PlotThemes._themes[:fourseas] = fourseas
+function fourseas!()
+    Plots.PlotThemes._themes[:fourseas] = fourseas
+    theme(:fourseas)
+end
+export fourseas!

@@ -1,7 +1,4 @@
 using .StatsBase
-# ------------------------------------------------------------------------------------------------ #
-#                                   Skewed Pitchfork Bifurcation                                   #
-# ------------------------------------------------------------------------------------------------ #
 
 @inline @inbounds function skewedGaussianQuadratic(x::AbstractArray, p::Function, t::Real)
     (μ, η, κ) = p(t)
@@ -14,6 +11,7 @@ end
     σ = η
 end
 
+"""Skewed Pitchfork Bifurcation"""
 function skewedGaussianQuadratic(P::Process)
     seed(P.solver_rng)
     prob = SDEProblem(P.process, skewedGaussianQuadratic_σ, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
@@ -34,10 +32,7 @@ skewedGaussianQuadraticSim = Process(
 export skewedGaussianQuadraticSim
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                          A system combining multiple classes of features                         #
-# ------------------------------------------------------------------------------------------------ #
-# Combine Chen's system with gaussian noise and an exponential measurement function
+"""A system combining multiple classes of features. Combine Chen's system with gaussian noise and an exponential measurement function"""
 function seeIfItSticks(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(chensSystem, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile[1:3], P.parameter_profile_parameters[1:3]), jac=chensSystem_J)

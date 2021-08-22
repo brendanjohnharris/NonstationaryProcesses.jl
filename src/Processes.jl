@@ -14,10 +14,7 @@ function seed(theSeed=nothing) # Seed the rng, but return the seed. If no, nothi
     return theSeed
 end
 
-# ------------------------------------------------------------------------------------------------ #
-#               Define a function which, if it gets a Discontinuity, fills in tstops               #
-# ------------------------------------------------------------------------------------------------ #
-
+"""Define a function which, if it gets a Discontinuity, fills in tstops"""
 function dsolve(prob, alg; kwargs...)
     if prob.p isa Discontinuous
         DifferentialEquations.solve(prob, alg; kwargs..., tstops=sort(collect(prob.p.d))) # May need to check tstops isn't in args in the future

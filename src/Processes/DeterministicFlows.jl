@@ -1,6 +1,4 @@
-# ------------------------------------------------------------------------------------------------ #
-#                                      Van der Pol Oscillator                                      #
-# ------------------------------------------------------------------------------------------------ #
+"""Van der Pol Oscillator"""
 @inline @inbounds function vanderpol(X::AbstractArray, μ::Function, t::Real)
     dX1 = X[2]
     dX2 = μ(t).*(1-X[1].^2).*X[2] - X[1]
@@ -33,10 +31,7 @@ export vanderpolSim
 
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                        Harmonic Oscillator                                       #
-# ------------------------------------------------------------------------------------------------ #
-
+"""Harmonic Oscillator"""
 @inline @inbounds function harmonic(X::AbstractArray, ω::Function, t::Real)
     dX2 = -ω(t)^2.0*X[1]
     dX1 = X[2]
@@ -69,10 +64,7 @@ export harmonicSim
 
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                         Normal form for a pitchfork bifurcation                                  #
-# ------------------------------------------------------------------------------------------------ #
-
+"""Normal form for a pitchfork bifurcation"""
 @inline @inbounds function pitchfork(x::Vector, p::Function, t::Real)
     (μ, α) = p(t)
     dx = μ*x[1] + α*x[1]^3
@@ -104,12 +96,7 @@ pitchforkSim = Process(
     solver_opts = Dict(:adaptive => false))
 export pitchforkSim
 
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                     Skewed Harmonic Oscillator                                   #
-# ------------------------------------------------------------------------------------------------ #
-
+"""Skewed 'Harmonic' Oscillator"""
 # @inline @inbounds function skewedHarmonic(X::AbstractArray, p::Function, t::Real)
 #     (ω, κ) = p(t)
 #     dX2 = -ω^2.0*X[1] + ω^2*X[1]*exp(-κ*X[1])
@@ -140,4 +127,3 @@ export pitchforkSim
 #     tmax = 100.0,
 #     alg = RK4())
 # export skewedHarmonicSim
-

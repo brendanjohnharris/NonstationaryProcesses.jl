@@ -1,6 +1,4 @@
-# ------------------------------------------------------------------------------------------------ #
-#                                           FM Signal                                              #
-# ------------------------------------------------------------------------------------------------ #
+"""FM Signal"""
 function fmWave(P::Process)
     # Only parameter is the FM signal
     T = P.transient_t0:P.savedt:P.tmax
@@ -27,9 +25,7 @@ fmWaveSim = Process(
 export fmWaveSim
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                            Noisy Sine                                            #
-# ------------------------------------------------------------------------------------------------ #
+"""Noisy Sine"""
 function noisySine(P::Process)
     seed(P.solver_rng)
     sol = [sin(t) + parameter_function(P)(t)*randn() for t in P.transient_t0:P.savedt:P.tmax]
@@ -51,9 +47,7 @@ export noisySineSim
 
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                      Noisy Shifty Scaly Sine                                     #
-# ------------------------------------------------------------------------------------------------ #
+"""Noisy Shifty Scaly Sine"""
 function noisyShiftyScalySine(P::Process)
     # Parameters (η, C, A)
     seed(P.solver_rng)
@@ -68,6 +62,8 @@ function noisyShiftyShcalySine(P::Process)
     sol = [A(t)*(sin(t) + η(t)*randn() + C(t)) for t in P.transient_t0:P.savedt:P.tmax]
 end
 
+
+"""Shifty Scaly Sine"""
 function shcalySine(P::Process)
     seed(P.solver_rng)
     A = parameter_function(P)
