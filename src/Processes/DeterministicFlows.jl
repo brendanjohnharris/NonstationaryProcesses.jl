@@ -1,4 +1,3 @@
-"""Van der Pol Oscillator"""
 @inline @inbounds function vanderpol(X::AbstractArray, μ::Function, t::Real)
     dX1 = X[2]
     dX2 = μ(t).*(1-X[1].^2).*X[2] - X[1]
@@ -10,6 +9,7 @@ end
                     -2*μ(t)*X[1]*X[2]-1      μ(t)*(1-X[1]^2)]
 end
 
+"""Van der Pol Oscillator"""
 function vanderpol(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=vanderpol_J)
@@ -31,7 +31,6 @@ export vanderpolSim
 
 
 
-"""Harmonic Oscillator"""
 @inline @inbounds function harmonic(X::AbstractArray, ω::Function, t::Real)
     dX2 = -ω(t)^2.0*X[1]
     dX1 = X[2]
@@ -42,6 +41,7 @@ end
     J = @SMatrix [0.0 1.0; -ω(t)^2 0.0]
 end
 
+"""Harmonic Oscillator"""
 function harmonic(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=harmonic_J)
@@ -63,8 +63,6 @@ export harmonicSim
 
 
 
-
-"""Normal form for a pitchfork bifurcation"""
 @inline @inbounds function pitchfork(x::Vector, p::Function, t::Real)
     (μ, α) = p(t)
     dx = μ*x[1] + α*x[1]^3
@@ -76,6 +74,7 @@ end
     J = [μ + 3α*x[1]^2]
 end
 
+"""Normal form for a pitchfork bifurcation"""
 function pitchfork(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=pitchfork_J)

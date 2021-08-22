@@ -40,7 +40,7 @@ simplestChaoticFlowSim = Process(
     solver_opts = Dict(:adaptive => false))
 export simplestChaoticFlowSim
 
-simplestChaoticFlowArt = Process(
+simplestChaoticFlowVis = Process(
     process = simplestChaoticFlow,
     X0 = [0.05, 0.05, 0.05],
     parameter_profile = ramp,
@@ -52,7 +52,7 @@ simplestChaoticFlowArt = Process(
     tmax = 5000.0,
     alg =  RK4(),
     solver_opts = Dict(:adaptive => true, :reltol => 1e-9))
-export simplestChaoticFlowArt
+export simplestChaoticFlowVis
 
 
 polarReduce(x::Real) = x - 2π*(x÷π);
@@ -123,7 +123,7 @@ cartesianDoublePendulumSim = Process(
     solver_opts = Dict(:adaptive => true, :reltol => 1e-20))
 export cartesianDoublePendulumSim
 
-cartesianDoublePendulumArt = Process(
+cartesianDoublePendulumVis = Process(
     process = cartesianDoublePendulum,
     X0 = [5π/6, π, 0.0, 0.0], # Two angles (from the downward direction) and two momenta
     parameter_profile = (lorentzian, lorentzian, constantParameter, constantParameter),
@@ -135,7 +135,7 @@ cartesianDoublePendulumArt = Process(
     parameter_profile_parameters = ((-1.0, 10.0, 25.0, 1.5), (-1.0, 5.0, 25.0, 2.0), (1.0,), (2.0,)),
     alg = AutoVern7(Rodas5()),
     solver_opts = Dict(:adaptive => false))
-export cartesianDoublePendulumArt
+export cartesianDoublePendulumVis
 
 
 
@@ -255,7 +255,7 @@ thomasCyclicallySymmetricSim = Process(
     solver_opts = Dict(:adaptive => true))
 export thomasCyclicallySymmetricSim
 
-thomasCyclicallySymmetricArt = Process(
+thomasCyclicallySymmetricVis = Process(
     process = thomasCyclicallySymmetric,
     X0 = [0.1, 0.0, 0.0],
     parameter_profile = constantParameter,
@@ -267,7 +267,7 @@ thomasCyclicallySymmetricArt = Process(
     tmax = 5000.0,
     alg = RadauIIA3(),
     solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
-export thomasCyclicallySymmetricArt
+export thomasCyclicallySymmetricVis
 
 
 
@@ -317,7 +317,7 @@ doubleScrollSim = Process(
     solver_opts = Dict(:adaptive => true))
 export doubleScrollSim
 
-doubleScrollArt = Process(
+doubleScrollVis = Process(
     process = doubleScroll,
     X0 = [0.01, 0.01, 0.0],
     parameter_profile = constantParameter,
@@ -329,7 +329,7 @@ doubleScrollArt = Process(
     tmax = 5000.0,
     alg = AutoVern7(Rodas5()),
     solver_opts = Dict(:adaptive => true, :reltol => 1e-12))
-export doubleScrollArt
+export doubleScrollVis
 
 
 
@@ -377,7 +377,7 @@ lorenzSim = Process(
     solver_opts = Dict(:adaptive => true, :abstol => 1e-10, :reltol => 1e-10))
 export lorenzSim
 
-lorenzArt= Process(
+lorenzVis= Process(
     process = lorenz,
     X0 = [0.0, 0.01, 9.0],
     parameter_profile = (constantParameter, constantParameter, constantParameter),
@@ -389,7 +389,7 @@ lorenzArt= Process(
     tmax = 1000.0,
     alg = AutoVern7(Rodas5()),
     solver_opts = Dict(:adaptive => true, :reltol => 1e-15))
-export lorenzArt
+export lorenzVis
 
 
 
@@ -432,7 +432,7 @@ diffusionlessLorenzSim = Process(
     solver_opts = Dict(:adaptive => false))
 export diffusionlessLorenzSim
 
-diffusionlessLorenzArt = Process(
+diffusionlessLorenzVis = Process(
     process = diffusionlessLorenz,
     X0 = [1.0, 0.0, 1.0],
     parameter_profile = constantParameter,
@@ -444,7 +444,7 @@ diffusionlessLorenzArt = Process(
     tmax = 20000.0,
     alg = AutoVern7(Rodas5()),
     solver_opts = Dict(:adaptive => true, :reltol => 1e-8))
-export diffusionlessLorenzArt
+export diffusionlessLorenzVis
 
 
 
@@ -493,7 +493,7 @@ piecewiseLinearHyperchaosSim = Process(
     solver_opts = Dict(:adaptive => false, :reltol => 1e-10, :abstol => 1e-10))
 export piecewiseLinearHyperchaosSim
 
-piecewiseLinearHyperchaosArt = Process(
+piecewiseLinearHyperchaosVis = Process(
     process = piecewiseLinearHyperchaos,
     X0 = [0.01, 0.01, 0.01, 0.01],
     parameter_profile = (constantParameter, constantParameter),
@@ -505,7 +505,7 @@ piecewiseLinearHyperchaosArt = Process(
     tmax = 15000.0,
     alg = AutoVern9(Rodas5()),
     solver_opts = Dict(:adaptive => true, :reltol => 1e-14))
-export piecewiseLinearHyperchaosArt
+export piecewiseLinearHyperchaosVis
 
 
 
@@ -555,7 +555,7 @@ simplifiedLorenz4DSim = Process(
     solver_opts = Dict(:adaptive => false))
 export simplifiedLorenz4DSim
 
-simplifiedLorenz4DArt = Process(
+simplifiedLorenz4DVis = Process(
     process = simplifiedLorenz4D,
     X0 = [2.0, 4.0, 0.0, 0.0],
     parameter_profile = (constantParameter, constantParameter),
@@ -567,7 +567,7 @@ simplifiedLorenz4DArt = Process(
     tmax = 7500.0,
     alg = Vern9(),
     solver_opts = Dict(:adaptive => false))#, :reltol => 1e-12))
-export simplifiedLorenz4DArt
+export simplifiedLorenz4DVis
 
 
 
@@ -618,7 +618,7 @@ chensSystemSim = Process(
     solver_opts = Dict(:adaptive => false))
 export chensSystemSim
 
-chensSystemArt = Process(
+chensSystemVis = Process(
     process = chensSystem,
     X0 = [-3.0, 2.0, 20.0],
     parameter_profile = (constantParameter, constantParameter, constantParameter),
@@ -630,4 +630,4 @@ chensSystemArt = Process(
     tmax = 1000.0,
     alg = Vern9(),
     solver_opts = Dict(:adaptive => true, :reltol => 1e-9))
-export chensSystemArt
+export chensSystemVis
