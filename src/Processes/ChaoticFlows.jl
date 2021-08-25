@@ -370,11 +370,11 @@ lorenzSim = Process(
     parameter_profile_parameters = (10.0, 28.0, 8/3), # Sprott's recomendation
     transient_t0 = -100.0,
     t0 = 0.0,
-    dt = 0.005,
-    savedt = 0.01,
-    tmax = 250.0,
-    alg = Vern9(),
-    solver_opts = Dict(:adaptive => true, :abstol => 1e-10, :reltol => 1e-10))
+    dt = 0.001,
+    savedt = 0.05,
+    tmax = 500.0,
+    alg = AutoVern9(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-10, :abstol => 1e-10))
 export lorenzSim
 
 lorenzVis= Process(
