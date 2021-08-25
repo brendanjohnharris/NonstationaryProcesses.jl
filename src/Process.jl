@@ -14,7 +14,7 @@ Base.@kwdef mutable struct Process # Not ensemble
     dt::Union{Float64, Int64} = 0.001
     savedt::Union{Float64, Int64} = 0.01
     tmax::Union{Float64, Int64} = 100.0
-    alg::Union{SciMLBase.SciMLAlgorithm, Nothing} = nothing
+    alg::Union{SciMLBase.SciMLAlgorithm, Function, Nothing} = nothing
     solver_opts::Dict = Dict(:adaptive=>false)
     #parameter_rng::UInt64 = seed()
     solver_rng::Int64 = seed()
@@ -22,6 +22,7 @@ Base.@kwdef mutable struct Process # Not ensemble
     date::String = string(Dates.now())
     solution = nothing
 end
+
 function Process(D::Dict)
     for s ∈ setdiff(keys(D), (:date, :solution))
         if D[s] isa String
@@ -56,7 +57,7 @@ export Process
 """Field Aliases for Process constructors"""
 process_aliases = Dict(
     :process =>                     [:sim, :system, :processes],
-    :parameter_profile =>           [:profile, :profiles, :𝑝, :𝑃],
+    :parameter_profile =>           [:profile, :profiles, :𝑝, :𝑃, :parameter_profiles],
     :parameter_profile_parameters =>[:parameters, :ps, :params, :param, :parameter,
                                      :profile_parameters, :parameterprofileparameters,
                                      :profileparameters, :𝔓, :𝔭],
