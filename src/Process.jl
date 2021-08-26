@@ -21,7 +21,7 @@ Base.@kwdef mutable struct Process # Not ensemble
     id::Int64 = abs(rand(Int64)) # Just a unique number for this simulation
     date::String = string(Dates.now())
     solution = nothing
-    varnames = defaultvars(length(X0))
+    varnames::Vector{Symbol} = defaultvars(length(X0))
 end
 
 function defaultvars(x)
@@ -154,6 +154,7 @@ function times(P::Process; transient::Bool=false)
         P.t0:P.savedt:P.tmax
     end
 end
+times(T::DimArray) = dims(T, Ti).val
 export times
 
 parameter_function(P::Process) = tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters)
