@@ -95,7 +95,6 @@ pitchforkSim = Process(
     solver_opts = Dict(:adaptive => false))
 export pitchforkSim
 
-"""Skewed 'Harmonic' Oscillator"""
 @inline @inbounds function skewedHarmonic(X::AbstractArray, p::Function, t::Real)
     (ω, κ) = p(t)
     dX2 = -ω^2.0*X[1] + ω^2*X[1]*exp(-κ*X[1])
@@ -108,6 +107,7 @@ end
     J = @SMatrix [0.0 1.0; -ω^2 - κ^2*exp(-κ*x) 0.0]
 end
 
+"""Skewed 'Harmonic' Oscillator"""
 function skewedHarmonic(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=skewedHarmonic_J)
