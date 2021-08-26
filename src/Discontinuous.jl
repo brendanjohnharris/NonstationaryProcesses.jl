@@ -45,5 +45,5 @@ function Plots.plot(D::Discontinuous; xguide="t", yguide="p(t)", kwargs...) # Ac
     else
         xr = (xr[1] - 0.2*scale):(scale/1000):(xr[2] + 0.2*scale)
     end
-    Plots.plot(xr, D; xguide, yguide)
+    Plots.plot(xr, D; xguide, yguide, kwargs...)
 end
