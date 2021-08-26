@@ -33,10 +33,11 @@ end
 (D::Discontinuous)(x::Union{Array, StepRange, StepRangeLen, UnitRange}) = D.f.(x)
 
 
-function Plots.plot(xr, D::Discontinuous, args...; kwargs...)
-    Plots.plot(xr, D(xr), args...; kwargs...)
+
+function Plots.plot(xr, D::Discontinuous; kwargs...)
+    Plots.plot(xr, D(xr); kwargs...)
 end
-function Plots.plot(D::Discontinuous, args...) # Actually this can be a recipe?
+function Plots.plot(D::Discontinuous; xguide="t", yguide="p(t)", kwargs...) # Actually this can be a recipe?
     xr = extrema(collect(D.d))
     scale = abs(-(xr...))
     if scale == 0.0
@@ -44,6 +45,5 @@ function Plots.plot(D::Discontinuous, args...) # Actually this can be a recipe?
     else
         xr = (xr[1] - 0.2*scale):(scale/1000):(xr[2] + 0.2*scale)
     end
-    Plots.plot(xr, D, args...)
-    plot!(xlabel="t", ylabel="p(t)", legend=nothing)
+    Plots.plot(xr, D; xguide, yguide)
 end
