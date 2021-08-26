@@ -21,6 +21,12 @@ Base.@kwdef mutable struct Process # Not ensemble
     id::Int64 = abs(rand(Int64)) # Just a unique number for this simulation
     date::String = string(Dates.now())
     solution = nothing
+    varnames = defaultvars(length(X0))
+end
+
+function defaultvars(x)
+    vars = Symbol.(Char.([(120:122)..., 119, 117, 118]))
+    (length(x) <= length(vars) ? vars[1:x] : 1:x)
 end
 
 function Process(D::Dict)
@@ -74,7 +80,8 @@ process_aliases = Dict(
     :solver_rng =>                  [:rng, :rngseed, :rng_seed, :solverrng],
     :id =>                          [:identifier, :inventory_id],
     :date =>                        [:time, :datetime],
-    :solution =>                    [:sol, :result, :output]
+    :solution =>                    [:sol, :result, :output],
+    :varnames =>                    [:variables, :variablenames, :variable_names]
 )
 function repalias!(D, aliai::Dict)
     for d ∈ keys(D)
@@ -125,10 +132,9 @@ function timeseries!(P::Process, dim=1:length(getX0(P)); transient::Bool=false)
         idxs = (length(P.transient_t0:P.savedt:P.t0)):1:length(times(P, transient=true))
     end
     saveTimes = (P.transient_t0:P.savedt:P.tmax)[idxs]
-    vars = Char.([(120:122)..., 119, 117, 118])
-    namevars(x) = (length(x) <= length(vars) ? vars[x] : x)
+    namevars = P.varnames[dim]
     if size(x, 2) > 1
-        x = DimArray(x[idxs, :], (Ti(saveTimes), Dim{:Variable}(namevars(1:size(x, 2)))))
+        x = DimArray(x[idxs, :], (Ti(saveTimes), Dim{:Variable}(namevars)))
     else
         x = DimArray(x[idxs], (Ti(saveTimes),))
     end

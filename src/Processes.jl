@@ -38,6 +38,7 @@ end
 export process2problem
 
 process2solution(P::Process, jac=nothing) = dsolve(process2problem(P, jac), P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+export process2solution
 
 function tuplef2ftuple(f, params)
     # turn a tuple of functions into a function of tuples
