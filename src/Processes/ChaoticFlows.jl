@@ -178,12 +178,12 @@ waveDrivenHarmonicSim = Process(# parameters:  (ω, ε, k, Ω)
 export waveDrivenHarmonicSim
 
 
-@inline @inbounds function pulseDrivenHarmonic(X::AbstractArray, p::Function, t::Real)
-    (ω, ε, k, Ω) = p(t)
-    dX2 = -ω^2.0*X[1] + ε*sin(k*X[1] - Ω*t)^2
-    dX1 = X[2]
-    return SVector{2}(dX1, dX2)
-end
+# @inline @inbounds function pulseDrivenHarmonic(X::AbstractArray, p::Function, t::Real)
+#     (ω, ε, k, Ω) = p(t)
+#     dX2 = -ω^2.0*X[1] + ε*sin(k*X[1] - Ω*t)^2
+#     dX1 = X[2]
+#     return SVector{2}(dX1, dX2)
+# end
 
 # @inline @inbounds function pulseDrivenHarmonic_J(X::AbstractArray, p::Function, t::Real)
 #     (ω, ε, k, Ω) = p(t)
@@ -191,27 +191,27 @@ end
 # end
 
 
-"""
-    An harmonic oscillator driven by directional 'pulses'
-"""
-function pulseDrivenHarmonic(P::Process)
-    seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))#, jac=waveDrivenHarmonic_J)
-    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
-end
+# """
+#     An harmonic oscillator driven by directional 'pulses'
+# """
+# function pulseDrivenHarmonic(P::Process)
+#     seed(P.solver_rng)
+#     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))#, jac=waveDrivenHarmonic_J)
+#     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+# end
 
-pulseDrivenHarmonicSim = Process(# parameters:  (ω, ε, k, Ω)
-    process = pulseDrivenHarmonic,
-    X0 = [0.0, 0.0],
-    parameter_profile = (constantParameter, constantParameter, constantParameter, constantParameter),
-    parameter_profile_parameters = ((1π,), (10.0,), (1π,), (1.5π,)),
-    transient_t0 = -10.0,
-    t0 = 0.0,
-    dt = 0.001,
-    savedt = 0.01,
-    tmax = 100.0,
-    alg = RK4())
-export pulseDrivenHarmonicSim
+# pulseDrivenHarmonicSim = Process(# parameters:  (ω, ε, k, Ω)
+#     process = pulseDrivenHarmonic,
+#     X0 = [0.0, 0.0],
+#     parameter_profile = (constantParameter, constantParameter, constantParameter, constantParameter),
+#     parameter_profile_parameters = ((1π,), (10.0,), (1π,), (1.5π,)),
+#     transient_t0 = -10.0,
+#     t0 = 0.0,
+#     dt = 0.001,
+#     savedt = 0.01,
+#     tmax = 100.0,
+#     alg = RK4())
+# export pulseDrivenHarmonicSim
 
 
 

@@ -96,33 +96,33 @@ pitchforkSim = Process(
 export pitchforkSim
 
 """Skewed 'Harmonic' Oscillator"""
-# @inline @inbounds function skewedHarmonic(X::AbstractArray, p::Function, t::Real)
-#     (ω, κ) = p(t)
-#     dX2 = -ω^2.0*X[1] + ω^2*X[1]*exp(-κ*X[1])
-#     dX1 = X[2]
-#     return SVector{2}(dX1, dX2)
-# end
+@inline @inbounds function skewedHarmonic(X::AbstractArray, p::Function, t::Real)
+    (ω, κ) = p(t)
+    dX2 = -ω^2.0*X[1] + ω^2*X[1]*exp(-κ*X[1])
+    dX1 = X[2]
+    return SVector{2}(dX1, dX2)
+end
 
-# @inline @inbounds function skewedHarmonic_J(X::AbstractArray, p::Function, t::Real)
-#     (ω, κ) = p(t)
-#     J = @SMatrix [0.0 1.0; -ω^2 - κ^2*exp(-κ*x) 0.0]
-# end
+@inline @inbounds function skewedHarmonic_J(X::AbstractArray, p::Function, t::Real)
+    (ω, κ) = p(t)
+    J = @SMatrix [0.0 1.0; -ω^2 - κ^2*exp(-κ*x) 0.0]
+end
 
-# function skewedHarmonic(P::Process)
-#     seed(P.solver_rng)
-#     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=skewedHarmonic_J)
-#     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
-# end
+function skewedHarmonic(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=skewedHarmonic_J)
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+end
 
-# skewedHarmonicSim = Process(
-#     process = skewedHarmonic,
-#     X0 = [1.0, 0.0],
-#     parameter_profile = (constantParameter, constantParameter),
-#     parameter_profile_parameters = ((1.0π,), (10.0,)), # (threshold, baseline, stepHeight)
-#     transient_t0 = -10.0,
-#     t0 = 0.0,
-#     dt = 0.0001,
-#     savedt = 0.001,
-#     tmax = 100.0,
-#     alg = RK4())
-# export skewedHarmonicSim
+skewedHarmonicSim = Process(
+    process = skewedHarmonic,
+    X0 = [1.0, 0.0],
+    parameter_profile = (constantParameter, constantParameter),
+    parameter_profile_parameters = ((1.0π,), (10.0,)), # (threshold, baseline, stepHeight)
+    transient_t0 = -10.0,
+    t0 = 0.0,
+    dt = 0.0001,
+    savedt = 0.001,
+    tmax = 100.0,
+    alg = RK4())
+export skewedHarmonicSim

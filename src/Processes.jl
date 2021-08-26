@@ -26,14 +26,18 @@ end
 """
 Whip up an ODEproblem from a Process
 """
-function process2problem(P::Process)
+function process2problem(P::Process, jac=nothing)
+    args = [P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters)]
+    isnothing(jac) || append!(ags, jac)
     if getalg(P) isa FunctionMap
-        DiscreteProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
+        DiscreteProblem(args...)
     else
-        ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
+        ODEProblem(args...)
     end
 end
 export process2problem
+
+process2solution(P::Process, jac=nothing) = dsolve(process2problem(P, jac), P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 
 function tuplef2ftuple(f, params)
     # turn a tuple of functions into a function of tuples
