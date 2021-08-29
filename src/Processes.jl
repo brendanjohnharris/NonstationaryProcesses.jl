@@ -14,7 +14,7 @@ function seed(theSeed=nothing) # Seed the rng, but return the seed. If no, nothi
     return theSeed
 end
 
-"""Define a function which, if it gets a Discontinuity, fills in tstops"""
+"""Define a function that, if it gets a Discontinuity, fills in tstops"""
 function dsolve(prob, alg; kwargs...)
     if prob.p isa Discontinuous
         DifferentialEquations.solve(prob, alg; kwargs..., tstops=sort(collect(prob.p.d))) # May need to check tstops isn't in args in the future
@@ -45,23 +45,28 @@ function tuplef2ftuple(f, params)
     if all(isempty.(params)) # The f's are just functions on their own, no need to add parameters
         # Be warned that you can't mix these; either use all parameter functions, or all standard functions. Don't be greedy.
         if f isa Tuple
-            pp(t) = [x(t) for x in f]
+            ds = [fi isa Discontinuous ? fi.d : [] for fi in f]
+            ds = reduce(∪, ds) |> Set
+            pp = Discontinuous(t->[x(t) for x in f], ds)
         else
             pp = f
         end
         return pp
-    end
-    if f isa Tuple
+    elseif f isa Tuple
         ps = Vector{Function}(undef, length(f))
         for i = 1:length(f)
             ps[i] = f[i](params[i]...)
         end
-        p(t) = map((x, g) -> g(x), fill(t, length(ps)), ps) # Something like that
+        ds = [fi isa Discontinuous ? fi.d : [] for fi in ps]
+        ds = reduce(∪, ds) |> Set
+        p = Discontinuous(t->map((x, g) -> g(x), fill(t, length(ps)), ps), ds) # Something like that
     else
         p = f(params...)
     end
+    return p
 end
 export tuplef2ftuple
+
 
 include("Processes/ARMA.jl")
 include("Processes/ChaoticFlows.jl")

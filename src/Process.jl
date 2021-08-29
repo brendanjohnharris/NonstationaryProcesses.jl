@@ -6,8 +6,8 @@ using DiffEqBase
 
 Base.@kwdef mutable struct Process # Not ensemble
     process = nothing
-    parameter_profile::Union{Function, Tuple, Array} = x->0.0 # Can be a tuple of functions, if the system has more than one parameter
-    parameter_profile_parameters::Union{Tuple, Array} = [] # Can be a tuple of tuples
+    parameter_profile::Union{Function, Tuple, Array, NTuple} = x->0.0 # Can be a tuple of functions, if the system has more than one parameter
+    parameter_profile_parameters = [] # Can be a tuple of tuples
     X0::Vector = [nothing]
     t0::Union{Float64, Int64} = 0.0
     transient_t0::Union{Float64, Int64} = t0 # t0 will always take precedence
