@@ -42,6 +42,7 @@ export henonSim
     return SVector{1}(dx)
 end
 
+"""Logistic map"""
 function logistic(P::Process)
     seed(P.solver_rng)
     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
@@ -60,3 +61,34 @@ logisticSim = Process(
     tmax = 6000,
     alg = FunctionMap()) # The only discrete solver, pretty much
 export logisticSim
+
+
+
+
+"""
+Ikeda map
+"""
+function ikeda(x, p, n)
+    X, Y = x
+    𝛼, 𝛽, 𝛾, 𝜇 = p(n)
+    𝜙 = 𝛽 - 𝛼/(1 + X^2 + Y^2)
+    dX = 𝛾 + 𝜇*(X*cos(𝜙) - Y*sin(𝜙))
+    dY = 𝜇*(X*sin(𝜙) + Y*cos(𝜙))
+    return SVector{2}(dX, dY)
+end
+
+ikedaSim = Process(
+    process = ikeda(P) = process2solution(P),
+    X0 = [0.0, 0.0],
+    parameter_profile = ntuple(x->constantParameter, 4),
+    parameter_profile_parameters = [6.0, 0.4, 1.0, 0.9], # Sprott
+    transient_t0 = 0,
+    t0 = 1000,
+    dt = 1,
+    savedt = 1,
+    tmax = 10000,
+    alg = FunctionMap())
+export ikedaSim
+
+ikedaVis = ikedaSim(tmax = 200000)
+export ikedaVis
