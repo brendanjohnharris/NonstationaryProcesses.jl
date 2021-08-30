@@ -298,10 +298,10 @@ function updateparam(P::Process, p::Integer, profile, value)
     if length(profiles) == 1
         @assert p == 1
         profiles = [profile]
-        values = value |> typeof(values[p])
+        values = value
     else
-        profiles[p] = profile
-        values[p] = value |> typeof(values[p])
+        profiles = [profiles[1:p-1]..., profile, profiles[p+1:end]...] # 🤮
+        values = [values[1:p-1]..., value, values[p+1:end]...]
     end
     return P(parameter_profile=Tuple(profiles), parameter_profile_parameters=values)
 end
