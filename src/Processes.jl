@@ -67,7 +67,6 @@ function tuplef2ftuple(f, params)
 end
 export tuplef2ftuple
 
-
 include("Processes/ARMA.jl")
 include("Processes/ChaoticFlows.jl")
 include("Processes/ChaoticMaps.jl")

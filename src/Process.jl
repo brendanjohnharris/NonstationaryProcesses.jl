@@ -24,6 +24,22 @@ Base.@kwdef mutable struct Process # Not ensemble
     varnames::Vector{Symbol} = defaultvars(length(X0))
 end
 
+function subshow(io, P)
+    namelen = maximum(length.(string.((fieldnames∘typeof)(P)))) + 2
+    fillfun = x -> repeat(" ", namelen-length(string(x)))
+    rows = ["   $x:$(fillfun(x))"*string(getfield(P, x))*"\n" for x∈(fieldnames∘typeof)(P)]
+    print(io, reduce(*, rows))
+end
+function Base.show(io::IO, P::Process)
+    print(io, "Process with fields:\n")
+    subshow(io, P)
+end
+function Base.show(io::IO, m::MIME"text/plain", P::Process)
+    printstyled(io, "Process", color=:red, bold=true)
+    printstyled(io, " with fields:\n", bold=true)
+    subshow(io, P)
+end
+
 function defaultvars(x)
     vars = Symbol.(Char.([(120:122)..., 119, 117, 118]))
     (length(x) <= length(vars) ? vars[1:x] : 1:x)
@@ -199,6 +215,14 @@ for field ∈ keys(process_aliases)
         end)
     end
 end
+
+""" Which parameters are not constant?"""
+function getvaryingparameters(P::Process)
+    fs = getparameter_profile(P)
+    ps = typeof.(fs) .!= typeof(constantParameter)
+    findall(ps)
+end
+export getvaryingparameters
 
 function forcevec(x)
     if !(x isa Union{AbstractArray, Tuple})
