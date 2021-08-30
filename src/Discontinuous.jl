@@ -47,3 +47,6 @@ function Plots.plot(D::Discontinuous; xguide="t", yguide="p(t)", kwargs...) # Ac
     end
     Plots.plot(xr, D; xguide, yguide, kwargs...)
 end
+
+
+# ! To use stiff solvers that error about instability with discontinuous profiles, try e.g. Rosenbrock23(autodiff = false) and turning off adaptive timestepping
