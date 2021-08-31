@@ -336,12 +336,9 @@ export doubleScrollVis
 @inline @inbounds function lorenz(dX, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     (𝜎, 𝑟, 𝑏) = p(𝑡)
-    𝑥̇ = 𝜎*(𝑦 - 𝑥)
-    𝑦̇ = -𝑥*𝑧 + 𝑟*𝑥 - 𝑦
-    𝑧̇ = 𝑥*𝑦 - 𝑏*𝑧
-    dX[1] = 𝑥̇
-    dX[2] = 𝑦̇
-    dX[3] = 𝑧̇
+    dX[1] = 𝜎*(𝑦 - 𝑥)
+    dX[2] = -𝑥*𝑧 + 𝑟*𝑥 - 𝑦
+    dX[3] = 𝑥*𝑦 - 𝑏*𝑧
 end
 @inline @inbounds function lorenz_J(X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
@@ -374,7 +371,7 @@ lorenzSim = Process(
     savedt = 0.05,
     tmax = 500.0,
     alg = AutoVern9(Rodas5()),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-10, :abstol => 1e-10))
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-10, :abstol => 1e-10, :maxiters=>1e7))
 export lorenzSim
 
 lorenzVis= Process(
