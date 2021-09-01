@@ -81,12 +81,12 @@ ikedaSim = Process(
     process = ikeda(P) = process2solution(P),
     X0 = [0.0, 0.0],
     parameter_profile = ntuple(x->constantParameter, 4),
-    parameter_profile_parameters = [6.0, 0.4, 1.0, 0.9], # Sprott
+    parameter_profile_parameters = (17, 0.2, 0.9, 0.85), # [6.0, 0.4, 1.0, 0.9], # Sprott
     transient_t0 = 0,
     t0 = 1000,
     dt = 1,
     savedt = 1,
-    tmax = 10000,
+    tmax = 11000,
     alg = FunctionMap())
 export ikedaSim
 
