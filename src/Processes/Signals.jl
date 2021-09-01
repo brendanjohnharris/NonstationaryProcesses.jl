@@ -87,13 +87,13 @@ export noisyShiftyScalySineSim
 noisyShiftyShcalySineSim = Process(
     process = noisyShiftyShcalySine,
     X0 = [0.0],
-    parameter_profile = (ramp, constantParameter, constantParameter), # (η, C, A)
-    parameter_profile_parameters = ((0.001, 2.0, 0.0), (1.0,), (1.0,)),
+    parameter_profile = (constantParameter, constantParameter, constantParameter), # (η, C, A)
+    parameter_profile_parameters = ((1.0,), (1.0,), (1.0,)),
     transient_t0 = 0.0,
     t0 = 0.0,
-    dt = 0.1,
-    savedt = 0.1,
-    tmax = 1000.0,
+    dt = 0.05,
+    savedt = 0.05,
+    tmax = 500.0,
     alg = nothing,
     solver_opts=Dict())
 export noisyShiftyShcalySineSim
