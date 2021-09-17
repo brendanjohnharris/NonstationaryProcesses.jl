@@ -65,7 +65,7 @@ export movie
 
 
 # Bring to the boil... Can extract trail plot function to remove
-function doublePendulumMovie(P::Process; downsample=1, trail=10, kwargs...)
+function doublePendulumMovie(P::Process; downsample=1, trail=10, barcolor=:gray, ballcolor=[:black, :black], trailcolor=[:cornflowerblue, :crimson], trailwidth=2, kwargs...)
     X = timeseries(P, 1:2)
     X2 = timeseries(P, 3:4)
     bound = 1.1*max(abs.([(mapslices(extrema, X2)...)...])...)
@@ -75,14 +75,14 @@ function doublePendulumMovie(P::Process; downsample=1, trail=10, kwargs...)
         print("\u1b[1GFrame $(i÷downsample)/$(I÷downsample)")
 
         # Bars
-        plot([0, X[i, 1]], [0, X[i, 2]], seriestype=:line, linewidth=5, color=:gray, label=:none, linealpha=0.5, xlims=(-bound, bound), ylims=(-bound, bound))
+        plot([0, X[i, 1]], [0, X[i, 2]], seriestype=:line, linewidth=5, color=barcolor, label=:none, linealpha=0.5, xlims=(-bound, bound), ylims=(-bound, bound))
         plot!([0], [0]; seriestype=:scatter,
             markersize=20,
             markercolor=:black,
             markeralpha=0.0,
             label=:none
         )
-        plot!([X[i, 1], X2[i, 1]], [X[i, 2], X2[i, 2]], seriestype=:line, linewidth=5, color=:gray, label=:none, linealpha=0.5)
+        plot!([X[i, 1], X2[i, 1]], [X[i, 2], X2[i, 2]], seriestype=:line, linewidth=5, color=barcolor, label=:none, linealpha=0.5)
 
         # Ball 1
         trailIdxs = i-(trail*size(X, 1)÷downsample):i
@@ -91,35 +91,34 @@ function doublePendulumMovie(P::Process; downsample=1, trail=10, kwargs...)
         Ytrail = X[trailIdxs, 2]
         if length(trailIdxs) > 1
             plot!(Xtrail, Ytrail, seriestype=:path,
-                    color=:cornflowerblue,
+                    color=trailcolor[1],
                     linealpha=LinRange(0, 1, length(trailIdxs)),
                     label=:none,
-                    linewidth=2,
+                    linewidth=trailwidth,
             )
         end
         plot!([X[i, 1]], [X[i, 2]]; seriestype=:scatter,
             markersize=20,
-            color=:black,
+            markercolor=ballcolor[1],
             size=(1000, 1000),
             border=:none,
             label=:none,
             kwargs...
         )
-
         # Ball 2
         Xtrail = X2[trailIdxs, 1]
         Ytrail = X2[trailIdxs, 2]
         if length(trailIdxs) > 1
             plot!(Xtrail, Ytrail, seriestype=:path,
-                    color=:red,
+                    color=trailcolor[2],
                     linealpha=LinRange(0, 1, length(trailIdxs)),
                     label=:none,
-                    linewidth=2,
+                    linewidth=trailwidth,
             )
         end
         plot!([X2[i, 1]], [X2[i, 2]]; seriestype=:scatter,
             markersize=20,
-            color=:black,
+            markercolor=ballcolor[2],
             size=(1000, 1000),
             border=:none,
             label=:none,

@@ -56,3 +56,24 @@ function fourseas!()
     theme(:fourseas)
 end
 export fourseas!
+
+
+fourseas_dark = NonstationaryProcesses.fourseas.defaults |> deepcopy
+fourseas_dark[:foreground_color_text] = :white
+fourseas_dark[:foreground_color_subplot] = darkbg
+fourseas_dark[:fgguide] = :white
+fourseas_dark[:fglegend] = :white
+fourseas_dark[:legendfontcolor] = :white
+fourseas_dark[:legendtitlefontcolor] = :white
+fourseas_dark[:titlefontcolor] = :white
+fourseas_dark[:foreground_color_minor_grid] = :gray45
+fourseas_dark[:foreground_color_grid] = :gray45
+fourseas_dark[:bg] = darkbg
+fourseas_dark[:bgcolor_inside] = darkbg
+fourseas_dark[:fontfamily] = "sans-serif"
+Plots.PlotThemes._themes[:fourseas_dark] = fourseas_dark |> Plots.PlotThemes.PlotTheme
+function fourseas_dark!()
+    Plots.PlotThemes._themes[:fourseas_dark] = fourseas_dark |> Plots.PlotThemes.PlotTheme
+    theme(:fourseas_dark)
+end
+export fourseas_dark!
