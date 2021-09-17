@@ -112,13 +112,13 @@ export doublePendulumSim
 cartesianDoublePendulumSim = Process(
     process = cartesianDoublePendulum,
     X0 = [π/2, π/2, 0.0, 0.0], # Two angles and two momenta
-    parameter_profile = (ramp, constantParameter, constantParameter, constantParameter),
-    parameter_profile_parameters = ((-0.015, 1.0, 0.0), (1.0,), (1.0,), (2.0,)), # (threshold, baseline, stepHeight)
+    parameter_profile = (constantParameter, constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters = ((1.0,), (1.0,), (1.0,), (1.0,)), # (ℓ₁, ℓ₂, m₁, m₂)
     transient_t0 = -10.0,
     t0 = 0.0,
     dt = 0.00001,
-    savedt = 0.01,
-    tmax = 50.0,
+    savedt = 0.1,
+    tmax = 100.0,
     alg = AutoVern7(Rodas5()),
     solver_opts = Dict(:adaptive => true, :reltol => 1e-20))
 export cartesianDoublePendulumSim
@@ -136,6 +136,21 @@ cartesianDoublePendulumVis = Process(
     alg = AutoVern7(Rodas5()),
     solver_opts = Dict(:adaptive => false))
 export cartesianDoublePendulumVis
+
+
+cartesianDoublePendulumVis2 = Process(
+    process = cartesianDoublePendulum,
+    X0 = [5π/6, π, 0.0, 0.0], # Two angles (from the downward direction) and two momenta
+    parameter_profile = (lorentzian, lorentzian, constantParameter, constantParameter),
+    transient_t0 = -10.0,
+    t0 = 0.0,
+    dt = 0.0001,
+    savedt = 0.001,
+    tmax = 100.0,
+    parameter_profile_parameters = ((-1.0, 18.0, 50.0, 1.5), (-1.0, 9.0, 50.0, 2.0), (1.0,), (2.0,)),
+    alg = AutoVern7(Rodas5()),
+    solver_opts = Dict(:adaptive => false))
+export cartesianDoublePendulumVis2
 
 
 
