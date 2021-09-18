@@ -19,8 +19,8 @@ end
 
 gaussianBimodalSim = Process(
     process = gaussianBimodal,
-    parameter_profile = (ramp, constantParameter, constantParameter),
-    parameter_profile_parameters = ((0.001, 0.1, 0.0), (1.0,), (0.1)),
+    parameter_profile = (constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters = ((1.0,), (1.0,), (0.5)),
     transient_t0 = 0.0,
     t0 = 0.0,
     savedt = 1,
