@@ -55,7 +55,11 @@ function Process(D::Dict)
                     D[s] = D[s] # It must be a string. You won't be able to solve this process, so the timeseries better be supplied.
                 end
             else
-                D[s] = eval(Meta.parse(D[s]))
+                if s == :gitcommit
+                    D[s] = D[s] # It's a string.
+                else
+                    D[s] = eval(Meta.parse(D[s]))
+                end
             end
         end
     end
