@@ -119,8 +119,8 @@ cartesianDoublePendulumSim = Process(
     dt = 0.00001,
     savedt = 0.1,
     tmax = 100.0,
-    alg = AutoVern7(Rodas5()),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-20))
+    alg = AutoVern9(Rodas5()),
+    solver_opts =  Dict(:adaptive => true, :reltol => 1e-12, :abstol => 1e-12))
 export cartesianDoublePendulumSim
 
 cartesianDoublePendulumVis = Process(
@@ -133,7 +133,7 @@ cartesianDoublePendulumVis = Process(
     savedt = 0.001,
     tmax = 50.0,
     parameter_profile_parameters = ((-1.0, 10.0, 25.0, 1.5), (-1.0, 5.0, 25.0, 2.0), (1.0,), (2.0,)),
-    alg = AutoVern7(Rodas5()),
+    alg = AutoVern9(Rodas5()),
     solver_opts = Dict(:adaptive => false))
 export cartesianDoublePendulumVis
 
