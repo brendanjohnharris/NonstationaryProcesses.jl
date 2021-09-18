@@ -19,6 +19,8 @@ function heaviside(x::Real, stepOpt::Real=1.0)
 end
 heaviside(x::AbstractArray, stepOpt::Real=1.0) = heaviside.(x, stepOpt)
 
+sigmoid(x::Real, width=1) = 1/(1+exp(-x/width))
+
 """
     unitStep(threshold::Real=0.0, baseline::Real=0.0, stepHeight::Real=1.0, stepOpt::Real=1.0)
 
@@ -35,6 +37,13 @@ function unitStep(threshold::Real=0.0, baseline::Real=0.0, stepHeight::Real=1.0,
 end
 unitStep(T::Tuple, args...) = unitStep(T[1], args...) # For compatibility with other parameter profile syntax. If T is tuple, use T[1] as the threshold
 export unitStep
+
+# * A unit step that is smooth as butter
+function unitsigmoid(threshold::Real=0.0, baseline::Real=0.0, stepHeight::Real=1.0, width::Real=0.1)
+    Discontinuous(x -> (sigmoid(x-threshold, width).*stepHeight)+baseline, Set([threshold]))
+end
+unitsigmoid(T::Tuple, args...) = unitsigmoid(T[1], args...) # For compatibility with other parameter profile syntax. If T is tuple, use T[1] as the threshold
+export unitsigmoid
 
 
 # Same as unitStep, but come back down
