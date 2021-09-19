@@ -56,7 +56,7 @@ function Process(D::Dict)
                 end
             else
                 if s == :gitcommit
-                    D[s] = D[s] # It's a string.
+                    pop!(D, s) # We don't need this
                 else
                     D[s] = eval(Meta.parse(D[s]))
                 end
@@ -65,6 +65,7 @@ function Process(D::Dict)
     end
     Process(;D...)
 end
+
 function (P::Process)(;kwargs...)
     # Can use field aliases here
     kwargs = Dict(kwargs)
