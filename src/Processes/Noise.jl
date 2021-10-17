@@ -95,11 +95,11 @@ arSim = Process(
     process = AR,
     X0 = [0.0], # Number of initial conditions should really be 1 + num. of parameters, but if you do not specify they default to 0.0
     parameter_profile = (constant, constant, constant, constant),
-    parameter_profile_parameters = ((0.2,), (0.2,), (0.2,), (0.2,)),
+    parameter_profile_parameters = ((0.1,), (0.1,), (0.1,), (0.1,)),
     t0 = 0,
     dt = 1,
     savedt = 1,
-    tmax = 5000)
+    tmax = 10000)
 export arSim
 
 

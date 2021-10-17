@@ -355,6 +355,7 @@ export doubleScrollVis
     dX[2] = -𝑥*𝑧 + 𝑟*𝑥 - 𝑦
     dX[3] = 𝑥*𝑦 - 𝑏*𝑧
 end
+
 @inline @inbounds function lorenz_J(X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     (𝜎, 𝑟, 𝑏) = p(𝑡)
@@ -626,8 +627,8 @@ chensSystemSim = Process(
     dt = 0.001,
     savedt = 0.025,
     tmax = 500.0,
-    alg = RK4(),
-    solver_opts = Dict(:adaptive => false))
+    alg = AutoVern9(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :abs_tol=>1e-10, :rel_tol=>1e-10))
 export chensSystemSim
 
 chensSystemVis = Process(

@@ -97,14 +97,6 @@ function doublePendulumMovie(P::Process; downsample=1, trail=10, barcolor=:gray,
                     linewidth=trailwidth,
             )
         end
-        plot!([X[i, 1]], [X[i, 2]]; seriestype=:scatter,
-            markersize=20,
-            markercolor=ballcolor[1],
-            size=(1000, 1000),
-            border=:none,
-            label=:none,
-            kwargs...
-        )
         # Ball 2
         Xtrail = X2[trailIdxs, 1]
         Ytrail = X2[trailIdxs, 2]
@@ -116,6 +108,14 @@ function doublePendulumMovie(P::Process; downsample=1, trail=10, barcolor=:gray,
                     linewidth=trailwidth,
             )
         end
+        plot!([X[i, 1]], [X[i, 2]]; seriestype=:scatter,
+            markersize=20,
+            markercolor=ballcolor[1],
+            size=(1000, 1000),
+            border=:none,
+            label=:none,
+            kwargs...
+        )
         plot!([X2[i, 1]], [X2[i, 2]]; seriestype=:scatter,
             markersize=20,
             markercolor=ballcolor[2],
