@@ -3,7 +3,7 @@
 """
 Plot and animate a system evolving alongside its power spectrum
 """
-function animatespectrum(S::Process; downsample=100, trail=1000, nwindows=20, phasogram=false, colorgradient=cgrad([:black, :crimson]), dpi=200)
+function animatespectrum(S::Process; downsample=100, trail=1000, nwindows=20, phasogram=false, colorgradient=cgrad([:black, :crimson]), dpi=200, dospectrum=true, linewidth=1.5)
     # Phasogram really requires a high sampling period
     t = times(S)
     p = parameterseries(S)[end, :]
@@ -30,7 +30,9 @@ function animatespectrum(S::Process; downsample=100, trail=1000, nwindows=20, ph
             if isnothing(widx)
                 widx = size(t1t, 2)
             end
-            plot(t1t[:, widx], X1X[:, widx], seriestype=:spectrogram, teval=1, layout=(phasogram ? (@layout [a{0.8h}; b{0.65w} c{0.35w}]) : (@layout [a{0.7h}; b])), subplot=2, size=(1000, 1000), framestyle=:box, left_margin=10Plots.mm, ylims=(10^-5, 10^10), nwindows=1, axis=nothing, grid=true, colorbar=false, color=:black, gridlinewidth=4.0, dpi=dpi)
+            if dospectrum
+                plot(t1t[:, widx], X1X[:, widx], seriestype=:spectrogram, teval=1, layout=(phasogram ? (@layout [a{0.8h}; b{0.65w} c{0.35w}]) : (@layout [a{0.7h}; b])), subplot=2, size=(1000, 1000), framestyle=:box, left_margin=10Plots.mm, ylims=(10^-5, 10^10), nwindows=1, axis=nothing, grid=true, colorbar=false, color=:black, gridlinewidth=4.0, dpi=dpi)
+            end
             if phasogram
                 # Gonna be very tricky here. Only take the top half of frequencies, and perform all sorts of rotations to get a nice visualisation
                 alignshift = 0.0# -mean(x[Int(ceil(length(x)/2)):end]) # Becuase only relative phases really matter, rotate so that the phases betwene frames are mostly aligned
@@ -38,9 +40,9 @@ function animatespectrum(S::Process; downsample=100, trail=1000, nwindows=20, ph
                 plot!(t1t[:, widx], X1X[:, widx], seriestype=:spectrogram, teval=1, subplot=3, nwindows=1, phasogram=true, colorbar=nothing, topfreqs = nothing, axis=nothing, gridlinewidth=4.0, margin = 2Plots.mm, foreground_text_color=:white)
             end
             if size(X, 2) == 2
-                plot!(x[trailidxs], y[trailidxs], z[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1], ylims=bounds[2], zlims=bounds[3], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient, linewidth=1.5)
+                plot!(x[trailidxs], y[trailidxs], z[trailidxs]; seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1].+[-0.1, 0.1], ylims=bounds[2].+[-0.1, 0.1], zlims=bounds[3].+[-0.1, 0.1], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient, linewidth)
             else
-                plot!(x[trailidxs], y[trailidxs], seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1], ylims=bounds[2], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient, symmetric=true)
+                plot!(x[trailidxs], y[trailidxs]; seriestype=:trail, subplot=1, axis=nothing, framestyle=:none, xlims=bounds[1].+[-0.1, 0.1], ylims=bounds[2].+[-0.1, 0.1], markersize=0.0, linez=p[trailidxs], clims=extrema(p), colorbar=nothing, color=colorgradient, symmetric=true, linewidth)
             end
             xprev = copy(x)
     end

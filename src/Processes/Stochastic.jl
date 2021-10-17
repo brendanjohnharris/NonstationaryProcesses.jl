@@ -21,9 +21,9 @@ end
 skewedGaussianQuadraticSim = Process(
     process = skewedGaussianQuadratic,
     X0 = [0.0],
-    parameter_profile = (constantParameter, constantParameter, ramp),
-    parameter_profile_parameters = ((-1.0,), (2.0,), (0.01, 0.1, 0.0)),
-    transient_t0 = -1.0,
+    parameter_profile = (constantParameter, constantParameter, rampInterval),
+    parameter_profile_parameters = ((-1.0,), (2.0,), (0.01, 0.05, 0.0, 1000.0)),
+    transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.001,
     savedt = 0.001,
