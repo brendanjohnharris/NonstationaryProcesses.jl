@@ -48,11 +48,11 @@ end
 bimodalSwitchingSim = Process(
     process = bimodalSwitching,
     parameter_profile = (constantParameter, constantParameter),
-    parameter_profile_parameters = ((0.9,), (10.0)),
+    parameter_profile_parameters = ((0.5,), (3.0)),
     transient_t0 = 0.0,
     t0 = 0.0,
     savedt = 1,
-    tmax = 1000.0)
+    tmax = 10000.0)
 export bimodalSwitchingSim
 
 
