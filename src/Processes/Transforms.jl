@@ -283,14 +283,14 @@ export iwft
 """
 Randomise phases of frequencies that constitute a propotion `p` of power (from the high to low frequencies)
 """
-function thresholdcorrupt(𝜑, A, 𝑝)
+function thresholdcorrupt(𝜑, A, 𝑝) # ! SO P IS THE SQRT ROOT OF PROPORTIONAL POWER!!!
     𝜑 .= (𝜑 .+ 2π).%2π
     A[1] = 0 # The first amplitude is just the offset, which we don't care about (i.e. we want power of a mean-centred signal)
     psd = (A.^2)./sum(A.^2)
     cpsd = cumsum(psd)
     # display(plot(cpsd))
     # display(plot(A))
-    idx = findfirst(cpsd .> 1-𝑝)
+    idx = findfirst(cpsd .> 1-𝑝^2)
     isnothing(idx) ? (return 𝜑) : nothing
     phi = deepcopy(𝜑)
     phi[idx:end] .= rand(length(phi[idx:end])).*2π

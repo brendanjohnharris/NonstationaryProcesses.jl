@@ -61,7 +61,7 @@ polarReduce(X::AbstractArray) = X .- 2π.*(X.÷π);
 @inline @inbounds function doublePendulum(X::AbstractArray, p, t::Real)
     (θ₁, θ₂, 𝑝₁, 𝑝₂) = X
     (ℓ₁, ℓ₂, m₁, m₂) = p(t)
-    𝑔 = 1.0
+    𝑔 = 0.0
 
     C₁(θ₁, θ₂, 𝑝₁, 𝑝₂) = (𝑝₁*𝑝₂*sin(θ₁ - θ₂))/(ℓ₁*ℓ₂*(m₁ + m₂*sin(θ₁ - θ₂)^2))
     C₂(θ₁, θ₂, 𝑝₁, 𝑝₂) = ((ℓ₂^2*m₂*𝑝₁^2 + ℓ₁^2*(m₁ + m₂)*𝑝₂^2 - ℓ₁*ℓ₂*m₂*𝑝₁*𝑝₂*cos(θ₁ - θ₂))/(2*ℓ₁^2*ℓ₂^2*(m₁ + m₂*sin(θ₁ - θ₂)^2)^2))*(sin(2*(θ₁ - θ₂)))
@@ -620,13 +620,13 @@ export yetAnotherChaoticAttractor
 chensSystemSim = Process(
     process = chensSystem,
     X0 = [-3.0, 2.0, 20.0],
-    parameter_profile = (ramp, ramp, ramp),
-    parameter_profile_parameters = ((42.0, 46.0, 0.0, 500.0), (4.0, 11.0, 0.0, 500.0), (28.0, 38.0, 0.0, 500.0)),
+    parameter_profile = (constant, constant, constant),
+    parameter_profile_parameters = ((44,), (5,), (30,)),
     transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.001,
-    savedt = 0.025,
-    tmax = 500.0,
+    savedt = 0.02,
+    tmax = 200.0,
     alg = AutoVern9(Rodas5()),
     solver_opts = Dict(:adaptive => true, :abs_tol=>1e-10, :rel_tol=>1e-10))
 export chensSystemSim

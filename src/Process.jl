@@ -27,7 +27,10 @@ end
 function subshow(io, P)
     namelen = maximum(length.(string.((fieldnames∘typeof)(P)))) + 2
     fillfun = x -> repeat(" ", namelen-length(string(x)))
-    rows = ["   $x:$(fillfun(x))"*string(getfield(P, x))*"\n" for x∈(fieldnames∘typeof)(P)]
+    showfields = (fieldnames∘typeof)(P)
+    rows = ["   $x:$(fillfun(x))"*string(getfield(P, x))*"\n" for x ∈ showfields]
+    issolved = !isnothing(getsolution(P))
+    rows[findfirst(showfields .== :solution)] = "   solution:$(fillfun(:solution))$issolved\n"
     print(io, reduce(*, rows))
 end
 function Base.show(io::IO, P::Process)

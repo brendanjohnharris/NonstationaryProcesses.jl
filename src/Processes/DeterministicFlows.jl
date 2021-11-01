@@ -1,3 +1,39 @@
+@inline @inbounds function forcedvanderpol(X::AbstractArray, p::Function, t::Real)
+    (μ, A, ω) = p(t)
+    dX1 = X[2]
+    dX2 = μ.*(1-X[1].^2).*X[2] - X[1] + A*sin(ω*t)
+    return SVector{2}(dX1, dX2)
+end
+
+
+"""Forcev Van der Pol Oscillator"""
+function forcedvanderpol(P::Process)
+    seed(P.solver_rng)
+    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
+    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+forcedvanderpolSim = Process(
+    process = forcedvanderpol,
+    X0 = [1.0, 1.0],
+    parameter_profile = (constant, constant, constant),
+    parameter_profile_parameters = ((1.0,), (1.0,), (2.0,)),
+    transient_t0 = -100.0,
+    t0 = 0.0,
+    dt = 0.001,
+    savedt = 0.1,
+    tmax = 100.0,
+    alg = AutoVern9(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-9, :abs_tol => 1e-9)) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ
+export forcedvanderpolSim
+
+
+
+
+
+
+
+
 @inline @inbounds function vanderpol(X::AbstractArray, μ::Function, t::Real)
     dX1 = X[2]
     dX2 = μ(t).*(1-X[1].^2).*X[2] - X[1]
@@ -19,14 +55,14 @@ end
 vanderpolSim = Process(
     process = vanderpol,
     X0 = [1.0, 1.0],
-    parameter_profile = unitStep,
-    parameter_profile_parameters = (1000.0, 0.0, 20.0), # (threshold, baseline, stepHeight)
+    parameter_profile = constantParameter,
+    parameter_profile_parameters = (5,), # (threshold, baseline, stepHeight)
     transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.001,
     savedt = 0.1,
-    tmax = 2000.0,
-    alg = RK4()) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ
+    tmax = 1000.0,
+    alg = AutoVern9(Rodas5())) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ
 export vanderpolSim
 
 

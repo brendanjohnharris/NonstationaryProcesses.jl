@@ -32,6 +32,7 @@ fourseas = Plots.PlotThemes.PlotTheme(
     linewidth = 2.5,
     palette = fourseas_palette,
     colorgradient = :viridis,
+    markerstrokecolor=:white,
     framestyle = :grid,
     grid = true,
     minorgrid = true,
