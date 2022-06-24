@@ -1,5 +1,5 @@
+ENV["PYTHON"]=""
 using PyCall
-using DifferentialEquations
 const cn = PyNULL()
 const signal = PyNULL()
 run(`$(PyCall.python) -m pip install colorednoise`)
@@ -13,32 +13,6 @@ function seed(theSeed=nothing) # Seed the rng, but return the seed. If no, nothi
     Random.seed!(theSeed)
     return theSeed
 end
-
-"""Define a function that, if it gets a Discontinuity, fills in tstops"""
-function dsolve(prob, alg; kwargs...)
-    if prob.p isa Discontinuous
-        DifferentialEquations.solve(prob, alg; kwargs..., tstops=sort(collect(prob.p.d))) # May need to check tstops isn't in args in the future
-    else
-        DifferentialEquations.solve(prob, alg; kwargs...)
-    end
-end
-
-"""
-Whip up an ODEproblem from a Process
-"""
-function process2problem(P::Process, jac=nothing)
-    args = [P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters)]
-    isnothing(jac) || append!(ags, jac)
-    if getalg(P) isa FunctionMap
-        DiscreteProblem(args...)
-    else
-        ODEProblem(args...)
-    end
-end
-export process2problem
-
-process2solution(P::Process, jac=nothing) = dsolve(process2problem(P, jac), P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
-export process2solution
 
 function tuplef2ftuple(f, params)
     # turn a tuple of functions into a function of tuples
@@ -68,10 +42,5 @@ end
 export tuplef2ftuple
 
 include("Processes/ARMA.jl")
-include("Processes/ChaoticFlows.jl")
-include("Processes/ChaoticMaps.jl")
-include("Processes/DeterministicFlows.jl")
 include("Processes/Noise.jl")
 include("Processes/Signals.jl")
-include("Processes/Stochastic.jl")
-include("Processes/Transforms.jl")
