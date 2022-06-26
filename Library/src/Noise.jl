@@ -1,5 +1,14 @@
-using .Distributions
-using .PyCall
+module Noise
+using Distributions
+using NonstationaryProcesses
+
+ENV["PYTHON"]=""
+using PyCall
+const cn = PyNULL()
+const signal = PyNULL()
+run(`$(PyCall.python) -m pip install colorednoise`)
+copy!(cn, pyimport("colorednoise"))
+copy!(signal, pyimport_conda("scipy.signal", "scipy"))
 
 """Gaussian Bimodal"""
 function gaussianBimodal(μ=0.0, σ=1.0, α=0.5)
@@ -131,3 +140,6 @@ shiftyNoiseSim = Process(
     savedt = 1,
     tmax = 1000.0)
 export shiftyNoiseSim
+
+
+end # module

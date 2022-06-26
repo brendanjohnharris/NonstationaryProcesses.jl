@@ -1,0 +1,10 @@
+name = "Library"
+uuid = "b0b392fe-18d2-48ac-a5f0-f1d80faf002a"
+authors = ["brendanjohnharris <brendanjohnharris@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+NonstationaryProcesses = "7656fb31-40ed-4019-8ece-32bdcc5fce69"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"

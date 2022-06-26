@@ -27,8 +27,8 @@ export process2problem
 process2solution(P::Process, jac=nothing) = dsolve(process2problem(P, jac), P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 export process2solution
 
-include("Processes/ChaoticFlows.jl")
-include("Processes/ChaoticMaps.jl")
-include("Processes/DeterministicFlows.jl")
-include("Processes/Stochastic.jl")
-include("Processes/Transforms.jl")
+include("ChaoticFlows.jl")
+include("ChaoticMaps.jl")
+include("DeterministicFlows.jl")
+include("Stochastic.jl")
+include("Transforms.jl")

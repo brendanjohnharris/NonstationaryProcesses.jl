@@ -2,7 +2,6 @@ using DimensionalData
 using DelimitedFiles
 using Dates
 using SciMLBase
-using DiffEqBase
 
 Base.@kwdef mutable struct Process # Not ensemble
     process = nothing
