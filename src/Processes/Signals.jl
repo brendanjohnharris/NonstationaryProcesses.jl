@@ -28,7 +28,7 @@ export fmWaveSim
 """Noisy Sine"""
 function noisySine(P::Process)
     seed(P.solver_rng)
-    sol = [sin(t) + parameter_function(P)(t)*randn() for t in P.transient_t0:P.savedt:P.tmax]
+    sol = [sin(t) + parameter_function(P)(t)[1]*randn() for t in P.transient_t0:P.savedt:P.tmax]
 end
 
 noisySineSim = Process(

@@ -71,11 +71,20 @@ end
 
 function (P::Process)(;kwargs...)
     # Can use field aliases here
-    kwargs = Dict(kwargs)
+    kwargs = Dict{Any, Any}(kwargs)
     repalias!(kwargs, process_aliases)
 
+    # * If the parameter profile is given as a number, assume this is a stationary process
+    if :parameter_profile ∈ keys(kwargs) && !(:parameter_profile_parameters ∈ keys(kwargs)) && kwargs[:parameter_profile] isa Number
+        kwargs[:parameter_profile] = Tuple([x->y for y in kwargs[:parameter_profile]])
+        kwargs[:parameter_profile_parameters] = ()
+    end
+
+    # * Copy kwargs onto a new Process
     P2 = deepcopy(P)
     [setfield!(P2, x, y) for (x, y) in kwargs]
+
+    # * Set new process metadata
     setfield!(P2, :solution, nothing) # You've changed some parameters, so the solution is no longer valid
     setfield!(P2, :id, abs(rand(Int64))) # New id, yeah?
     setfield!(P2, :solver_rng, seed()) # New random seed, yeah?
