@@ -2,25 +2,53 @@ module NonstationaryProcesses
 
 using Requires
 using Random
-using StaticArrays
-using PyCall
+using NonstationaryProcessesBase
 using Distributions
-using Tullio
-using FFTW
-using Setfield
-using StatsBase
-import Library
 
+export tuplef2ftuple, seed
 
 function __init__()
-    @require BifurcationKit="0f109fa4-8a5d-4b75-95aa-f515264e7665" @eval include("Bifurcations.jl")
-    @require DynamicalSystems="61744808-ddfa-5f27-97ff-6e42cc95d634" @eval include("DynamicalSystems.jl")
-    @require StatsPlots="f3b207a7-027a-5e70-b257-86293d7955fd" @eval include("Plots/Plotting.jl")
-    @require PyPlot="d330b81b-6aea-500a-939a-2ce795aea3ee" @eval include("PyPlotTools.jl")
+    @require DifferentialEquations="0c46a032-eb83-5123-abaf-570d42b7fbaa" @eval include("DifferentialEquations.jl")
 end
 
-include("Discontinuous.jl")
-include("ParameterProfiles.jl")
-include("Process.jl")
 
+function seed(theSeed=nothing) # Seed the rng, but return the seed. If no, nothing, or NaN argument, randomly seed rng
+    if isnothing(theSeed)
+        theSeed = abs(Random.rand(Int64))
+    end
+    Random.seed!(theSeed)
+    return theSeed
 end
+
+function tuplef2ftuple(f, params)
+    # turn a tuple of functions into a function of tuples
+    if all(isempty.(params)) # The f's are just functions on their own, no need to add parameters
+        # Be warned that you can't mix these; either use all parameter functions, or all standard functions. Don't be greedy.
+        if f isa Tuple
+            ds = [fi isa Discontinuous ? fi.d : [] for fi in f]
+            ds = reduce(∪, ds) |> Set
+            pp = Discontinuous(t->[x(t) for x in f], ds)
+        else
+            pp = f
+        end
+        return pp
+    elseif f isa Tuple
+        ps = Vector{Function}(undef, length(f))
+        for i = 1:length(f)
+            ps[i] = f[i](params[i]...)
+        end
+        ds = [fi isa Discontinuous ? fi.d : [] for fi in ps]
+        ds = reduce(∪, ds) |> Set
+        p = Discontinuous(t->map((x, g) -> g(x), fill(t, length(ps)), ps), ds) # Something like that
+    else
+        p = f(params...)
+    end
+    return p
+end
+
+include("ARMA.jl")
+include("Noise.jl")
+include("Signals.jl")
+
+
+end # module

@@ -4,36 +4,14 @@ authors = ["brendanjohnharris <brendanjohnharris@gmail.com> and contributors"]
 version = "0.1.0"
 
 [deps]
-Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-DelayEmbeddings = "5732040d-69e3-5649-938a-b6b4f237613f"
-DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-KernelDensity = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
-Library = "9189a08a-2f99-4f53-ba42-51b7904c515a"
+NonstationaryProcessesBase = "af5f7d59-81cb-4819-a164-3c52f7fc19dd"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
-SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
-StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 
 [compat]
-DimensionalData = "≥0.16"
-Distributions = "0.23 - 0.25"
-FFTW = "1"
-KernelDensity = "0.6"
-PyCall = "1"
-Requires = "1.1"
-SciMLBase = "1"
-Setfield = "0.7"
-StaticArrays = "1.1"
-StatsBase = "0.33"
-Tullio = "0.2, 0.3"
-julia = "1"
+julia = "1.6 - 1.7"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
