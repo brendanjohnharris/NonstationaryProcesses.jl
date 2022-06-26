@@ -1,10 +1,10 @@
-ENV["PYTHON"]=""
-using PyCall
-const cn = PyNULL()
-const signal = PyNULL()
-run(`$(PyCall.python) -m pip install colorednoise`)
-copy!(cn, pyimport("colorednoise"))
-copy!(signal, pyimport_conda("scipy.signal", "scipy"))
+module Library
+# using Requires
+using NonstationaryProcessess
+
+# function __init__()
+#     @require DifferentialEquations="0c46a032-eb83-5123-abaf-570d42b7fbaa" @eval include("DifferentialEquations.jl")
+# end
 
 function seed(theSeed=nothing) # Seed the rng, but return the seed. If no, nothing or NaN argument, randomly seed rng
     if isnothing(theSeed)
@@ -41,6 +41,8 @@ function tuplef2ftuple(f, params)
 end
 export tuplef2ftuple
 
-include("Processes/ARMA.jl")
-include("Processes/Noise.jl")
-include("Processes/Signals.jl")
+include("ARMA.jl")
+include("Noise.jl")
+include("Signals.jl")
+
+end # module
