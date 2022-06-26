@@ -1,0 +1,8 @@
+[deps]
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+DynamicalSystems = "61744808-ddfa-5f27-97ff-6e42cc95d634"
+NonstationaryProcesses = "7656fb31-40ed-4019-8ece-32bdcc5fce69"
+NonstationaryProcessesBase = "af5f7d59-81cb-4819-a164-3c52f7fc19dd"
+StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

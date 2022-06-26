@@ -1,5 +1,5 @@
-using DifferentialEquations
-using DifferentialEquations.OrdinaryDiffEq
+using .DifferentialEquations
+using .DifferentialEquations.OrdinaryDiffEq
 
 """Define a function that, if it gets a Discontinuity, fills in tstops"""
 function dsolve(prob, alg; kwargs...)

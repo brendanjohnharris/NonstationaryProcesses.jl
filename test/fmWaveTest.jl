@@ -1,6 +1,6 @@
 using DynamicalSystems
+using NonstationaryProcessesBase
 using Plots
-plotly()
 
 # Integrate an FM wave with DynamicalSystems
 
