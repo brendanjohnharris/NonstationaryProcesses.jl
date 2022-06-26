@@ -1,5 +1,11 @@
 using .DifferentialEquations
+using .StatsBase
+using .Tullio
+using .DifferentialEquations.DiffEqBase
 using .DifferentialEquations.OrdinaryDiffEq
+using .FFTW
+using .DimensionalData
+import .DifferentialEquations.DiffEqBase.StaticArrays.@SMatrix
 
 """Define a function that, if it gets a Discontinuity, fills in tstops"""
 function dsolve(prob, alg; kwargs...)
