@@ -1,7 +1,3 @@
-module Noise
-using Distributions
-using NonstationaryProcesses
-
 ENV["PYTHON"]=""
 using PyCall
 const cn = PyNULL()
@@ -140,6 +136,3 @@ shiftyNoiseSim = Process(
     savedt = 1,
     tmax = 1000.0)
 export shiftyNoiseSim
-
-
-end # module
