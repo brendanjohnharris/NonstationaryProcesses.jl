@@ -1,12 +1,13 @@
-using NonstationaryProcesses
 using DynamicalSystems
+using DifferentialEquations
 using Distributions
 using StatsPlots
+using NonstationaryProcesses
 
 sim = lorenzSim(
     X0 = [0.0, -0.01, 9.0],
     parameter_profile = (constantParameter, constantParameter, constantParameter),
-    parameter_profile_parameters = (10.0, 28.0, 8/3), # Sprott's recomendation
+    parameter_profile_parameters = (10.0, 28.0, 8/3), # Sprott's recommendation
     transient_t0 = -100.0,
     t0 = 0.0,
     dt = 0.001,

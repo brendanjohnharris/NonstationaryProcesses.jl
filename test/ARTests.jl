@@ -65,5 +65,3 @@ end
 Random.seed!(32)
 t = integrateAR(X0, p, T)
 plot!(t[:, 1], seriestype=:path)
-
-
