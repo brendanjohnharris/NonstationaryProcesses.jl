@@ -6,7 +6,7 @@ function fmWave(P::Process)
     Δ𝑓 = 1.0
     sol = zeros(size(T))
     pint = 0.0
-    for i ∈ 2:lastindex(T)
+    for i ∈ 1:lastindex(T) # The initial condition has no meaning here
         t = T[i]
         pint += (p(t-P.savedt) + p(t))*P.savedt/2 # Crude integration, should be fine
         sol[i] = cos(2π*(t + Δ𝑓*pint))

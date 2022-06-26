@@ -3,6 +3,10 @@ module NonstationaryProcesses
 using Requires
 using Random
 using Reexport
+using StatsBase
+using Tullio
+using FFTW
+using DimensionalData
 @reexport using NonstationaryProcessesBase
 using Distributions
 
