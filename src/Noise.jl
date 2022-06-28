@@ -88,12 +88,13 @@ function AR(P::Process)
     ϕ⃗ = parameter_function(P)
     p = length(ϕ⃗(gett0(P)))
     ξ⃗ = randn(p+1)
-    X = zeros(length(times(P)), p+1)
+    𝑡 = times(P; transient=true)
+    X = zeros(length(𝑡), p+1)
     X[1, 1:length(getX0(P))] = getX0(P)
-    for t ∈ 2:length(times(P))
+    for t ∈ 2:length(𝑡)
         X[t, :], ξ⃗ = AR(X[t-1, :], ξ⃗, forcevec(ϕ⃗(t)))
     end
-    return X[Int.(times(P, transient=true) .- (gett0(P)-1)), 1:length(getX0(P))]
+    return X[Int.(𝑡 .- (gettransient_t0(P) - 1)), 1:length(getX0(P))]
 end
 
 arSim = Process(
