@@ -3,6 +3,7 @@ using .StatsBase
 using .Tullio
 using .DifferentialEquations.DiffEqBase
 using .DifferentialEquations.OrdinaryDiffEq
+using .DifferentialEquations.DiffEqBase.StaticArrays
 using .FFTW
 using .DimensionalData
 import .DifferentialEquations.DiffEqBase.StaticArrays.@SMatrix
