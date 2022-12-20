@@ -11,7 +11,7 @@ end
 X0 = [1.0, 1.0]
 tspan = (0.0, 2000.0)
 μ = unitStep(1000.0).*20.0 # A step from 0 to 20 at t = 1000
-prob = ODEProblem(f!, X0, tspan, μ)
+prob = odeproblem(f!, X0, tspan, μ)
 sol = solve(prob; tstops=sort(collect(μ.d)), saveat=0.001, reltol=1e-6)
 
 plot(sol, vars=(1))
