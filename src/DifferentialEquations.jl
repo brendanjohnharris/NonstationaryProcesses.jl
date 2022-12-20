@@ -18,7 +18,7 @@ function dsolve(prob, alg; kwargs...)
 end
 
 """
-Whip up an ODEproblem from a Process
+Whip up an odeproblem from a Process
 """
 function process2problem(P::Process, jac=nothing)
     args = [P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters)]
@@ -26,13 +26,22 @@ function process2problem(P::Process, jac=nothing)
     if getalg(P) isa FunctionMap
         DiscreteProblem(args...)
     else
-        ODEProblem(args...)
+        odeproblem(args...)
     end
 end
 export process2problem
 
 process2solution(P::Process, jac=nothing) = dsolve(process2problem(P, jac), P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 export process2solution
+
+"""
+For working with old DifferentialEquations syntax, pre v7
+"""
+function odeproblem(f, X0, ts, ps; jac=nothing)
+    odefunction = ODEFunction{true}(f; jac)
+    return ODEProblem(odefunction, X0, ts, ps)
+end
+export odeproblem
 
 include("ChaoticFlows.jl")
 include("ChaoticMaps.jl")

@@ -9,7 +9,7 @@ end
 """Forcev Van der Pol Oscillator"""
 function forcedvanderpol(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -40,15 +40,15 @@ export forcedvanderpolSim
     return SVector{2}(dX1, dX2)
 end
 
-@inline @inbounds function vanderpol_J(X::AbstractArray, μ::Function, t::Real)
-    J = @SMatrix [  0                  1;
+@inline @inbounds function vanderpol_J(J, X::AbstractArray, μ::Function, t::Real)
+    J .=               [  0                  1;
                     -2*μ(t)*X[1]*X[2]-1      μ(t)*(1-X[1]^2)]
 end
 
 """Van der Pol Oscillator"""
 function vanderpol(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=vanderpol_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=vanderpol_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -73,14 +73,14 @@ export vanderpolSim
     return SVector{2}(dX1, dX2)
 end
 
-@inline @inbounds function harmonic_J(X::AbstractArray, ω::Function, t::Real)
-    J = @SMatrix [0.0 1.0; -ω(t)^2 0.0]
+@inline @inbounds function harmonic_J(J, X::AbstractArray, ω::Function, t::Real)
+    J .= [0.0 1.0; -ω(t)^2 0.0]
 end
 
 """Harmonic Oscillator"""
 function harmonic(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=harmonic_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=harmonic_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -105,15 +105,15 @@ export harmonicSim
     return [dx]
 end
 
-@inline @inbounds function pitchfork_J(x::Vector, p::Function, t::Real)
+@inline @inbounds function pitchfork_J(J, x::Vector, p::Function, t::Real)
     (μ, α) = p(t)
-    J = [μ + 3α*x[1]^2]
+    J .= [μ + 3α*x[1]^2]
 end
 
 """Normal form for a pitchfork bifurcation"""
 function pitchfork(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=pitchfork_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=pitchfork_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -138,15 +138,15 @@ export pitchforkSim
     return SVector{2}(dX1, dX2)
 end
 
-@inline @inbounds function skewedHarmonic_J(X::AbstractArray, p::Function, t::Real)
+@inline @inbounds function skewedHarmonic_J(J, X::AbstractArray, p::Function, t::Real)
     (ω, κ) = p(t)
-    J = @SMatrix [0.0 1.0; -ω^2 - κ^2*exp(-κ*x) 0.0]
+    J .= [0.0 1.0; -ω^2 - κ^2*exp(-κ*x) 0.0]
 end
 
 """Skewed 'Harmonic' Oscillator"""
 function skewedHarmonic(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=skewedHarmonic_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=skewedHarmonic_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 

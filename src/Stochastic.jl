@@ -35,7 +35,7 @@ export skewedGaussianQuadraticSim
 """A system combining multiple classes of features. Combine Chen's system with gaussian noise and an exponential measurement function"""
 function seeIfItSticks(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(chensSystem, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile[1:3], P.parameter_profile_parameters[1:3]), jac=chensSystem_J)
+    prob = odeproblem(chensSystem, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile[1:3], P.parameter_profile_parameters[1:3]), jac=chensSystem_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
     η = parameterseries(P, p=[4], transient=true)
     α = parameterseries(P, p=[5], transient=true)

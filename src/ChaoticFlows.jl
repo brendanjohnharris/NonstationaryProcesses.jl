@@ -6,9 +6,9 @@
     return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
 end
 
-@inline @inbounds function simplestChaoticFlow_J(X::AbstractArray, 𝐴::Function, 𝑡::Real)
+@inline @inbounds function simplestChaoticFlow_J(J, X::AbstractArray, 𝐴::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
-    J = @SMatrix [  1.0     0.0     0.0;
+    J .=          [  1.0     0.0     0.0;
                     0.0     1.0     0.0;
                     2.0*𝑦   -𝐴(𝑡)   -1.0]
 end
@@ -20,7 +20,7 @@ Sprott, or Sprott1997
 """
 function simplestChaoticFlow(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=simplestChaoticFlow_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=simplestChaoticFlow_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -76,7 +76,7 @@ polarReduce(X::AbstractArray) = X .- 2π.*(X.÷π);
 end
 function doublePendulum(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -161,9 +161,9 @@ export cartesianDoublePendulumVis2
     return SVector{2}(dX1, dX2)
 end
 
-@inline @inbounds function waveDrivenHarmonic_J(X::AbstractArray, p::Function, t::Real)
+@inline @inbounds function waveDrivenHarmonic_J(J, X::AbstractArray, p::Function, t::Real)
     (ω, ε, k, Ω) = p(t)
-    J = @SMatrix [0.0 1.0; ε*k*cos(k*X[1] - Ω*t)-ω^2 0.0]
+    J .= [0.0 1.0; ε*k*cos(k*X[1] - Ω*t)-ω^2 0.0]
 end
 
 """
@@ -173,7 +173,7 @@ Sprott, or Chernikov1988
 """
 function waveDrivenHarmonic(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=waveDrivenHarmonic_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=waveDrivenHarmonic_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -211,7 +211,7 @@ export waveDrivenHarmonicSim
 # """
 # function pulseDrivenHarmonic(P::Process)
 #     seed(P.solver_rng)
-#     prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))#, jac=waveDrivenHarmonic_J)
+#     prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))#, jac=waveDrivenHarmonic_J)
 #     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 # end
 
@@ -238,9 +238,9 @@ export waveDrivenHarmonicSim
     return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
 end
 
-@inline @inbounds function thomasCyclicallySymmetric_J(X::AbstractArray, 𝑏::Function, 𝑡::Real)
+@inline @inbounds function thomasCyclicallySymmetric_J(J, X::AbstractArray, 𝑏::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
-    J = @SMatrix [  -𝑏(𝑡)   cos(𝑦)   0.0;
+    J .=        [  -𝑏(𝑡)   cos(𝑦)   0.0;
                     0.0     -𝑏(𝑡)    cos(𝑧);
                     cos(𝑥)  0.0      -𝑏(𝑡)]
 end
@@ -252,7 +252,7 @@ From Sprott, or Thomas1999
 """
 function thomasCyclicallySymmetric(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=thomasCyclicallySymmetric_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=thomasCyclicallySymmetric_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -300,9 +300,9 @@ function 𝛿(x)
         return 0
     end
 end
-@inline @inbounds function doubleScroll_J(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+@inline @inbounds function doubleScroll_J(J, X::AbstractArray, 𝑎::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
-    J = @SMatrix [  0.0   1.0   0.0;
+    J .=         [  0.0   1.0   0.0;
                     0.0   0.0   1.0;
                     -𝑎(𝑡)*(1.0-2.0*𝛿(x))  -𝑎(𝑡)  -𝑎(𝑡)] # Need to worry about integrating delta? Hopefully we never hit 0.0...
 end
@@ -314,7 +314,7 @@ From Sprott, or Elwakil2001
 """
 function doubleScroll(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=doubleScroll_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=doubleScroll_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -356,12 +356,12 @@ export doubleScrollVis
     dX[3] = 𝑥*𝑦 - 𝑏*𝑧
 end
 
-@inline @inbounds function lorenz_J(X::AbstractArray, p::Function, 𝑡::Real)
+@inline @inbounds function lorenz_J(J, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     (𝜎, 𝑟, 𝑏) = p(𝑡)
-    J = @SMatrix [  -𝜎      𝜎       0.0;
-                    𝑟-𝑧     -1.0    -𝑥;
-                    𝑦       𝑥       -𝑏]
+    J .= [  -𝜎      𝜎       0.0;
+            𝑟-𝑧     -1.0    -𝑥;
+            𝑦       𝑥       -𝑏]
 end
 
 """
@@ -371,7 +371,7 @@ Sprott, Shin1998, Balcerzak2018
 """
 function lorenz(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=lorenz_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=lorenz_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -413,9 +413,9 @@ export lorenzVis
     𝑧̇ = 𝑥*𝑦 - 𝑎(𝑡)
     return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
 end
-@inline @inbounds function diffusionlessLorenz_J(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+@inline @inbounds function diffusionlessLorenz_J(J, X::AbstractArray, 𝑎::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
-    J = @SMatrix [  -1.0   1.0   0.0;
+    J .=         [  -1.0   1.0   0.0;
                     -𝑧     0.0   -𝑥;
                     𝑦      𝑥     0.0]
 end
@@ -427,7 +427,7 @@ See Li2014, Sprott2010a (Elegant Chaos), and Schrier2000
 """
 function diffusionlessLorenz(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=diffusionlessLorenz_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=diffusionlessLorenz_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -472,10 +472,10 @@ export diffusionlessLorenzVis
 
     return SVector{4}(𝑥̇, 𝑦̇, 𝑧̇, 𝑢̇)
 end
-@inline @inbounds function piecewiseLinearHyperchaos_J(X::AbstractArray, p::Function, 𝑡::Real)
+@inline @inbounds function piecewiseLinearHyperchaos_J(J, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
     (𝑎, 𝑏) = p(𝑡)
-    J = @SMatrix [  -1.0        1.0        0.0          0.0;
+    J .=         [  -1.0        1.0        0.0          0.0;
                     -2*𝛿(𝑧)     0.0        -sign(𝑥)     1.0; # ? Again, hope we miss the zero
                     sign(𝑥)     0.0        0.0          0.0;
                     0.0         -𝑏         0.0          0.0]
@@ -488,7 +488,7 @@ Li2014
 """
 function piecewiseLinearHyperchaos(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=piecewiseLinearHyperchaos_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=piecewiseLinearHyperchaos_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -534,10 +534,10 @@ export piecewiseLinearHyperchaosVis
 
     return SVector{4}(𝑥̇, 𝑦̇, 𝑧̇, 𝑢̇)
 end
-@inline @inbounds function simplifiedLorenz4D_J(X::AbstractArray, p::Function, 𝑡::Real)
+@inline @inbounds function simplifiedLorenz4D_J(J, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
     (𝑎, 𝑏) = p(𝑡)
-    J = @SMatrix [  -1.0        1.0        0.0          0.0;
+    J .=         [  -1.0        1.0        0.0          0.0;
                     -𝑧          0.0        -𝑥           1.0;
                     𝑦           𝑥          0.0          0.0;
                     0.0         -𝑏         0.0          0.0]
@@ -550,7 +550,7 @@ Li2014a and Gao2006
 """
 function simplifiedLorenz4D(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=simplifiedLorenz4D_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=simplifiedLorenz4D_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 
@@ -594,10 +594,10 @@ export simplifiedLorenz4DVis
 
     return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
 end
-@inline @inbounds function chensSystem_J(X::AbstractArray, p::Function, 𝑡::Real)
+@inline @inbounds function chensSystem_J(J, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     (𝑎, 𝑏, 𝑐) = p(𝑡)
-    J = @SMatrix [-𝑎        𝑎       0.0;
+    J .=         [-𝑎        𝑎       0.0;
                   𝑐-𝑎-𝑧     𝑐       -𝑥;
                   𝑦         𝑥       -𝑏]
 end
@@ -610,7 +610,7 @@ Chen1999, Song2004
 """
 function chensSystem(P::Process)
     seed(P.solver_rng)
-    prob = ODEProblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=chensSystem_J)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=chensSystem_J)
     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
 end
 export chensSystem
