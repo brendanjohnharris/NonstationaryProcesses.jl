@@ -1,4 +1,4 @@
-using .StatsBase
+using StatsBase
 
 @inline @inbounds function skewedGaussianQuadratic(x::AbstractArray, p::Function, t::Real)
     (μ, η, κ) = p(t)
