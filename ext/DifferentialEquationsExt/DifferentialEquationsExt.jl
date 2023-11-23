@@ -1,12 +1,14 @@
-using .DifferentialEquations
-using .StatsBase
-using .Tullio
-using .DifferentialEquations.DiffEqBase
-using .DifferentialEquations.OrdinaryDiffEq
-using .DifferentialEquations.DiffEqBase.StaticArrays
-using .FFTW
-using .DimensionalData
-import .DifferentialEquations.DiffEqBase.StaticArrays.@SMatrix
+module DifferentialEquationsExt
+using ..DifferentialEquations
+using StatsBase
+using Tullio
+using ..DifferentialEquations.DiffEqBase
+using ..DifferentialEquations.OrdinaryDiffEq
+using StaticArrays
+using FFTW
+using DimensionalData
+using NonstationaryProcesses
+import StaticArrays.@SMatrix
 
 """Define a function that, if it gets a Discontinuity, fills in tstops"""
 function dsolve(prob, alg; kwargs...)
@@ -43,8 +45,9 @@ function odeproblem(f, X0, ts, ps; jac=nothing)
 end
 export odeproblem
 
-include("ChaoticFlows.jl")
-include("ChaoticMaps.jl")
-include("DeterministicFlows.jl")
-include("Stochastic.jl")
-include("Transforms.jl")
+include("./ChaoticFlows.jl")
+include("./ChaoticMaps.jl")
+include("./DeterministicFlows.jl")
+include("./Stochastic.jl")
+include("./Transforms.jl")
+end # module
