@@ -1,10 +1,4 @@
-ENV["PYTHON"]=""
-using PyCall
-const cn = PyNULL()
-const signal = PyNULL()
-run(`$(PyCall.python) -m pip install colorednoise`)
-copy!(cn, pyimport("colorednoise"))
-copy!(signal, pyimport_conda("scipy.signal", "scipy"))
+import TimeseriesTools
 
 """Gaussian Bimodal"""
 function gaussianBimodal(μ=0.0, σ=1.0, α=0.5)
@@ -109,11 +103,8 @@ arSim = Process(
 export arSim
 
 
-"""
-Wrap the main function of the python package colorednoise
-"""
-function colorednoise(β, N)
-    cn.powerlaw_psd_gaussian(β, N)
+function colorednoise(α, N)
+    collect(TimeseriesTools.colorednoise(1:N; α))
 end
 export colorednoise
 
