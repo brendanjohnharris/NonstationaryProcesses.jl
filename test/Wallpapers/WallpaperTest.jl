@@ -12,8 +12,6 @@ function wallPlot(S, vars; kwargs...)
         name = getprocess(S)
     end
     mkpath(joinpath(dir, "Square"))
-    display(S)
-    display(vars)
     p = plot(S; vars, colormode=:velocity, linecolor=colorgradient, background_color=:black, axis=nothing, framestyle=:none, size=(900, 900), aspect_ratio=:equal, margin=15Plots.mm, dpi=1000, linewidth=1.0, kwargs...)
     savefig(p, joinpath(dir, "Square", string(name) * ".png"))
 
@@ -35,23 +33,25 @@ mkpath(dir)
 
 # Dict of system => variables to plot
 𝒮 = Dict(
-    # DE.simplestChaoticFlowVis() => 2:3, # I think these need to be updated for in-place
+    DE.simplestChaoticFlowVis() => 2:3, # I think these need to be updated for in-place
     # DE.thomasCyclicallySymmetricVis() => 1:2,
-    # doubleScrollVis()                       => 1:3,
-    # diffusionlessLorenzVis()                => 1:3,
-    # piecewiseLinearHyperchaosVis()          => [1, 3],
-    # simplifiedLorenz4DVis()                 => [3, 2, 4],
-    # chensSystemVis()                        => [1, 2, 3],
-    # chensSystemVis(parameters=(46.0, 11.0, 29.0), tmax=500.0)
-    #                                         => ([1, 2, 3], "chensSystem46"),
-    # cartesianDoublePendulumSim(profiles=(constant, constant, constant, constant),
-    #                            parameters=(0.5, 1.0, 1.0, 1.0),
-    #                            X0=[π/4, π, 0.0, 0.0],
-    #                            tmax=2000.0,
-    #                            savedt= 0.01)
-    #                                         => [3, 4],
+    # DE.doubleScrollVis() => 1:3,
+    # DE.diffusionlessLorenzVis() => 1:3,
+    # DE.piecewiseLinearHyperchaosVis() => [1, 3],
+    # DE.simplifiedLorenz4DVis() => [3, 2, 4],
+    # DE.chensSystemVis() => [1, 2, 3],
+    # DE.chensSystemVis(parameters=(46.0, 11.0, 29.0), tmax=500.0)
+    # =>
+    #     ([1, 2, 3], "chensSystem46"),
+    # DE.cartesianDoublePendulumSim(profiles=(constant, constant, constant, constant),
+    #     parameters=(0.5, 1.0, 1.0, 1.0),
+    #     X0=[π / 4, π, 0.0, 0.0],
+    #     tmax=2000.0,
+    #     savedt=0.01)
+    # =>
+    #     [3, 4],
     # DE.lorenzVis() => 1:3,
-    DE.dequanLiVis() => 1:3,
+    # DE.dequanLiVis() => 1:3,
 )
 
 for (S, vars) ∈ 𝒮
