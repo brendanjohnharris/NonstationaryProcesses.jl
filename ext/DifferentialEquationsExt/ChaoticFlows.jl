@@ -1,9 +1,8 @@
-@inline @inbounds function simplestChaoticFlow(X::AbstractArray, 𝐴::Function, 𝑡::Real)
+@inline @inbounds function simplestChaoticFlow(dX, X::AbstractArray, 𝐴::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
-    𝑥̇ = 𝑦
-    𝑦̇ = 𝑧
-    𝑧̇ = -𝐴(𝑡) * 𝑧 + 𝑦^2 - 𝑥
-    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+    dX[1] = 𝑦
+    dX[2] = 𝑧
+    dX[3] = -𝐴(𝑡) * 𝑧 + 𝑦^2 - 𝑥
 end
 
 @inline @inbounds function simplestChaoticFlow_J(J, X::AbstractArray, 𝐴::Function, 𝑡::Real)
@@ -58,7 +57,7 @@ export simplestChaoticFlowVis
 polarReduce(x::Real) = x - 2π * (x ÷ π);
 polarReduce(X::AbstractArray) = X .- 2π .* (X .÷ π);
 
-@inline @inbounds function doublePendulum(X::AbstractArray, p, t::Real)
+@inline @inbounds function doublePendulum(dX, X::AbstractArray, p, t::Real)
     (θ₁, θ₂, 𝑝₁, 𝑝₂) = X
     (ℓ₁, ℓ₂, m₁, m₂) = p(t)
     𝑔 = 0.0
@@ -66,13 +65,13 @@ polarReduce(X::AbstractArray) = X .- 2π .* (X .÷ π);
     C₁(θ₁, θ₂, 𝑝₁, 𝑝₂) = (𝑝₁ * 𝑝₂ * sin(θ₁ - θ₂)) / (ℓ₁ * ℓ₂ * (m₁ + m₂ * sin(θ₁ - θ₂)^2))
     C₂(θ₁, θ₂, 𝑝₁, 𝑝₂) = ((ℓ₂^2 * m₂ * 𝑝₁^2 + ℓ₁^2 * (m₁ + m₂) * 𝑝₂^2 - ℓ₁ * ℓ₂ * m₂ * 𝑝₁ * 𝑝₂ * cos(θ₁ - θ₂)) / (2 * ℓ₁^2 * ℓ₂^2 * (m₁ + m₂ * sin(θ₁ - θ₂)^2)^2)) * (sin(2 * (θ₁ - θ₂)))
 
-    dθ₁ = (ℓ₂ * 𝑝₁ - ℓ₁ * 𝑝₂ * cos(θ₁ - θ₂)) / (ℓ₁^2 * ℓ₂ * (m₁ + m₂ * sin(θ₁ - θ₂)^2))
-    dθ₂ = (ℓ₁ * (m₁ + m₂) * 𝑝₂ - ℓ₂ * m₂ * 𝑝₁ * cos(θ₁ - θ₂)) / (ℓ₁ * ℓ₂^2 * m₂ * (m₁ + m₂ * sin(θ₁ - θ₂)^2))
+    dX[1] = (ℓ₂ * 𝑝₁ - ℓ₁ * 𝑝₂ * cos(θ₁ - θ₂)) / (ℓ₁^2 * ℓ₂ * (m₁ + m₂ * sin(θ₁ - θ₂)^2))
+    dX[2] = (ℓ₁ * (m₁ + m₂) * 𝑝₂ - ℓ₂ * m₂ * 𝑝₁ * cos(θ₁ - θ₂)) / (ℓ₁ * ℓ₂^2 * m₂ * (m₁ + m₂ * sin(θ₁ - θ₂)^2))
 
-    d𝑝₁ = -(m₁ + m₂) * 𝑔 * ℓ₁ * sin(θ₁) - C₁(θ₁, θ₂, 𝑝₁, 𝑝₂) + C₂(θ₁, θ₂, 𝑝₁, 𝑝₂)
-    d𝑝₂ = -m₂ * 𝑔 * ℓ₂ * sin(θ₂) + C₁(θ₁, θ₂, 𝑝₁, 𝑝₂) - C₂(θ₁, θ₂, 𝑝₁, 𝑝₂)
+    dX[3] = -(m₁ + m₂) * 𝑔 * ℓ₁ * sin(θ₁) - C₁(θ₁, θ₂, 𝑝₁, 𝑝₂) + C₂(θ₁, θ₂, 𝑝₁, 𝑝₂)
+    dX[4] = -m₂ * 𝑔 * ℓ₂ * sin(θ₂) + C₁(θ₁, θ₂, 𝑝₁, 𝑝₂) - C₂(θ₁, θ₂, 𝑝₁, 𝑝₂)
 
-    return SVector{4}(dθ₁, dθ₂, d𝑝₁, d𝑝₂)
+    # dX = (dθ₁, dθ₂, d𝑝₁, d𝑝₂)
 end
 function doublePendulum(P::Process)
     seed(P.solver_rng)
@@ -154,11 +153,10 @@ export cartesianDoublePendulumVis2
 
 
 
-@inline @inbounds function waveDrivenHarmonic(X::AbstractArray, p::Function, t::Real)
+@inline @inbounds function waveDrivenHarmonic(dX, X::AbstractArray, p::Function, t::Real)
     (ω, ε, k, Ω) = p(t)
-    dX2 = -ω^2.0 * X[1] + ε * sin(k * X[1] - Ω * t)
-    dX1 = X[2]
-    return SVector{2}(dX1, dX2)
+    dX[1] = -ω^2.0 * X[1] + ε * sin(k * X[1] - Ω * t)
+    dX[2] = X[2]
 end
 
 @inline @inbounds function waveDrivenHarmonic_J(J, X::AbstractArray, p::Function, t::Real)
@@ -230,12 +228,11 @@ export waveDrivenHarmonicSim
 
 
 
-@inline @inbounds function thomasCyclicallySymmetric(X::AbstractArray, 𝑏::Function, 𝑡::Real)
+@inline @inbounds function thomasCyclicallySymmetric(dX, X::AbstractArray, 𝑏::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
-    𝑥̇ = -𝑏(𝑡) * 𝑥 + sin(𝑦)
-    𝑦̇ = -𝑏(𝑡) * 𝑦 + sin(𝑧)
-    𝑧̇ = -𝑏(𝑡) * 𝑧 + sin(𝑥)
-    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+    dX[1] = -𝑏(𝑡) * 𝑥 + sin(𝑦)
+    dX[2] = -𝑏(𝑡) * 𝑦 + sin(𝑧)
+    dX[3] = -𝑏(𝑡) * 𝑧 + sin(𝑥)
 end
 
 @inline @inbounds function thomasCyclicallySymmetric_J(J, X::AbstractArray, 𝑏::Function, 𝑡::Real)
@@ -286,12 +283,11 @@ export thomasCyclicallySymmetricVis
 
 
 
-@inline @inbounds function doubleScroll(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+@inline @inbounds function doubleScroll(dX, X::AbstractArray, 𝑎::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
-    𝑥̇ = 𝑦
-    𝑦̇ = 𝑧
-    𝑧̇ = -𝑎(𝑡) * (𝑧 + 𝑦 + 𝑥 - sign(𝑥))
-    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+    dX[1] = 𝑦
+    dX[2] = 𝑧
+    dX[3] = -𝑎(𝑡) * (𝑧 + 𝑦 + 𝑥 - sign(𝑥))
 end
 function 𝛿(x)
     if x == 0
@@ -406,12 +402,11 @@ export lorenzVis
 
 
 
-@inline @inbounds function diffusionlessLorenz(X::AbstractArray, 𝑎::Function, 𝑡::Real)
+@inline @inbounds function diffusionlessLorenz(dX, X::AbstractArray, 𝑎::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
-    𝑥̇ = 𝑦 - 𝑥
-    𝑦̇ = -𝑥 * 𝑧
-    𝑧̇ = 𝑥 * 𝑦 - 𝑎(𝑡)
-    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+    dX[1] = 𝑦 - 𝑥
+    dX[2] = -𝑥 * 𝑧
+    dX[3] = 𝑥 * 𝑦 - 𝑎(𝑡)
 end
 @inline @inbounds function diffusionlessLorenz_J(J, X::AbstractArray, 𝑎::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
@@ -461,16 +456,14 @@ export diffusionlessLorenzVis
 
 
 
-@inline @inbounds function piecewiseLinearHyperchaos(X::AbstractArray, p::Function, 𝑡::Real)
+@inline @inbounds function piecewiseLinearHyperchaos(dX, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
     (𝑎, 𝑏) = p(𝑡)
 
-    𝑥̇ = 𝑦 - 𝑥
-    𝑦̇ = -𝑧 * sign(𝑥) + 𝑢
-    𝑧̇ = abs(𝑥) - 𝑎
-    𝑢̇ = -𝑏 * 𝑦
-
-    return SVector{4}(𝑥̇, 𝑦̇, 𝑧̇, 𝑢̇)
+    dX[1] = 𝑦 - 𝑥
+    dX[2] = -𝑧 * sign(𝑥) + 𝑢
+    dX[3] = abs(𝑥) - 𝑎
+    dX[4] = -𝑏 * 𝑦
 end
 @inline @inbounds function piecewiseLinearHyperchaos_J(J, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
@@ -523,16 +516,14 @@ export piecewiseLinearHyperchaosVis
 
 
 
-@inline @inbounds function simplifiedLorenz4D(X::AbstractArray, p::Function, 𝑡::Real)
+@inline @inbounds function simplifiedLorenz4D(dX, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
     (𝑎, 𝑏) = p(𝑡)
 
-    𝑥̇ = 𝑦 - 𝑥
-    𝑦̇ = -𝑥 * 𝑧 + 𝑢
-    𝑧̇ = 𝑥 * 𝑦 - 𝑎
-    𝑢̇ = -𝑏 * 𝑦
-
-    return SVector{4}(𝑥̇, 𝑦̇, 𝑧̇, 𝑢̇)
+    dX[1] = 𝑦 - 𝑥
+    dX[2] = -𝑥 * 𝑧 + 𝑢
+    dX[3] = 𝑥 * 𝑦 - 𝑎
+    dX[4] = -𝑏 * 𝑦
 end
 @inline @inbounds function simplifiedLorenz4D_J(J, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧, 𝑢) = X
@@ -584,15 +575,13 @@ export simplifiedLorenz4DVis
 
 
 
-@inline @inbounds function chensSystem(X::AbstractArray, p::Function, 𝑡::Real)
+@inline @inbounds function chensSystem(dX, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X
     (𝑎, 𝑏, 𝑐) = p(𝑡)
 
-    𝑥̇ = 𝑎 * (𝑦 - 𝑥)
-    𝑦̇ = (𝑐 - 𝑎) * 𝑥 - 𝑥 * 𝑧 + 𝑐 * 𝑦
-    𝑧̇ = 𝑥 * 𝑦 - 𝑏 * 𝑧
-
-    return SVector{3}(𝑥̇, 𝑦̇, 𝑧̇)
+    dX[1] = 𝑎 * (𝑦 - 𝑥)
+    dX[2] = (𝑐 - 𝑎) * 𝑥 - 𝑥 * 𝑧 + 𝑐 * 𝑦
+    dX[3] = 𝑥 * 𝑦 - 𝑏 * 𝑧
 end
 @inline @inbounds function chensSystem_J(J, X::AbstractArray, p::Function, 𝑡::Real)
     (𝑥, 𝑦, 𝑧) = X

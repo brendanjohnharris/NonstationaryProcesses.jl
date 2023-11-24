@@ -1,13 +1,20 @@
+# Pkg.add("NonstationaryProcessesBase")
+Pkg.add(url="https://github.com/brendanjohnharris/NonstationaryProcessesBase.jl", rev="main")
+Pkg.add(url="https://github.com/brendanjohnharris/NonstationaryProcesses.jl", rev="main")
+Pkg.add("Plots")
+Pkg.add("StatsPlots")
+Pkg.add("DifferentialEquations")
 using Plots
 using StatsPlots
 using DifferentialEquations
 using NonstationaryProcesses
-import NonstationaryProcesses.DifferentialEquationsExt as DE
+import NonstationaryProcesses.DifferentialEquationsExt.dequanLi
 
-tmax = 1000.0
+tmax = 2000.0
 𝑘() = t -> 0.55 .+ (9 .* 0.55) * sin.(4π * t ./ tmax)
+
 S = Process(;
-    process=DE.dequanLi,
+    process=dequanLi,
     X0=[-11.395722, -104.12614, 202.46173],
     parameter_profile=Tuple([[constantParameter for _ in 1:5]..., 𝑘]),
     parameter_profile_parameters=(40, 1.833, 0.16, 0.65, 20, ()), # (𝑎, 𝑐, 𝑑, 𝑒, 𝑓, 𝑘)
@@ -30,8 +37,9 @@ p = plot(S;
     size=(900, 900),
     aspect_ratio=:equal,
     margin=15Plots.mm,
-    dpi=1000, linewidth=1.0,
-    N=1000000,
-    linealpha=0.01)
+    dpi=1000,
+    linewidth=0.2,
+    N=2000000,
+    linealpha=0.05)
 
 savefig(p, "DequanLi.png")
