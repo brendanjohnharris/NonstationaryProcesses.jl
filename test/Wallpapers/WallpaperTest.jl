@@ -57,17 +57,3 @@ mkpath(dir)
 for (S, vars) ∈ 𝒮
     wallPlot(S, vars; N=100000)
 end
-
-
-# dequanLi is tricky
-begin
-    S = DE.dequanLiVis()
-    vars = 1:3
-    kwargs = ()
-    S.dt = 0.001
-    S.savedt = 0.001
-    S.tmax = 10000.0
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-13, :maxiters => 1e12)
-    p = plot(S; vars, colormode=:velocity, linecolor=colorgradient, background_color=:black, axis=nothing, framestyle=:none, size=(900, 900), aspect_ratio=:equal, margin=15Plots.mm, dpi=1000, linewidth=1.0, N=1000000, linealpha=0.025, kwargs...)
-    savefig(p, joinpath(dir, "Square", "DequanLiRepeats" * ".png"))
-end
