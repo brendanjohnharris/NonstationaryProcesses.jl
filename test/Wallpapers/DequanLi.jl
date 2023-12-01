@@ -1,11 +1,15 @@
-# Pkg.add("NonstationaryProcessesBase")
-Pkg.add(url="https://github.com/brendanjohnharris/NonstationaryProcessesBase.jl", rev="main")
-Pkg.add(url="https://github.com/brendanjohnharris/NonstationaryProcesses.jl", rev="main")
-Pkg.add("Plots")
-Pkg.add("StatsPlots")
-Pkg.add("DifferentialEquations")
+# # Pkg.add("NonstationaryProcessesBase")
+# Pkg.add(url="https://github.com/brendanjohnharris/NonstationaryProcessesBase.jl", rev="main")
+# Pkg.add(url="https://github.com/brendanjohnharris/NonstationaryProcesses.jl", rev="main")
+# Pkg.add("Plots")
+# Pkg.add("StatsPlots")
+# Pkg.add("DifferentialEquations")
 using Plots
 using StatsPlots
+using CairoMakie
+using TimeseriesTools
+using Foresight
+set_theme!(foresight(:transparent))
 using DifferentialEquations
 using NonstationaryProcesses
 import NonstationaryProcesses.DifferentialEquationsExt.dequanLi
@@ -26,20 +30,36 @@ S = Process(;
     alg=AutoVern9(Rodas5()),
     solver_opts=Dict(:adaptive => true, :reltol => 1e-11, :maxiters => 1e12))
 
+# begin
+#     p = plot(S;
+#         vars=1:3,
+#         colormode=:velocity,
+#         linecolor=seethrough(:turbo, 0.05, 0.1),
+#         background_color=:white,
+#         axis=nothing,
+#         framestyle=:none,
+#         size=(900, 900),
+#         aspect_ratio=:equal,
+#         margin=0Plots.mm,
+#         dpi=1000,
+#         linewidth=0.1,
+#         N=6000000,
+#         linealpha=0.05)
 
-p = plot(S;
-    vars=1:3,
-    colormode=:velocity,
-    linecolor=:turbo,
-    background_color=:black,
-    axis=nothing,
-    framestyle=:none,
-    size=(900, 900),
-    aspect_ratio=:equal,
-    margin=15Plots.mm,
-    dpi=1000,
-    linewidth=0.2,
-    N=2000000,
-    linealpha=0.05)
+#     savefig(p, "DequanLi.png")
+# end
 
-savefig(p, "DequanLi.png")
+
+begin
+    X = TimeseriesTools.TimeSeries(S) |> eachcol .|> collect
+    f = Figure(resolution=(7680, 7680), backgroundcolor=:transparent)
+    ax = Axis3(f[1, 1]; aspect=(1, 1, 1), azimuth=-π / 10, elevation=π / 5)
+    hidedecorations!(ax)
+    hidespines!(ax)
+    trajectory!(ax, X...;
+        colormode=:velocity,
+        linewidth=3,
+        colormap=seethrough(:viridis, 0.04, 0.1))
+    f
+    save("DequanLi.png", f)
+end
