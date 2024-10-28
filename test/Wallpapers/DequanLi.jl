@@ -4,8 +4,6 @@
 # Pkg.add("Plots")
 # Pkg.add("StatsPlots")
 # Pkg.add("DifferentialEquations")
-using Plots
-using StatsPlots
 using CairoMakie
 using TimeseriesTools
 using Foresight
@@ -13,7 +11,6 @@ set_theme!(foresight(:transparent))
 using DifferentialEquations
 using NonstationaryProcesses
 import NonstationaryProcesses.DifferentialEquationsExt.dequanLi
-
 tmax = 2000.0
 𝑘() = t -> 0.55 .+ (9 .* 0.55) * sin.(4π * t ./ tmax)
 

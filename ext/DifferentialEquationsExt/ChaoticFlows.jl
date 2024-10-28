@@ -690,3 +690,61 @@ dequanLiVis = Process(
     alg=AutoVern9(Rodas5()),
     solver_opts=Dict(:adaptive => true, :reltol => 1e-11, :maxiters => 1e12))
 export dequanLiVis
+
+
+
+@inline @inbounds function aizawa(dX, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝛼, 𝛽, 𝛾, 𝛿) = p(𝑡)
+    dX[1] = (𝑧 - 𝛽) * 𝑥 - 𝛿 * 𝑦
+    dX[2] = 𝛿 * 𝑥 + (𝑧 - 𝛽) * 𝑦
+    dX[3] = 𝛾 + 𝛼 * 𝑧 - (1 / 3) * 𝑧^3 - 𝑥^2 - 𝑦^2 - 0.25 * 𝑧 * 𝑥^2 - 0.25 * 𝑧 * 𝑦^2 + 0.1 * 𝑧 * 𝑥^3
+end
+
+# @inline @inbounds function dequanLi_J(J, X::AbstractArray, p::Function, 𝑡::Real)
+#     (𝑥, 𝑦, 𝑧) = X
+#     (𝜎, 𝑟, 𝑏) = p(𝑡)
+#     J .= [-𝜎 𝜎 0.0;
+#         𝑟-𝑧 -1.0 -𝑥;
+#         𝑦 𝑥 -𝑏]
+# end
+
+"""
+    Aizawa attractor
+
+See Aizawa1982, Langford1984
+"""
+function aizawa(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))#, jac=thomasCyclicallySymmetric_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+aizawaSim = Process(
+    process=aizawa,
+    X0=[-0.78450179, -0.62887672, -0.17620268],
+    parameter_profile=Tuple([constantParameter for _ in 1:4]),
+    parameter_profile_parameters=((0.95, 0.7, 0.6, 3.5)), # (𝛼, 𝛽, 𝛾, 𝛿)
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=500.0,
+    alg=AutoVern9(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-10, :abstol => 1e-10, :maxiters => 1e7))
+export aizawaSim
+
+
+# aizawaVis = Process(
+#     process=aizawa,
+#     X0=[0.0, 0.01, 9.0],
+#     parameter_profile=Tuple([constantParameter for _ in 1:6]),
+#     parameter_profile_parameters=(40.0, 11 / 6, 0.16, 0.65, 20.0, 55.0), # (𝑎, 𝑐, 𝑑, 𝑒, 𝑓, 𝑘)
+#     transient_t0=-100.0,
+#     t0=0.0,
+#     dt=0.001,
+#     savedt=0.005,
+#     tmax=100000.0,
+#     alg=AutoVern9(Rodas5()),
+#     solver_opts=Dict(:adaptive => true, :reltol => 1e-11, :maxiters => 1e12))
+# export aizawaVis

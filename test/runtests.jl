@@ -1,4 +1,9 @@
+using TimeseriesSurrogates
+using DynamicalSystems
+using DifferentialEquations
 using NonstationaryProcesses
+using NonstationaryProcesses.NonstationaryProcessesBase
+using TimeseriesTools
 using Test
 
 @testset "Simulations" begin
