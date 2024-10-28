@@ -1,4 +1,4 @@
-import TimeseriesTools
+# import TimeseriesTools
 
 """Gaussian Bimodal"""
 function gaussianBimodal(μ=0.0, σ=1.0, α=0.5)
@@ -6,7 +6,7 @@ function gaussianBimodal(μ=0.0, σ=1.0, α=0.5)
     if rand() > α # Draw from the first distribution
         x = randn()
     else # Draw from the satellite
-        x = σ*randn() + μ
+        x = σ * randn() + μ
     end
 end
 
@@ -17,13 +17,13 @@ function gaussianBimodal(P::Process)
 end
 
 gaussianBimodalSim = Process(
-    process = gaussianBimodal,
-    parameter_profile = (constantParameter, constantParameter, constantParameter),
-    parameter_profile_parameters = ((1.0,), (1.0,), (0.5)),
-    transient_t0 = 0.0,
-    t0 = 0.0,
-    savedt = 1,
-    tmax = 10000.0)
+    process=gaussianBimodal,
+    parameter_profile=(constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters=((1.0,), (1.0,), (0.5)),
+    transient_t0=0.0,
+    t0=0.0,
+    savedt=1,
+    tmax=10000.0)
 export gaussianBimodalSim
 
 
@@ -32,9 +32,9 @@ function bimodalSwitching(t⃗, α::Function, δ::Function)
     v = zeros(length(t⃗))
     for t ∈ 2:length(t⃗)
         Y = rand(Binomial(1, α(t⃗[t])))
-        v[t] = Y*v[t-1] + (1-Y)*(1-v[t-1])
+        v[t] = Y * v[t-1] + (1 - Y) * (1 - v[t-1])
     end
-    x = randn(length(t⃗)) .+ v.*δ.(t⃗)
+    x = randn(length(t⃗)) .+ v .* δ.(t⃗)
 end
 
 function bimodalSwitching(P::Process)
@@ -45,13 +45,13 @@ function bimodalSwitching(P::Process)
 end
 
 bimodalSwitchingSim = Process(
-    process = bimodalSwitching,
-    parameter_profile = (constantParameter, constantParameter),
-    parameter_profile_parameters = ((0.5,), (3.0)),
-    transient_t0 = 0.0,
-    t0 = 0.0,
-    savedt = 1,
-    tmax = 10000.0)
+    process=bimodalSwitching,
+    parameter_profile=(constantParameter, constantParameter),
+    parameter_profile_parameters=((0.5,), (3.0)),
+    transient_t0=0.0,
+    t0=0.0,
+    savedt=1,
+    tmax=10000.0)
 export bimodalSwitchingSim
 
 
@@ -60,18 +60,18 @@ function shiftyNoise(P::Process)
     # Parameters (η, C)
     seed(P.solver_rng)
     (η, C) = parameter_functions(P)
-    sol = [η(t)*randn() + C(t) for t in P.transient_t0:P.savedt:P.tmax]
+    sol = [η(t) * randn() + C(t) for t in P.transient_t0:P.savedt:P.tmax]
 end
 
 
 shiftyNoiseSim = Process(
-    process = shiftyNoise,
-    parameter_profile = (constantParameter, stepNoise),
-    parameter_profile_parameters = [(1.0,), ((0.0, 1000.0), 100.0, 2.0, 0.0)],
-    transient_t0 = 0.0,
-    t0 = 0.0,
-    savedt = 1,
-    tmax = 1000.0)
+    process=shiftyNoise,
+    parameter_profile=(constantParameter, stepNoise),
+    parameter_profile_parameters=[(1.0,), ((0.0, 1000.0), 100.0, 2.0, 0.0)],
+    transient_t0=0.0,
+    t0=0.0,
+    savedt=1,
+    tmax=1000.0)
 export shiftyNoiseSim
 
 
@@ -81,9 +81,9 @@ function AR(P::Process)
     seed(P.solver_rng)
     ϕ⃗ = parameter_function(P)
     p = length(ϕ⃗(gett0(P)))
-    ξ⃗ = randn(p+1)
+    ξ⃗ = randn(p + 1)
     𝑡 = times(P; transient=true)
-    X = zeros(length(𝑡), p+1)
+    X = zeros(length(𝑡), p + 1)
     X[1, 1:length(getX0(P))] = getX0(P)
     for t ∈ 2:length(𝑡)
         X[t, :], ξ⃗ = AR(X[t-1, :], ξ⃗, forcevec(ϕ⃗(t)))
@@ -92,21 +92,21 @@ function AR(P::Process)
 end
 
 arSim = Process(
-    process = AR,
-    X0 = [0.0], # Number of initial conditions should really be 1 + num. of parameters, but if you do not specify they default to 0.0
-    parameter_profile = (constant, constant, constant, constant),
-    parameter_profile_parameters = ((0.1,), (0.1,), (0.1,), (0.1,)),
-    t0 = 0,
-    dt = 1,
-    savedt = 1,
-    tmax = 10000)
+    process=AR,
+    X0=[0.0], # Number of initial conditions should really be 1 + num. of parameters, but if you do not specify they default to 0.0
+    parameter_profile=(constant, constant, constant, constant),
+    parameter_profile_parameters=((0.1,), (0.1,), (0.1,), (0.1,)),
+    t0=0,
+    dt=1,
+    savedt=1,
+    tmax=10000)
 export arSim
 
 
-function colorednoise(α, N)
-    collect(TimeseriesTools.colorednoise(1:N; α))
-end
-export colorednoise
+# function colorednoise(α, N)
+#     collect(TimeseriesTools.colorednoise(1:N; α))
+# end
+# export colorednoise
 
 # """
 # Colored noise with a power-law spectrum described by the exponent β
@@ -120,11 +120,11 @@ export colorednoise
 
 
 shiftyNoiseSim = Process(
-    process = shiftyNoise,
-    parameter_profile = (constantParameter, stepNoise),
-    parameter_profile_parameters = [(1.0,), ((0.0, 1000.0), 100.0, 2.0, 0.0)],
-    transient_t0 = 0.0,
-    t0 = 0.0,
-    savedt = 1,
-    tmax = 1000.0)
+    process=shiftyNoise,
+    parameter_profile=(constantParameter, stepNoise),
+    parameter_profile_parameters=[(1.0,), ((0.0, 1000.0), 100.0, 2.0, 0.0)],
+    transient_t0=0.0,
+    t0=0.0,
+    savedt=1,
+    tmax=1000.0)
 export shiftyNoiseSim
