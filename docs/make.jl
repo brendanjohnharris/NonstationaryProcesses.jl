@@ -1,3 +1,4 @@
+using DifferentialEquations
 using NonstationaryProcesses
 using Documenter
 
