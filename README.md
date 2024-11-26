@@ -1,5 +1,4 @@
 # NonstationaryProcesses.jl
-Generate nonstationary time series by varying the parameters of otherwise stationary processes
 
 A Julia package for simulating and analyzing non-stationary dynamical systems, providing tools to model processes with time-varying parameters.
 
@@ -40,6 +39,7 @@ end
 ## Parameter profiles
 They key functionality beyond `DifferentialEquations` is a library of parameter profiles, functions that describe the time course of a parameter across time.
 These include discontinuous profiles represented by a custom `Discontinuous` type, which track the time points of discontinuities and force solvers to evaluate either side of these points for accuracy.
+Parameter profiles can also be provided as arbitrary functions of time.
 Below are some of the pre-defined parameter profiles:
 
 |Profile|Description|
@@ -115,3 +115,25 @@ To collect the time series of this simulation, we use:
 ```julia
 NonstationaryProcesses.timeseries(lorenzSim) # A `TimeseriesTools` `AbstractTimeSeries`
 ```
+
+## Simulation parameters
+The `Process` syntax has some shorthand for specifying the various options for simulating a nonstationary system:
+
+| option | description|
+|---|---|
+|`process`| A `Function` with a method for Process types that performs a particular simulation|
+|`parameter_profile`| A tuple of `Function`s that describe how each parameter of a system evolves over time. These can be functions, or curried functions of parameters given in `:parameter_profile_parameters`|
+|`parameter_profile_parameters`| A tuple of parameters (which may also be tuples) for each `:parameter_profile`|
+|`X0`| The initial conditions, given as a vector equal in length to number of variables in the system|
+|`t0`| The initial time of the simulation, at which the system has the state `:X0`|
+|`transient_t0`| The length of time to simulate the system, from the initial conditions `:X0` at `:t0`, that is discarded when retrieving the timeseries|
+|`dt`| The time step of the simulation and solver|
+|`savedt`| The sampling period of the solution's timeseries, which must be a multiple of `:dt`|
+|`tmax`| The final time point of the simulation. The duration of the simulation is then `:tmax` - `:transient_t0`, and the duration of the returned time series is `:tmax` - `:t0`. See times|
+|`alg`| The algorithm used to solve `DifferentialEquations.jl` processes. See e.g. the list of [ODE solvers](https://diffeq.sciml.ai/stable/solvers/ode_solve/)|
+|`solver_opts`| A dictionary of additional options passed to the `:alg`. This can include solver tolerances, adaptive timesteps, or the maximum number of iterations. See the common solver options|
+|`solver_rng`| An integer seed for the random number generator, set to a random number by default|
+|`id`| A unique integer ID for a given `Process`|
+|`date`| The date at which the `Process` was created|
+|`solution`| The solution of the simulation in its native format (e.g. an ODE solution)|
+|`varnames`| Dummy names for the variables of a Process, defaulting to `[:x, :y, :z, ...]`|
