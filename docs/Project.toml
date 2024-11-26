@@ -1,3 +1,4 @@
 [deps]
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 NonstationaryProcesses = "3be01ceb-5174-4752-9eb7-19dda806dcae"
