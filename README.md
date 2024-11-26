@@ -47,19 +47,19 @@ Below are some of the pre-defined parameter profiles:
 |   `constantParameter`|	Constant parameter profile|
 |   `heaviside`|	Heaviside step function|
 |   `sigmoid`|	Sigmoid function|
-|   `unitStep`|	A constant function that undergoes a step change at a specified threshold|
-|   `unitBump`| A step-like "bump" (increase and then decrease) between two thresholds|
-|   `compositeBump`|	A composite function combining multiple bumps|
-|   `compositeStep`|	A composition of multiple step changes at specified thresholds|
-|   `stepNoise`|	A composition of random bumps around a baseline|
-|   `stepRandomWalk`|	A random walk defined by successive random steps|
-|   `ramp`| A linear function between two points values|
-|   `rampInterval`|	A ramp with saturation before and after the given interval|
-|   `rampOn`|	A ramp that saturates before the interval and extrapolates after|
-|   `rampOff`|	A ramp that extrapolates prior to an interval and saturates after|
-|   `sineWave`|	A sine wave with a specified period, amplitude, and baseline|
-|   `triangleWave`|	A triangular wave|
-|   `lorentzian`|	A Lorentzian function with specified amplitude, width, center, and baseline|
+|   `unitStep`|	Constant function that undergoes a step change at a specified threshold|
+|   `unitBump`| Step-like "bump" (increase and then decrease) between two thresholds|
+|   `compositeBump`|	Composite function combining multiple bumps|
+|   `compositeStep`|	Composition of multiple step changes at specified thresholds|
+|   `stepNoise`|	Composition of random bumps around a baseline|
+|   `stepRandomWalk`|	Random walk defined by successive random steps|
+|   `ramp`| Linear function between two points values|
+|   `rampInterval`|	Ramp with saturation before and after the given interval|
+|   `rampOn`|	Ramp that saturates before the interval and extrapolates after|
+|   `rampOff`|	Ramp that extrapolates prior to an interval and saturates after|
+|   `sineWave`|	Sine wave with a specified period, amplitude, and baseline|
+|   `triangleWave`|	Triangular wave|
+|   `lorentzian`|	Lorentzian function with specified amplitude, width, center, and baseline|
 
 ## Predefined systems
 Alone, this package defines some simple signals (e.g. frequency-modulated waves) and `ARMA` processes.
