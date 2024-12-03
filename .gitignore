@@ -25,3 +25,6 @@ Manifest.toml
 
 *.vscode
 *.code-workspace
+
+*.png
+*.pdf
