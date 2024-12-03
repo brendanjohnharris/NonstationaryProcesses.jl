@@ -1,0 +1,750 @@
+@inline @inbounds function simplestChaoticFlow(dX, X::AbstractArray, 𝐴::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    dX[1] = 𝑦
+    dX[2] = 𝑧
+    dX[3] = -𝐴(𝑡) * 𝑧 + 𝑦^2 - 𝑥
+end
+
+@inline @inbounds function simplestChaoticFlow_J(J, X::AbstractArray, 𝐴::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    J .= [1.0 0.0 0.0;
+        0.0 1.0 0.0;
+        2.0*𝑦 -𝐴(𝑡) -1.0]
+end
+
+"""
+    Sprott's simplest chaotic flow
+
+Sprott, or Sprott1997
+"""
+function simplestChaoticFlow(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=simplestChaoticFlow_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+simplestChaoticFlowSim = Process(
+    process=simplestChaoticFlow,
+    X0=[0.05, 0.05, 0.05], # As in Sprott's paper
+    parameter_profile=ramp,
+    parameter_profile_parameters=(2.02, 2.07, 0.0, 10000.0),
+    # Parameters should only be between ~2.018 and ~2.082 (otherwise, unbounded)
+    # Range can be different when parameters are time varying
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.0001,
+    savedt=0.5,
+    tmax=10000.0,
+    alg=RK4(),
+    solver_opts=Dict(:adaptive => false))
+export simplestChaoticFlowSim
+
+simplestChaoticFlowVis = Process(
+    process=simplestChaoticFlow,
+    X0=[0.05, 0.05, 0.05],
+    parameter_profile=ramp,
+    parameter_profile_parameters=(2.03, 2.05, 0.0, 5000.0),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.0001,
+    savedt=0.01,
+    tmax=5000.0,
+    alg=RK4(),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-9))
+export simplestChaoticFlowVis
+
+
+polarReduce(x::Real) = x - 2π * (x ÷ π);
+polarReduce(X::AbstractArray) = X .- 2π .* (X .÷ π);
+
+@inline @inbounds function doublePendulum(dX, X::AbstractArray, p, t::Real)
+    (θ₁, θ₂, 𝑝₁, 𝑝₂) = X
+    (ℓ₁, ℓ₂, m₁, m₂) = p(t)
+    𝑔 = 0.0
+
+    C₁(θ₁, θ₂, 𝑝₁, 𝑝₂) = (𝑝₁ * 𝑝₂ * sin(θ₁ - θ₂)) / (ℓ₁ * ℓ₂ * (m₁ + m₂ * sin(θ₁ - θ₂)^2))
+    C₂(θ₁, θ₂, 𝑝₁, 𝑝₂) = ((ℓ₂^2 * m₂ * 𝑝₁^2 + ℓ₁^2 * (m₁ + m₂) * 𝑝₂^2 - ℓ₁ * ℓ₂ * m₂ * 𝑝₁ * 𝑝₂ * cos(θ₁ - θ₂)) / (2 * ℓ₁^2 * ℓ₂^2 * (m₁ + m₂ * sin(θ₁ - θ₂)^2)^2)) * (sin(2 * (θ₁ - θ₂)))
+
+    dX[1] = (ℓ₂ * 𝑝₁ - ℓ₁ * 𝑝₂ * cos(θ₁ - θ₂)) / (ℓ₁^2 * ℓ₂ * (m₁ + m₂ * sin(θ₁ - θ₂)^2))
+    dX[2] = (ℓ₁ * (m₁ + m₂) * 𝑝₂ - ℓ₂ * m₂ * 𝑝₁ * cos(θ₁ - θ₂)) / (ℓ₁ * ℓ₂^2 * m₂ * (m₁ + m₂ * sin(θ₁ - θ₂)^2))
+
+    dX[3] = -(m₁ + m₂) * 𝑔 * ℓ₁ * sin(θ₁) - C₁(θ₁, θ₂, 𝑝₁, 𝑝₂) + C₂(θ₁, θ₂, 𝑝₁, 𝑝₂)
+    dX[4] = -m₂ * 𝑔 * ℓ₂ * sin(θ₂) + C₁(θ₁, θ₂, 𝑝₁, 𝑝₂) - C₂(θ₁, θ₂, 𝑝₁, 𝑝₂)
+
+    # dX = (dθ₁, dθ₂, d𝑝₁, d𝑝₂)
+end
+function doublePendulum(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+"""
+    Your classic double pendulum, with Hamiltonian equations of motion
+
+    https://scienceworld.wolfram.com/physics/DoublePendulum.html
+"""
+function cartesianDoublePendulum(P::Process)
+    # Should the initial conditions be set in cartesian coordinates?
+    sol = doublePendulum(P(process=doublePendulum))
+    p = parameterseries(P, transient=true)
+    x₁ = p[1, :] .* sin.(sol[1, :])
+    y₁ = .-p[1, :] .* cos.(sol[1, :])
+    x₂ = x₁ .+ p[2, :] .* sin.(sol[2, :])
+    y₂ = y₁ .- p[2, :] .* cos.(sol[2, :])
+    sol = hcat(x₁, y₁, x₂, y₂)
+end
+
+doublePendulumSim = Process(
+    process=doublePendulum,
+    X0=[π, 0.01, 0.0, 0.0], # Two angles and two momenta
+    parameter_profile=(ramp, constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters=((0.0, 1.0, 0.0), (1.0,), (1.0,), (1.0,), (1.0,)), # (threshold, baseline, stepHeight)
+    transient_t0=-10.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.1,
+    tmax=1000.0,
+    alg=AutoVern7(Rodas5()))
+export doublePendulumSim
+
+cartesianDoublePendulumSim = Process(
+    process=cartesianDoublePendulum,
+    X0=[π / 2, π / 2, 0.0, 0.0], # Two angles and two momenta
+    parameter_profile=(constantParameter, constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters=((1.0,), (1.0,), (1.0,), (1.0,)), # (ℓ₁, ℓ₂, m₁, m₂)
+    transient_t0=-10.0,
+    t0=0.0,
+    dt=0.00001,
+    savedt=0.1,
+    tmax=100.0,
+    alg=AutoVern9(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-12, :abstol => 1e-12))
+export cartesianDoublePendulumSim
+
+cartesianDoublePendulumVis = Process(
+    process=cartesianDoublePendulum,
+    X0=[5π / 6, π, 0.0, 0.0], # Two angles (from the downward direction) and two momenta
+    parameter_profile=(lorentzian, lorentzian, constantParameter, constantParameter),
+    transient_t0=-10.0,
+    t0=0.0,
+    dt=0.0001,
+    savedt=0.001,
+    tmax=50.0,
+    parameter_profile_parameters=((-1.0, 10.0, 25.0, 1.5), (-1.0, 5.0, 25.0, 2.0), (1.0,), (2.0,)),
+    alg=AutoVern9(Rodas5()),
+    solver_opts=Dict(:adaptive => false))
+export cartesianDoublePendulumVis
+
+
+cartesianDoublePendulumVis2 = Process(
+    process=cartesianDoublePendulum,
+    X0=[5π / 6, π, 0.0, 0.0], # Two angles (from the downward direction) and two momenta
+    parameter_profile=(lorentzian, lorentzian, constantParameter, constantParameter),
+    transient_t0=-10.0,
+    t0=0.0,
+    dt=0.0001,
+    savedt=0.001,
+    tmax=100.0,
+    parameter_profile_parameters=((-1.0, 18.0, 50.0, 1.5), (-1.0, 9.0, 50.0, 2.0), (1.0,), (2.0,)),
+    alg=AutoVern7(Rodas5()),
+    solver_opts=Dict(:adaptive => false))
+export cartesianDoublePendulumVis2
+
+
+
+@inline @inbounds function waveDrivenHarmonic(dX, X::AbstractArray, p::Function, t::Real)
+    (ω, ε, k, Ω) = p(t)
+    dX[1] = -ω^2.0 * X[1] + ε * sin(k * X[1] - Ω * t)
+    dX[2] = X[2]
+end
+
+@inline @inbounds function waveDrivenHarmonic_J(J, X::AbstractArray, p::Function, t::Real)
+    (ω, ε, k, Ω) = p(t)
+    J .= [0.0 1.0; ε*k*cos(k * X[1] - Ω * t)-ω^2 0.0]
+end
+
+"""
+    An harmonic oscillator driven by a plane wave propagating in the x-direction
+
+Sprott, or Chernikov1988
+"""
+function waveDrivenHarmonic(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=waveDrivenHarmonic_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+
+waveDrivenHarmonicSim = Process(# parameters:  (ω, ε, k, Ω)
+    process=waveDrivenHarmonic,
+    X0=[0.1, 0.1],
+    parameter_profile=(constantParameter, constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters=((1π,), (5π,), (1.0π,), (3π,)),
+    #parameter_profile_parameters = ((1π,), (10.0,), (1.0π,), (0.9π)),
+    transient_t0=-10.0,
+    t0=0.0,
+    dt=0.0001,
+    savedt=0.01,
+    tmax=100.0,
+    alg=RK4())
+export waveDrivenHarmonicSim
+
+
+# @inline @inbounds function pulseDrivenHarmonic(X::AbstractArray, p::Function, t::Real)
+#     (ω, ε, k, Ω) = p(t)
+#     dX2 = -ω^2.0*X[1] + ε*sin(k*X[1] - Ω*t)^2
+#     dX1 = X[2]
+#     return SVector{2}(dX1, dX2)
+# end
+
+# @inline @inbounds function pulseDrivenHarmonic_J(X::AbstractArray, p::Function, t::Real)
+#     (ω, ε, k, Ω) = p(t)
+#     J = @SMatrix [0.0 1.0; 2*ε*k*cos(k*X[1] - Ω*t)-ω^2 0.0]
+# end
+
+
+# """
+#     An harmonic oscillator driven by directional 'pulses'
+# """
+# function pulseDrivenHarmonic(P::Process)
+#     seed(P.solver_rng)
+#     prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))#, jac=waveDrivenHarmonic_J)
+#     sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+# end
+
+# pulseDrivenHarmonicSim = Process(# parameters:  (ω, ε, k, Ω)
+#     process = pulseDrivenHarmonic,
+#     X0 = [0.0, 0.0],
+#     parameter_profile = (constantParameter, constantParameter, constantParameter, constantParameter),
+#     parameter_profile_parameters = ((1π,), (10.0,), (1π,), (1.5π,)),
+#     transient_t0 = -10.0,
+#     t0 = 0.0,
+#     dt = 0.001,
+#     savedt = 0.01,
+#     tmax = 100.0,
+#     alg = RK4())
+# export pulseDrivenHarmonicSim
+
+
+
+@inline @inbounds function thomasCyclicallySymmetric(dX, X::AbstractArray, 𝑏::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    dX[1] = -𝑏(𝑡) * 𝑥 + sin(𝑦)
+    dX[2] = -𝑏(𝑡) * 𝑦 + sin(𝑧)
+    dX[3] = -𝑏(𝑡) * 𝑧 + sin(𝑥)
+end
+
+@inline @inbounds function thomasCyclicallySymmetric_J(J, X::AbstractArray, 𝑏::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    J .= [-𝑏(𝑡) cos(𝑦) 0.0;
+        0.0 -𝑏(𝑡) cos(𝑧);
+        cos(𝑥) 0.0 -𝑏(𝑡)]
+end
+
+"""
+    Thomas' cyclically symmetric attractor
+
+From Sprott, or Thomas1999
+"""
+function thomasCyclicallySymmetric(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=thomasCyclicallySymmetric_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+thomasCyclicallySymmetricSim = Process(
+    process=thomasCyclicallySymmetric,
+    X0=[0.1, 0.0, 0.0],
+    parameter_profile=constantParameter,
+    parameter_profile_parameters=(0.18,),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=1000.0,
+    alg=RK4(),
+    solver_opts=Dict(:adaptive => true))
+export thomasCyclicallySymmetricSim
+
+thomasCyclicallySymmetricVis = Process(
+    process=thomasCyclicallySymmetric,
+    X0=[0.1, 0.0, 0.0],
+    parameter_profile=constantParameter,
+    parameter_profile_parameters=(0.18,),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.0001,
+    savedt=0.05,
+    tmax=5000.0,
+    alg=RadauIIA3(),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-12))
+export thomasCyclicallySymmetricVis
+
+
+
+@inline @inbounds function doubleScroll(dX, X::AbstractArray, 𝑎::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    dX[1] = 𝑦
+    dX[2] = 𝑧
+    dX[3] = -𝑎(𝑡) * (𝑧 + 𝑦 + 𝑥 - sign(𝑥))
+end
+function 𝛿(x)
+    if x == 0
+        return Inf
+    else
+        return 0
+    end
+end
+@inline @inbounds function doubleScroll_J(J, X::AbstractArray, 𝑎::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    J .= [0.0 1.0 0.0;
+        0.0 0.0 1.0;
+        -𝑎(𝑡)*(1.0-2.0*𝛿(x)) -𝑎(𝑡) -𝑎(𝑡)] # Need to worry about integrating delta? Hopefully we never hit 0.0...
+end
+
+"""
+    Double scroll attractor
+
+From Sprott, or Elwakil2001
+"""
+function doubleScroll(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=doubleScroll_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+doubleScrollSim = Process(
+    process=doubleScroll,
+    X0=[0.01, 0.01, 0.0],
+    parameter_profile=constantParameter,
+    parameter_profile_parameters=(0.8,),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=1000.0,
+    alg=RK4(),
+    solver_opts=Dict(:adaptive => true))
+export doubleScrollSim
+
+doubleScrollVis = Process(
+    process=doubleScroll,
+    X0=[0.01, 0.01, 0.0],
+    parameter_profile=constantParameter,
+    parameter_profile_parameters=(0.8,),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.01,
+    tmax=5000.0,
+    alg=AutoVern7(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-12))
+export doubleScrollVis
+
+
+
+@inline @inbounds function lorenz(dX, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝜎, 𝑟, 𝑏) = p(𝑡)
+    dX[1] = 𝜎 * (𝑦 - 𝑥)
+    dX[2] = -𝑥 * 𝑧 + 𝑟 * 𝑥 - 𝑦
+    dX[3] = 𝑥 * 𝑦 - 𝑏 * 𝑧
+end
+
+@inline @inbounds function lorenz_J(J, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝜎, 𝑟, 𝑏) = p(𝑡)
+    J .= [-𝜎 𝜎 0.0;
+        𝑟-𝑧 -1.0 -𝑥;
+        𝑦 𝑥 -𝑏]
+end
+
+"""
+    Lorenz system
+
+Sprott, Shin1998, Balcerzak2018
+"""
+function lorenz(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=lorenz_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+
+lorenzSim = Process(
+    process=lorenz,
+    X0=[0.0, -0.01, 9.0],
+    parameter_profile=(constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters=(10.0, 28.0, 8 / 3), # Sprott's recomendation
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=500.0,
+    alg=AutoVern9(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-10, :abstol => 1e-10, :maxiters => 1e7))
+export lorenzSim
+
+lorenzVis = Process(
+    process=lorenz,
+    X0=[0.0, 0.01, 9.0],
+    parameter_profile=(constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters=(10.0, 28.0, 8 / 3),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.0005,
+    savedt=0.001,
+    tmax=1000.0,
+    alg=AutoVern7(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-15))
+export lorenzVis
+
+
+
+@inline @inbounds function diffusionlessLorenz(dX, X::AbstractArray, 𝑎::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    dX[1] = 𝑦 - 𝑥
+    dX[2] = -𝑥 * 𝑧
+    dX[3] = 𝑥 * 𝑦 - 𝑎(𝑡)
+end
+@inline @inbounds function diffusionlessLorenz_J(J, X::AbstractArray, 𝑎::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    J .= [-1.0 1.0 0.0;
+        -𝑧 0.0 -𝑥;
+        𝑦 𝑥 0.0]
+end
+
+"""
+    Diffusionless Lorenz system
+
+See Li2014, Sprott2010a (Elegant Chaos), and Schrier2000
+"""
+function diffusionlessLorenz(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=diffusionlessLorenz_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+diffusionlessLorenzSim = Process(
+    process=diffusionlessLorenz,
+    X0=[1.0, 0.0, 1.0],
+    parameter_profile=constantParameter,
+    parameter_profile_parameters=(1.0,),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=1000.0,
+    alg=RK4(),
+    solver_opts=Dict(:adaptive => false))
+export diffusionlessLorenzSim
+
+diffusionlessLorenzVis = Process(
+    process=diffusionlessLorenz,
+    X0=[1.0, 0.0, 1.0],
+    parameter_profile=constantParameter,
+    parameter_profile_parameters=(1.0,),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.025,
+    tmax=20000.0,
+    alg=AutoVern7(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-8))
+export diffusionlessLorenzVis
+
+
+
+@inline @inbounds function piecewiseLinearHyperchaos(dX, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧, 𝑢) = X
+    (𝑎, 𝑏) = p(𝑡)
+
+    dX[1] = 𝑦 - 𝑥
+    dX[2] = -𝑧 * sign(𝑥) + 𝑢
+    dX[3] = abs(𝑥) - 𝑎
+    dX[4] = -𝑏 * 𝑦
+end
+@inline @inbounds function piecewiseLinearHyperchaos_J(J, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧, 𝑢) = X
+    (𝑎, 𝑏) = p(𝑡)
+    J .= [-1.0 1.0 0.0 0.0;
+        -2*𝛿(𝑧) 0.0 -sign(𝑥) 1.0; # ? Again, hope we miss the zero
+        sign(𝑥) 0.0 0.0 0.0;
+        0.0 -𝑏 0.0 0.0]
+end
+
+"""
+    A simple, piecewise-linear, hyperchaotic flow
+
+Li2014
+"""
+function piecewiseLinearHyperchaos(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=piecewiseLinearHyperchaos_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+piecewiseLinearHyperchaosSim = Process(
+    process=piecewiseLinearHyperchaos,
+    X0=[0.2, 0.0, 1.0, 0.0],
+    parameter_profile=(constantParameter, constantParameter),
+    parameter_profile_parameters=(1.0, 0.25), # * 𝑎 is an amplitude, so set to 1 without loss of generality
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=1000.0,
+    alg=Vern9(),
+    solver_opts=Dict(:adaptive => false, :reltol => 1e-10, :abstol => 1e-10))
+export piecewiseLinearHyperchaosSim
+
+piecewiseLinearHyperchaosVis = Process(
+    process=piecewiseLinearHyperchaos,
+    X0=[0.01, 0.01, 0.01, 0.01],
+    parameter_profile=(constantParameter, constantParameter),
+    parameter_profile_parameters=(1.0, 0.25),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=15000.0,
+    alg=AutoVern9(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-14))
+export piecewiseLinearHyperchaosVis
+
+
+
+
+@inline @inbounds function simplifiedLorenz4D(dX, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧, 𝑢) = X
+    (𝑎, 𝑏) = p(𝑡)
+
+    dX[1] = 𝑦 - 𝑥
+    dX[2] = -𝑥 * 𝑧 + 𝑢
+    dX[3] = 𝑥 * 𝑦 - 𝑎
+    dX[4] = -𝑏 * 𝑦
+end
+@inline @inbounds function simplifiedLorenz4D_J(J, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧, 𝑢) = X
+    (𝑎, 𝑏) = p(𝑡)
+    J .= [-1.0 1.0 0.0 0.0;
+        -𝑧 0.0 -𝑥 1.0;
+        𝑦 𝑥 0.0 0.0;
+        0.0 -𝑏 0.0 0.0]
+end
+
+"""
+    The simplified 4D Lorenz system, whose attractors are exclusively hidden and can be hyperchaotic
+
+Li2014a and Gao2006
+"""
+function simplifiedLorenz4D(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=simplifiedLorenz4D_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+simplifiedLorenz4DSim = Process(
+    process=simplifiedLorenz4D,
+    X0=[2.0, 4.0, 0.0, 0.0],
+    parameter_profile=(constantParameter, constantParameter),
+    parameter_profile_parameters=(2.6, 0.44),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.0001,
+    savedt=0.05,
+    tmax=1000.0,
+    alg=RK4(),
+    solver_opts=Dict(:adaptive => false))
+export simplifiedLorenz4DSim
+
+simplifiedLorenz4DVis = Process(
+    process=simplifiedLorenz4D,
+    X0=[2.0, 4.0, 0.0, 0.0],
+    parameter_profile=(constantParameter, constantParameter),
+    parameter_profile_parameters=(2.6, 0.45),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=7500.0,
+    alg=Vern9(),
+    solver_opts=Dict(:adaptive => false))#, :reltol => 1e-12))
+export simplifiedLorenz4DVis
+
+
+
+@inline @inbounds function chensSystem(dX, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝑎, 𝑏, 𝑐) = p(𝑡)
+
+    dX[1] = 𝑎 * (𝑦 - 𝑥)
+    dX[2] = (𝑐 - 𝑎) * 𝑥 - 𝑥 * 𝑧 + 𝑐 * 𝑦
+    dX[3] = 𝑥 * 𝑦 - 𝑏 * 𝑧
+end
+@inline @inbounds function chensSystem_J(J, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝑎, 𝑏, 𝑐) = p(𝑡)
+    J .= [-𝑎 𝑎 0.0;
+        𝑐-𝑎-𝑧 𝑐 -𝑥;
+        𝑦 𝑥 -𝑏]
+end
+
+
+"""
+    Yet another chaotic attractor
+
+Chen1999, Song2004
+"""
+function chensSystem(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=chensSystem_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+export chensSystem
+yetAnotherChaoticAttractor = chensSystem
+export yetAnotherChaoticAttractor
+
+chensSystemSim = Process(
+    process=chensSystem,
+    X0=[-3.0, 2.0, 20.0],
+    parameter_profile=(constant, constant, constant),
+    parameter_profile_parameters=((44,), (5,), (30,)),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.02,
+    tmax=200.0,
+    alg=AutoVern9(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :abs_tol => 1e-10, :rel_tol => 1e-10))
+export chensSystemSim
+
+chensSystemVis = Process(
+    process=chensSystem,
+    X0=[-3.0, 2.0, 20.0],
+    parameter_profile=(constantParameter, constantParameter, constantParameter),
+    parameter_profile_parameters=(35.0, 8.0 / 3.0, 28.0),
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.0001,
+    savedt=0.001,
+    tmax=1000.0,
+    alg=Vern9(),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-9))
+export chensSystemVis
+
+
+@inline @inbounds function dequanLi(dX, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝑎, 𝑐, 𝑑, 𝑒, 𝑓, 𝑘) = p(𝑡)
+    dX[1] = 𝑎 * (𝑦 - 𝑥) + 𝑑 * 𝑥 * 𝑧
+    dX[2] = 𝑘 * 𝑥 + 𝑓 * 𝑦 - 𝑥 * 𝑧
+    dX[3] = -𝑒 * 𝑥^2 + 𝑥 * 𝑦 + 𝑐 * 𝑧
+end
+
+# @inline @inbounds function dequanLi_J(J, X::AbstractArray, p::Function, 𝑡::Real)
+#     (𝑥, 𝑦, 𝑧) = X
+#     (𝜎, 𝑟, 𝑏) = p(𝑡)
+#     J .= [-𝜎 𝜎 0.0;
+#         𝑟-𝑧 -1.0 -𝑥;
+#         𝑦 𝑥 -𝑏]
+# end
+
+"""
+    Dequan Li's three-scroll attractor
+
+From Li2008
+"""
+function dequanLi(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))#, jac=thomasCyclicallySymmetric_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+dequanLiSim = Process(
+    process=dequanLi,
+    X0=[0.0, -0.01, 9.0],
+    parameter_profile=Tuple([constantParameter for _ in 1:6]),
+    parameter_profile_parameters=(40.0, 11 / 6, 0.16, 0.65, 20.0, 55.0), # (𝑎, 𝑐, 𝑑, 𝑒, 𝑓, 𝑘)
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=500.0,
+    alg=AutoVern9(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-10, :abstol => 1e-10, :maxiters => 1e7))
+export dequanLiSim
+
+
+dequanLiVis = Process(
+    process=dequanLi,
+    X0=[0.0, 0.01, 9.0],
+    parameter_profile=Tuple([constantParameter for _ in 1:6]),
+    parameter_profile_parameters=(40.0, 11 / 6, 0.16, 0.65, 20.0, 55.0), # (𝑎, 𝑐, 𝑑, 𝑒, 𝑓, 𝑘)
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.005,
+    tmax=100000.0,
+    alg=AutoVern9(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-11, :maxiters => 1e12))
+export dequanLiVis
+
+
+
+@inline @inbounds function aizawa(dX, X::AbstractArray, p::Function, 𝑡::Real)
+    (𝑥, 𝑦, 𝑧) = X
+    (𝛼, 𝛽, 𝛾, 𝛿) = p(𝑡)
+    dX[1] = (𝑧 - 𝛽) * 𝑥 - 𝛿 * 𝑦
+    dX[2] = 𝛿 * 𝑥 + (𝑧 - 𝛽) * 𝑦
+    dX[3] = 𝛾 + 𝛼 * 𝑧 - (1 / 3) * 𝑧^3 - 𝑥^2 - 𝑦^2 - 0.25 * 𝑧 * 𝑥^2 - 0.25 * 𝑧 * 𝑦^2 + 0.1 * 𝑧 * 𝑥^3
+end
+
+# @inline @inbounds function dequanLi_J(J, X::AbstractArray, p::Function, 𝑡::Real)
+#     (𝑥, 𝑦, 𝑧) = X
+#     (𝜎, 𝑟, 𝑏) = p(𝑡)
+#     J .= [-𝜎 𝜎 0.0;
+#         𝑟-𝑧 -1.0 -𝑥;
+#         𝑦 𝑥 -𝑏]
+# end
+
+"""
+    Aizawa attractor
+
+See Aizawa1982, Langford1984
+"""
+function aizawa(P::Process)
+    seed(P.solver_rng)
+    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))#, jac=thomasCyclicallySymmetric_J)
+    sol = dsolve(prob, P.alg; dt=P.dt, saveat=P.savedt, P.solver_opts...)
+end
+
+aizawaSim = Process(
+    process=aizawa,
+    X0=[-0.78450179, -0.62887672, -0.17620268],
+    parameter_profile=Tuple([constantParameter for _ in 1:4]),
+    parameter_profile_parameters=((0.95, 0.7, 0.6, 3.5)), # (𝛼, 𝛽, 𝛾, 𝛿)
+    transient_t0=-100.0,
+    t0=0.0,
+    dt=0.001,
+    savedt=0.05,
+    tmax=500.0,
+    alg=AutoVern9(Rodas5()),
+    solver_opts=Dict(:adaptive => true, :reltol => 1e-10, :abstol => 1e-10, :maxiters => 1e7))
+export aizawaSim
+
+
+# aizawaVis = Process(
+#     process=aizawa,
+#     X0=[0.0, 0.01, 9.0],
+#     parameter_profile=Tuple([constantParameter for _ in 1:6]),
+#     parameter_profile_parameters=(40.0, 11 / 6, 0.16, 0.65, 20.0, 55.0), # (𝑎, 𝑐, 𝑑, 𝑒, 𝑓, 𝑘)
+#     transient_t0=-100.0,
+#     t0=0.0,
+#     dt=0.001,
+#     savedt=0.005,
+#     tmax=100000.0,
+#     alg=AutoVern9(Rodas5()),
+#     solver_opts=Dict(:adaptive => true, :reltol => 1e-11, :maxiters => 1e12))
+# export aizawaVis

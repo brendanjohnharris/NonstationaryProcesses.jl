@@ -28,4 +28,5 @@ Manifest.toml
 *.vscode
 *.code-workspace
 test/Wallpapers/**/*.png
-/*.png
+*.png
+*.pdf
