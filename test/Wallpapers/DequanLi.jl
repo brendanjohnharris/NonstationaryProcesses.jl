@@ -5,12 +5,12 @@
 # Pkg.add("StatsPlots")
 # Pkg.add("DifferentialEquations")
 using CairoMakie
-using TimeseriesTools
+using TimeseriesBase
 using Foresight
 set_theme!(foresight(:transparent))
 using DifferentialEquations
 using NonstationaryProcesses
-import NonstationaryProcesses.DifferentialEquationsExt.dequanLi
+import NonstationaryProcesses.dequanLi
 tmax = 2000.0
 𝑘() = t -> 0.55 .+ (9 .* 0.55) * sin.(4π * t ./ tmax)
 
@@ -48,7 +48,7 @@ S = Process(;
 
 
 begin
-    X = TimeseriesTools.TimeSeries(S) |> eachcol .|> collect
+    X = TimeseriesBase.Timeseries(S) |> eachcol .|> collect
     f = Figure(resolution=(7680, 7680), backgroundcolor=:transparent)
     ax = Axis3(f[1, 1]; aspect=(1, 1, 1), azimuth=-π / 10, elevation=π / 5)
     hidedecorations!(ax)

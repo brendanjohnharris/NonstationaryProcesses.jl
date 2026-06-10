@@ -7,12 +7,12 @@
 # using Plots
 # using StatsPlots
 using CairoMakie
-using TimeseriesTools
+using TimeseriesBase
 using Foresight
 set_theme!(foresight(:transparent))
 using DifferentialEquations
 using NonstationaryProcesses
-import NonstationaryProcesses.DifferentialEquationsExt.aizawa
+import NonstationaryProcesses.aizawa
 tmax = 15000.0
 𝛿() = t -> 3.5 .+ 0.75 * sin.(2π * t ./ tmax)
 
@@ -31,7 +31,7 @@ S = Process(;
 
 
 begin
-    X = TimeseriesTools.TimeSeries(S) |> eachcol .|> collect
+    X = TimeseriesBase.Timeseries(S) |> eachcol .|> collect
     f = Figure(size=(5760, 5760), backgroundcolor=:transparent)
     ax = Axis3(f[1, 1]; aspect=(1, 1, 1), azimuth=π / 8, elevation=π / 5)
     hidedecorations!(ax)

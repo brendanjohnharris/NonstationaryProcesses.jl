@@ -2,7 +2,7 @@ using Plots
 using StatsPlots
 using DifferentialEquations
 using NonstationaryProcesses
-import NonstationaryProcesses.DifferentialEquationsExt as DE
+import NonstationaryProcesses as DE
 
 function wallPlot(S, vars; kwargs...)
     # Square ones

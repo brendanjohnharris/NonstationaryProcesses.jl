@@ -1,4 +1,4 @@
-# import TimeseriesTools
+# import TimeseriesBase
 
 """Gaussian Bimodal"""
 function gaussianBimodal(μ=0.0, σ=1.0, α=0.5)
@@ -104,7 +104,7 @@ export arSim
 
 
 # function colorednoise(α, N)
-#     collect(TimeseriesTools.colorednoise(1:N; α))
+#     collect(TimeseriesBase.colorednoise(1:N; α))
 # end
 # export colorednoise
 

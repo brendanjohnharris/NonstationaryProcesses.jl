@@ -1,10 +1,10 @@
 using CairoMakie
-import TimeseriesTools.TimeSeries
-using TimeseriesTools
+import TimeseriesBase.TimeSeries
+using TimeseriesBase
 using DifferentialEquations
 using TimeseriesSurrogates
 using NonstationaryProcesses
-using NonstationaryProcesses.DifferentialEquationsExt
+using NonstationaryProcesses
 using Foresight
 using FFTW
 

@@ -3,7 +3,7 @@ using DynamicalSystems
 using DifferentialEquations
 using NonstationaryProcesses
 using NonstationaryProcesses.NonstationaryProcessesBase
-using TimeseriesTools
+using TimeseriesBase
 using Test
 
 @testset "Simulations" begin
@@ -12,3 +12,5 @@ using Test
     @test_nowarn include("./datasets/honours/lyapunovTest.jl")
     @test_nowarn include("./datasets/honours/testGaussianBimodal.jl")
 end
+
+include("./SimulatorTests.jl")

@@ -1,11 +1,12 @@
 using CairoMakie
-using TimeseriesTools
+using TimeseriesBase
 using DynamicalSystems
 using DifferentialEquations
 using Distributions
 using Random
+using OrdinaryDiffEqRosenbrock  # Rodas5 (not re-exported by OrdinaryDiffEq 7 / DifferentialEquations)
 using NonstationaryProcesses
-import NonstationaryProcesses.DifferentialEquationsExt: lorenzSim, process2problem
+import NonstationaryProcesses: lorenzSim, process2problem
 
 sim = lorenzSim(
     X0=[0.0, -0.01, 9.0],
