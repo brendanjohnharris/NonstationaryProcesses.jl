@@ -5,7 +5,7 @@ using TimeseriesBase
 using Test
 
 @testset "Simulations" begin
-    @test_nowarn include("./datasets/honours/testGaussianBimodal.jl")
+    @test (include("./datasets/honours/testGaussianBimodal.jl"); true)
 end
 
 # Reference tests that cross-check against DynamicalSystems.jl. The modern
@@ -19,9 +19,9 @@ if VERSION >= v"1.11"
     using Pkg
     Pkg.add(["DynamicalSystems", "DifferentialEquations"])
     @testset "DynamicalSystems references" begin
-        @test_nowarn include("./datasets/honours/ARTests.jl")
-        @test_nowarn include("./datasets/honours/HenonTest.jl")
-        @test_nowarn include("./datasets/honours/lyapunovTest.jl")
+        @test (include("./datasets/honours/ARTests.jl"); true)
+        @test (include("./datasets/honours/HenonTest.jl"); true)
+        @test (include("./datasets/honours/lyapunovTest.jl"); true)
     end
 else
     @info "Skipping DynamicalSystems-based reference tests on Julia $VERSION (<1.11); the DynamicalSystems dependency graph is unsatisfiable there."
