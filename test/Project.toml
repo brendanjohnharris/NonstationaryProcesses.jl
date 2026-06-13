@@ -1,8 +1,6 @@
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-DynamicalSystems = "61744808-ddfa-5f27-97ff-6e42cc95d634"
 NonstationaryProcesses = "7656fb31-40ed-4019-8ece-32bdcc5fce69"
 NonstationaryProcessesBase = "af5f7d59-81cb-4819-a164-3c52f7fc19dd"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"

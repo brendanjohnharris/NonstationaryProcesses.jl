@@ -22,7 +22,7 @@ Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 [compat]
 Distributions = "0.24, 0.25"
 FFTW = "1"
-NonstationaryProcessesBase = "0.2, 0.3"
+NonstationaryProcessesBase = "0.3"
 OrdinaryDiffEq = "7"
 OrdinaryDiffEqFIRK = "1, 2"
 OrdinaryDiffEqFunctionMap = "1, 2"
