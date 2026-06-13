@@ -1,7 +1,7 @@
 name = "NonstationaryProcesses"
 uuid = "7656fb31-40ed-4019-8ece-32bdcc5fce69"
 authors = ["brendanjohnharris <brendanjohnharris@gmail.com> and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -33,4 +33,4 @@ StaticArrays = "1"
 StatsBase = "0.30, 0.31, 0.32, 0.33, 0.34"
 StochasticDiffEq = "6, 7"
 Tullio = "0.3"
-julia = "1.9"
+julia = "1.10"
