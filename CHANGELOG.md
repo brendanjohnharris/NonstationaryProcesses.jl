@@ -1,6 +1,5 @@
 # Changelog
 
-
 ## [v0.1.1]
 
 Dependency and loading migration; no public API changes (the `Process` type,
