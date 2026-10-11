@@ -1,8 +1,8 @@
-@inline @inbounds function forcedvanderpol(X::AbstractArray, p::Function, t::Real)
+@inline @inbounds function forcedvanderpol(dX::AbstractArray, X::AbstractArray, p::Function, t::Real)
     (μ, A, ω) = p(t)
-    dX1 = X[2]
-    dX2 = μ.*(1-X[1].^2).*X[2] - X[1] + A*sin(ω*t)
-    return SVector{2}(dX1, dX2)
+    dX[1] = X[2]
+    dX[2] = μ*(1-X[1]^2)*X[2] - X[1] + A*sin(ω*t)
+    return nothing
 end
 
 
@@ -24,7 +24,7 @@ forcedvanderpolSim = Process(
     savedt = 0.1,
     tmax = 100.0,
     alg = AutoVern9(Rodas5()),
-    solver_opts = Dict(:adaptive => true, :reltol => 1e-9, :abs_tol => 1e-9)) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ
+    solver_opts = Dict(:adaptive => true, :reltol => 1e-9, :abstol => 1e-9, :maxiters => 1e7)) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ; relaxation oscillations need many steps over a long tmax
 export forcedvanderpolSim
 
 
@@ -34,10 +34,10 @@ export forcedvanderpolSim
 
 
 
-@inline @inbounds function vanderpol(X::AbstractArray, μ::Function, t::Real)
-    dX1 = X[2]
-    dX2 = μ(t).*(1-X[1].^2).*X[2] - X[1]
-    return SVector{2}(dX1, dX2)
+@inline @inbounds function vanderpol(dX::AbstractArray, X::AbstractArray, μ::Function, t::Real)
+    dX[1] = X[2]
+    dX[2] = μ(t)*(1-X[1]^2)*X[2] - X[1]
+    return nothing
 end
 
 @inline @inbounds function vanderpol_J(J, X::AbstractArray, μ::Function, t::Real)
@@ -62,7 +62,8 @@ vanderpolSim = Process(
     dt = 0.001,
     savedt = 0.1,
     tmax = 1000.0,
-    alg = AutoVern9(Rodas5())) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ
+    alg = AutoVern9(Rodas5()),
+    solver_opts = Dict(:adaptive => true, :maxiters => 1e7)) # the Van der Pol equation is non-stiff for low μ, but stiff for high μ; the default maxiters (1e5) is exhausted well before tmax
 export vanderpolSim
 
 

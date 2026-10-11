@@ -77,7 +77,9 @@ const FLOW_SIMS = (:lorenzSim => lorenzSim,
     :thomasCyclicallySymmetricSim => thomasCyclicallySymmetricSim,
     :piecewiseLinearHyperchaosSim => piecewiseLinearHyperchaosSim,
     :waveDrivenHarmonicSim => waveDrivenHarmonicSim,
-    :doublePendulumSim => doublePendulumSim)
+    :doublePendulumSim => doublePendulumSim,
+    :vanderpolSim => vanderpolSim,
+    :forcedvanderpolSim => forcedvanderpolSim)
 
 @testset "continuous flows" begin
     for (name, sim) in FLOW_SIMS
@@ -89,6 +91,15 @@ const FLOW_SIMS = (:lorenzSim => lorenzSim,
             @test all(isfinite, X)
             @test timeseries(simulate(sim(tmax=5.0))) == X     # deterministic ODE -> reproducible
         end
+    end
+end
+
+@testset "discrete maps" begin
+    for sim in (henonSim, logisticSim)
+        X = timeseries(simulate(sim()))
+        @test length(X) > 0
+        @test all(isfinite, X)
+        @test timeseries(simulate(sim())) == X
     end
 end
 

@@ -13,10 +13,9 @@ end
 """
 Henon map
 """
-function henon(P::Process)
+function henon(P::Process) # `henon` is out-of-place, so it needs a DiscreteProblem (as for `ikeda`), not an in-place ODEFunction
     seed(P.solver_rng)
-    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters), jac=henon_J)
-    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+    process2solution(P)
 end
 
 henonSim = Process(
@@ -42,10 +41,9 @@ export henonSim
 end
 
 """Logistic map"""
-function logistic(P::Process)
+function logistic(P::Process) # Out-of-place, so a DiscreteProblem rather than an in-place ODEFunction
     seed(P.solver_rng)
-    prob = odeproblem(P.process, P.X0, (P.transient_t0, P.tmax), tuplef2ftuple(P.parameter_profile, P.parameter_profile_parameters))
-    sol = dsolve(prob, P.alg; dt = P.dt, saveat=P.savedt, P.solver_opts...)
+    process2solution(P)
 end
 
 logisticSim = Process(
