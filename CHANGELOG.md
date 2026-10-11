@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.1.2]
+
+### Fixed
+- `vanderpolSim`, `forcedvanderpolSim`, `henonSim` and `logisticSim` failed to simulate. The Van der Pol flows are now in-place, and the Henon and logistic maps solve as discrete problems.
+- `forcedvanderpolSim` passed the misspelt solver option `abs_tol`.
+- The DynamicalSystems reference tests failed to precompile on Julia 1.13.
+
+### Changed
+- CI: added Julia 1.13.
+
 ## [v0.1.1]
 
 Dependency and loading migration; no public API changes (the `Process` type,
