@@ -1,3 +1,5 @@
+using Pkg
+VERSION >= v"1.11" && Pkg.add(["DynamicalSystems", "DifferentialEquations"]) # before any `using`, so the re-resolve cannot change versions already loaded
 using TimeseriesSurrogates
 using NonstationaryProcesses
 using NonstationaryProcesses.NonstationaryProcessesBase
@@ -16,8 +18,6 @@ end
 # DifferentialEquations are omitted from test/Project.toml and added on demand
 # only where the dependency graph is satisfiable.
 if VERSION >= v"1.11"
-    using Pkg
-    Pkg.add(["DynamicalSystems", "DifferentialEquations"])
     @testset "DynamicalSystems references" begin
         @test (include("./datasets/honours/ARTests.jl"); true)
         @test (include("./datasets/honours/HenonTest.jl"); true)
